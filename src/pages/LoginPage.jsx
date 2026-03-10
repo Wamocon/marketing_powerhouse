@@ -49,7 +49,7 @@ export default function LoginPage({ onLogin }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px' }}>
                         <div className="sidebar-logo" style={{ width: 44, height: 44, fontSize: '1.25rem' }}>M</div>
                         <div>
-                            <div className="sidebar-brand-name" style={{ fontSize: '1.25rem' }}>Marketing Powerhouse</div>
+                            <div className="sidebar-brand-name" style={{ fontSize: '1.25rem' }}>WAMOCON Academy</div>
                         </div>
                     </div>
 

@@ -123,7 +123,7 @@ export default function DashboardPage() {
                                         <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                 <XAxis dataKey="name" stroke="var(--text-tertiary)" fontSize={12} />
                                 <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                                 <Tooltip content={<CustomTooltip />} />

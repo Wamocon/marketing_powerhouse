@@ -122,7 +122,7 @@ export default function BudgetPage() {
                     <div className="chart-container">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={budgetData.monthlyTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                 <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
                                 <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                                 <Tooltip content={<CustomTooltip />} />

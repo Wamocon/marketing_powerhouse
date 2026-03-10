@@ -83,8 +83,8 @@ export const ROLE_CONFIG = {
     manager: {
         label: 'Marketing Manager',
         shortLabel: 'Manager',
-        color: '#6366f1',
-        bgColor: 'rgba(99, 102, 241, 0.12)',
+        color: '#2563eb',
+        bgColor: 'rgba(37, 99, 235, 0.12)',
         description: 'Kampagnen und Aufgaben erstellen, Team koordinieren',
     },
     member: {

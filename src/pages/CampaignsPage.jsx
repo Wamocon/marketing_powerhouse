@@ -143,7 +143,7 @@ export default function CampaignsPage() {
                                         display: 'flex', alignItems: 'center', gap: '4px',
                                         fontSize: '0.6875rem', padding: '2px 8px',
                                         borderRadius: 'var(--radius-full)',
-                                        background: 'rgba(99,102,241,0.15)',
+                                        background: 'rgba(220,38,38,0.15)',
                                         color: 'var(--color-primary)',
                                     }}>
                                         <Bot size={10} /> Master-Prompt
@@ -312,7 +312,7 @@ export default function CampaignsPage() {
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: '12px',
                                                         padding: '12px', borderRadius: 'var(--radius-md)',
-                                                        background: selectedAudiences.includes(a.id) ? 'rgba(99,102,241,0.1)' : 'var(--bg-elevated)',
+                                                        background: selectedAudiences.includes(a.id) ? 'rgba(220,38,38,0.1)' : 'var(--bg-elevated)',
                                                         border: `1px solid ${selectedAudiences.includes(a.id) ? 'var(--color-primary)' : 'transparent'}`,
                                                         cursor: 'pointer', transition: 'all 0.2s ease',
                                                     }}

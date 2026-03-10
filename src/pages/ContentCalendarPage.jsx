@@ -117,7 +117,7 @@ export default function ContentCalendarPage() {
                                 key={index}
                                 className={`calendar-cell ${!cell.isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
                             >
-                                <div className="calendar-day-number" style={isToday ? { color: 'var(--color-primary-light)', fontWeight: 700 } : {}}>
+                                <div className="calendar-day-number" style={isToday ? { color: 'var(--color-primary)', fontWeight: 700 } : {}}>
                                     {cell.day}
                                 </div>
                                 {events.map(ev => (

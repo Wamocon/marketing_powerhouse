@@ -24,7 +24,7 @@ export default function Header() {
         <header className="header">
             <div className="header-left">
                 <div className="header-breadcrumb">
-                    <span>Marketing Powerhouse</span>
+                    <span>WAMOCON Academy</span>
                     <span className="header-breadcrumb-separator">/</span>
                     {isCampaignDetail ? (
                         <>

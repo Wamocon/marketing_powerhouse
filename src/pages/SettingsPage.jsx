@@ -87,7 +87,7 @@ export default function SettingsPage() {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Workspace-Name</label>
-                                <input type="text" className="form-input" defaultValue="Marketing Powerhouse GmbH" disabled={!can('canManageSettings')} />
+                                <input type="text" className="form-input" defaultValue="WAMOCON Academy" disabled={!can('canManageSettings')} />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Beschreibung</label>
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <span style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{user.name}</span>
                                                         {isMe && (
-                                                            <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary-light)', fontWeight: 700 }}>Du</span>
+                                                            <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: 'var(--radius-full)', background: 'rgba(220,38,38,0.1)', color: 'var(--color-primary-light)', fontWeight: 700 }}>Du</span>
                                                         )}
                                                     </div>
                                                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>

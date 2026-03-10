@@ -235,8 +235,8 @@ export default function PositioningPage() {
                             {pos.toneOfVoice.adjectives.map(adj => (
                                 <span key={adj} style={{
                                     padding: '4px 12px', borderRadius: 'var(--radius-full)',
-                                    background: 'rgba(99,102,241,0.12)', color: 'var(--color-primary-light)',
-                                    border: '1px solid rgba(99,102,241,0.25)', fontSize: 'var(--font-size-xs)', fontWeight: 600,
+                                    background: 'rgba(220,38,38,0.12)', color: 'var(--color-primary)',
+                                    border: '1px solid rgba(220,38,38,0.25)', fontSize: 'var(--font-size-xs)', fontWeight: 600,
                                 }}>
                                     {adj}
                                 </span>
@@ -307,7 +307,7 @@ export default function PositioningPage() {
                         <div key={kw.id} style={{
                             display: 'flex', alignItems: 'center', gap: '6px',
                             padding: '6px 14px', borderRadius: 'var(--radius-full)',
-                            background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)',
+                            background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)',
                             fontSize: 'var(--font-size-xs)',
                         }}>
                             <span style={{ fontWeight: 600, color: 'var(--color-primary-light)' }}>{kw.term}</span>

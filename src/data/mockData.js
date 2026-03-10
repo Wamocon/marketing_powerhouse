@@ -1,4 +1,4 @@
-// Mock data for UI prototype
+// Mock data for UI prototype - Customized for WAMOCON Academy
 
 // ─────────────────────────────────────────────
 // TEST-BENUTZER (für alle 3 Rollen)
@@ -7,81 +7,81 @@
 export const testUsers = [
     {
         id: 'u1',
-        name: 'Alexander König',
-        email: 'admin@marketing-ph.de',
+        name: 'Daniel Moretz',
+        email: 'daniel@test-it-academy.de',
         password: 'admin123',
         role: 'admin',
-        jobTitle: 'System Administrator',
-        avatar: 'AK',
+        jobTitle: 'Akkreditierter ISTQB®-Trainer / Testmanager',
+        avatar: 'DM',
         status: 'online',
-        department: 'IT & Operations',
-        phone: '+49 89 1234-100',
-        joinedAt: '2024-01-01',
+        department: 'Geschäftsführung & Training',
+        phone: '+49 123 456789-0',
+        joinedAt: '2015-01-01',
     },
     {
         id: 'u2',
-        name: 'Sarah Müller',
-        email: 'sarah@marketing-ph.de',
+        name: 'Waleri Moretz',
+        email: 'waleri@test-it-academy.de',
         password: 'manager123',
         role: 'manager',
-        jobTitle: 'Marketing Manager',
-        avatar: 'SM',
+        jobTitle: 'Gründer & Akkreditierter ISTQB®-Trainer',
+        avatar: 'WM',
         status: 'online',
-        department: 'Marketing',
-        phone: '+49 89 1234-101',
-        joinedAt: '2024-02-15',
+        department: 'Training & Qualität',
+        phone: '+49 123 456789-1',
+        joinedAt: '1998-01-01',
     },
     {
         id: 'u3',
-        name: 'Max Weber',
-        email: 'max@marketing-ph.de',
+        name: 'Anna Schmidt',
+        email: 'anna@test-it-academy.de',
         password: 'manager123',
         role: 'manager',
-        jobTitle: 'Marketing Manager',
-        avatar: 'MW',
+        jobTitle: 'Marketing Managerin',
+        avatar: 'AS',
         status: 'online',
         department: 'Marketing',
-        phone: '+49 89 1234-102',
-        joinedAt: '2024-03-01',
+        phone: '+49 123 456789-2',
+        joinedAt: '2023-05-15',
     },
     {
         id: 'u4',
-        name: 'Lisa Chen',
-        email: 'lisa@marketing-ph.de',
+        name: 'Lisa Bauer',
+        email: 'lisa@test-it-academy.de',
         password: 'member123',
         role: 'member',
-        jobTitle: 'Content Creator',
-        avatar: 'LC',
+        jobTitle: 'Content & Social Media',
+        avatar: 'LB',
         status: 'away',
         department: 'Marketing',
-        phone: '+49 89 1234-103',
-        joinedAt: '2024-04-10',
+        phone: '+49 123 456789-3',
+        joinedAt: '2024-02-10',
     },
     {
         id: 'u5',
-        name: 'Tom Schmidt',
-        email: 'tom@marketing-ph.de',
+        name: 'Tom Weber',
+        email: 'tom@test-it-academy.de',
         password: 'member123',
         role: 'member',
-        jobTitle: 'SEA Specialist',
-        avatar: 'TS',
+        jobTitle: 'Performance Marketing Experte',
+        avatar: 'TW',
         status: 'offline',
-        department: 'Performance Marketing',
-        phone: '+49 89 1234-104',
-        joinedAt: '2024-05-20',
+        department: 'Performance',
+        phone: '+49 123 456789-4',
+        joinedAt: '2024-05-01',
     },
     {
         id: 'u6',
-        name: 'Julia Bauer',
-        email: 'julia@marketing-ph.de',
+        name: 'Jana Klein',
+        email: 'jana@test-it-academy.de',
         password: 'member123',
         role: 'member',
-        jobTitle: 'Social Media Managerin',
-        avatar: 'JB',
+        jobTitle: 'Community Support',
+        avatar: 'JK',
         status: 'online',
-        department: 'Marketing',
-        phone: '+49 89 1234-105',
-        joinedAt: '2024-06-01',
+        department: 'Kundenservice',
+        phone: '+49 123 456789-5',
+        joinedAt: '2024-06-15',
     },
 ];
 
@@ -94,81 +94,80 @@ export const currentUser = testUsers[1];
 
 export const companyPositioning = {
     // Block 1: Unternehmens-DNA
-    name: 'Marketing Powerhouse GmbH',
-    tagline: 'Smarter Marketing. Größere Wirkung.',
-    founded: '2020',
-    industry: 'SaaS / Marketing Technology',
-    headquarters: 'München, Deutschland',
-    legalForm: 'GmbH',
-    employees: '12–25',
-    website: 'www.marketing-powerhouse.de',
+    name: 'WAMOCON Academy (Test-IT Academy)',
+    tagline: 'In 45 Tagen vom Jobsuchenden zum IT-Tester – ganz ohne Programmieren',
+    founded: '1998',
+    industry: 'IT-Ausbildung & Schulungen',
+    headquarters: 'Eschborn / Frankfurt am Main',
+    legalForm: 'Academy',
+    employees: '1-10',
+    website: 'test-it-academy.com',
 
     // Block 2: Digitale Identität
-    vision: 'Wir wollen die führende europäische Marketing-Plattform sein, die Marketing-Teams in KMUs und Mittelstand so befähigt, dass Kreativität und Daten Hand in Hand gehen — DSGVO-konform, effizient und menschlich.',
-    mission: 'Wir vereinen Kampagnen-Management, Content-Planung und Budget-Kontrolle in einem einzigen, intuitiven Tool, damit Marketing-Teams endlich fokussiert arbeiten können — ohne Tool-Chaos, ohne Datenverlust, ohne Compliance-Risiken.',
+    vision: 'Wir möchten Quereinsteigern und Jobsuchenden den einfachsten und praxisnahesten Einstieg in die IT ermöglichen, ohne dass sie programmieren können müssen.',
+    mission: 'Mit über 25 Jahren Erfahrung, dem DiTeLe Praxis-Tool und 300+ Praxisübungen machen wir unsere Absolventen zu zertifizierten ISTQB®-Testern, die vom ersten Tag an Mehrwert liefern.',
     values: [
         {
             id: 'v1',
-            title: 'Verlässlichkeit',
-            icon: '🛡️',
-            description: 'Unsere Kunden können sich auf uns verlassen — bei Datenschutz, Verfügbarkeit und Support. Versprechen halten wir ein.',
+            title: 'Praxisnähe',
+            icon: '💻',
+            description: 'Wir bringen keine trockene Theorie bei, sondern Praxis. Unser eigens entwickeltes DiTeLe Tool ermöglicht 300+ realistische Übungen.',
         },
         {
             id: 'v2',
-            title: 'Klarheit',
-            icon: '💡',
-            description: 'Wir kommunizieren klar, einfach und ohne Fachjargon. Komplexes machen wir greifbar — in unserem Produkt und in unserer Sprache.',
+            title: 'Persönliche Betreuung',
+            icon: '🤝',
+            description: 'Unsere akkreditierten Trainer (Waleri & Daniel) begleiten jeden Lernenden persönlich — im Webinar, Online oder Präsenz.',
         },
         {
             id: 'v3',
-            title: 'Menschlichkeit',
-            icon: '🤝',
-            description: 'Hinter jedem Klick steckt ein Mensch. Wir bauen Technologie mit Empathie — für Teams, nicht für Statistiken.',
+            title: 'Anerkannte Qualität',
+            icon: '🏅',
+            description: 'Wir bilden nach offiziellem ISTQB® Certified Tester Foundation Level V.4.0 (CTFL) Standard aus und bringen eine hohe Erfolgsquote mit.',
         },
         {
             id: 'v4',
-            title: 'Innovation',
+            title: 'Chancengleichheit',
             icon: '🚀',
-            description: 'Wir denken voraus. KI, Automatisierung, neue Kanäle — wir entwickeln uns mit dem Markt, ohne unsere Kunden zu überfordern.',
+            description: 'IT ist für alle da. Wir helfen Jobsuchenden, finanziert durch Bildungsgutscheine, einen sicheren und gut bezahlten Job zu finden.',
         },
         {
             id: 'v5',
-            title: 'Europäische Stärke',
-            icon: '🇪🇺',
-            description: 'Made in Europe, für Europa. DSGVO ist für uns kein Kostenfaktor, sondern ein Qualitätsmerkmal und ein Versprechen.',
+            title: 'Netzwerk & Community',
+            icon: '🌐',
+            description: 'Wir bereiten nicht nur auf die Prüfung vor, sondern unterstützen beim Bewerbungsprozess und der Integration in IT-Projekte.',
         },
     ],
 
     // Block 3: Kommunikations-DNA
     toneOfVoice: {
-        adjectives: ['Klar', 'Direkt', 'Ermächtigend', 'Warm', 'Professionell', 'Menschlich'],
-        description: 'Wir sprechen auf Augenhöhe — weder überheblich akademisch noch flach-familiär. Wir duzen unsere Kunden, sind sachlich wenn nötig und persönlich wo möglich. Fachbegriffe nutzen wir bewusst und erklären sie.',
-        personality: 'Vertrauenswürdiger Experte, der komplexe Themen einfach macht — wie ein erfahrener Kollege, nicht wie ein Unternehmensberater.',
+        adjectives: ['Ermutigend', 'Praxisnah', 'Klar', 'Expertenhaft', 'Persönlich', 'Verständlich'],
+        description: 'Wir duzen unsere Zielgruppe (B2C) respektvoll. Wir nehmen ihnen die Angst vor "schwerer IT" und "Programmieren" und vermitteln Zuversicht. Im B2B-Bereich bleiben wir professionell und lösungsorientiert.',
+        personality: 'Der erfahrene, aber nahbare Mentor, der dich sicher und mit einem klaren Fahrplan an dein Ziel (das Zertifikat und den Job) führt.',
     },
     dos: [
-        'Konkrete Beispiele und Zahlen verwenden',
-        'Kundennutzen immer vor Features stellen',
-        'Aktive Sprache, kurze Sätze',
-        'DSGVO-Aspekte proaktiv erwähnen',
-        'Emotionen zeigen — Begeisterung, Verständnis',
+        'Jobchancen und IT-Quereinstieg betonen',
+        '"Ohne Programmieren" erwähnen, um Hürden zu nehmen',
+        'Immer auf das kostenlose Webinar verweisen',
+        'Praxisbezug (DiTeLe, reale Fälle) in den Vordergrund stellen',
+        'Einfache Sprache, Komplexe IT-Begriffe erklären',
     ],
     donts: [
-        'Nie "revolutionary" oder "disruptive" — das sind Worthülsen',
-        'Keine US-zentrischen Beispiele oder Referenzen',
-        'Kein Fachjargon ohne Erklärung',
-        'Keine generischen Floskeln wie "Ihre Lösung für alles"',
-        'Nie Compliance als Selbstverständlichkeit abtun',
-        'Nicht über Konkurrenten sprechen — nur über unsere Stärken',
+        'Kein trockener Uni-Vorlesungs-Stil',
+        'Keine falschen Job-Garantie-Aussagen tätigen',
+        'Testen nie als "langweilig" oder "zweitrangig" darstellen',
+        'Programmierkenntnisse voraussetzen',
+        'Den Bildungsgutschein-Prozess kompliziert aussehen lassen',
     ],
 
     // Block 4: Zielmarkt
     primaryMarket: 'DACH-Region (Deutschland, Österreich, Schweiz)',
-    secondaryMarkets: ['BeNeLux', 'Nordeuropa (Scandinavia)'],
-    targetCompanySize: 'KMU & Mittelstand, 10–500 Mitarbeiter',
-    targetIndustries: ['Handel & E-Commerce', 'Dienstleistungen', 'B2B Software', 'Gesundheit & Wellness'],
+    secondaryMarkets: ['Regionale Firmen im Rhein-Main-Gebiet (B2B)'],
+    targetCompanySize: 'Jobsuchende (B2C) & KMU bis Enterprise (B2B Schulungen)',
+    targetIndustries: ['Agentur für Arbeit Kunden', 'IT & Softwareentwicklung', 'Finanzen/Banken (Raum FFM)'],
 
     lastUpdated: '2026-03-10',
-    updatedBy: 'Alexander König',
+    updatedBy: 'Daniel Moretz',
 };
 
 // ─────────────────────────────────────────────
@@ -178,101 +177,76 @@ export const companyPositioning = {
 export const audiences = [
     {
         id: 'a1',
-        name: 'Digital Dave',
+        name: 'Quereinsteiger Quirin',
         type: 'buyer',
         segment: 'B2C',
         color: '#6366f1',
-        initials: 'DD',
-        age: '28–38',
+        initials: 'QQ',
+        age: '28–45',
         gender: 'Männlich',
-        location: 'Großstädte DACH',
-        income: '40.000 – 65.000 €/Jahr',
-        education: 'Bachelor / Master',
-        jobTitle: 'IT-Fachkraft / Tech-Enthusiast',
-        interests: ['Technologie', 'Gaming', 'Nachhaltigkeit', 'Smart Home'],
-        painPoints: ['Zu viele Tools, zu wenig Zeit', 'Informationsflut', 'Wunsch nach Effizienz'],
-        goals: ['Digitalen Alltag vereinfachen', 'Produktiver werden', 'Up-to-date bleiben'],
-        preferredChannels: ['Instagram', 'YouTube', 'LinkedIn', 'Newsletter'],
-        buyingBehavior: 'Recherchiert intensiv vor Kauf, vergleicht Bewertungen, kauft digital',
-        decisionProcess: 'Eigenständig, datengetrieben, beeinflusst von Peers',
+        location: 'Deutschland',
+        income: 'Aktuell Arbeitssuchend / Umschulung',
+        education: 'Abgeschlossene Ausbildung / Studium abseits IT',
+        jobTitle: 'Arbeitssuchend',
+        interests: ['Neue Karrierechancen', 'Stabiles Einkommen', 'Lernen am PC'],
+        painPoints: ['Hat Angst, dass IT zu schwer ist', 'Kann nicht programmieren', 'Sucht berufliche Sicherheit'],
+        goals: ['Einen zukunftssicheren Job in der IT', 'Schneller Einstieg (max 45 Tage)', 'Finanzierung über Bildungsgutschein'],
+        preferredChannels: ['Facebook', 'Instagram', 'Jobportale', 'Google Search'],
+        buyingBehavior: 'Entscheidet nach Vertrauen ins Institut und Unterstützung bei Kostenerstattung.',
+        decisionProcess: 'Besucht kostenlose Webinare, spricht persönlich mit den Trainern.',
         journeyPhase: 'Awareness → Consideration',
-        description: 'Digital Dave ist technikaffin und immer auf der Suche nach smarten Lösungen. Er ist früher Adopter und teilt Empfehlungen in sozialen Netzwerken.',
-        campaignIds: ['1', '2'],
+        description: 'Quirin sucht einen Ausweg aus seiner bisherigen Branche. Er hat gehört, dass in der IT gut bezahlt wird, ist aber unsicher, ob er stark genug in Mathe oder Code ist.',
+        campaignIds: ['1', '3'],
         createdAt: '2026-01-15',
         updatedAt: '2026-03-01',
     },
     {
         id: 'a2',
-        name: 'Manager Maria',
+        name: 'HR-Hannah',
         type: 'buyer',
         segment: 'B2B',
         color: '#10b981',
-        initials: 'MM',
-        age: '38–52',
+        initials: 'HH',
+        age: '35–50',
         gender: 'Weiblich',
-        location: 'DACH-Region',
-        income: '75.000 – 120.000 €/Jahr',
-        education: 'MBA / wirtschaftliches Studium',
-        jobTitle: 'Marketing-Leiterin / CMO',
-        interests: ['Marketing-Trends', 'Leadership', 'Effizienzsteigerung', 'Data-driven Marketing'],
-        painPoints: ['Tool-Fragmentierung im Team', 'Fehlende Übersicht über Kampagnen', 'Budget-Kontrolle', 'DSGVO-Compliance'],
-        goals: ['Marketing ROI steigern', 'Team effizienter machen', 'Reporting automatisieren'],
-        preferredChannels: ['LinkedIn', 'Newsletter', 'Webinare', 'Fachpresse'],
-        buyingBehavior: 'Kaufentscheidung nach Evaluierung, Freigabeprozess intern, Verträge jährlich',
-        decisionProcess: 'Teambasiert, Budget-getrieben, sucht Referenzen und Case Studies',
+        location: 'Rhein-Main Gebiet',
+        income: 'k.A.',
+        education: 'BWL Studium',
+        jobTitle: 'Personalentwicklerin / HR Manager',
+        interests: ['Mitarbeiterbindung', 'Weiterbildung', 'Zertifizierungen'],
+        painPoints: ['Mitarbeiter für Softwaretests schulen', 'Fehlende Inhouse-Trainingskompetenz', 'Ausfallzeiten reduzieren'],
+        goals: ['Das QA-Team standardisiert (ISTQB) schulen', 'Qualität der Software-Releases erhöhen', 'Teambuilding durch gemeinsames Training'],
+        preferredChannels: ['LinkedIn', 'Persönliches Netzwerk', 'Google Search'],
+        buyingBehavior: 'Bucht Inhouse-Trainings oder Gruppen-Plätze, benötigt offizielle Rechnung und Zertifikat.',
+        decisionProcess: 'Vergleicht Anbieter nach ISTQB Akkreditierung und Flexibilität (Online/Vorort).',
         journeyPhase: 'Consideration → Decision',
-        description: 'Manager Maria verantwortet das gesamte Marketing-Budget und sucht nach Lösungen, die Transparenz, Kontrolle und Effizienz vereinen.',
-        campaignIds: ['2', '3'],
+        description: 'Hannah soll das neue Test-Team weiterbilden und sucht einen verlässlichen, akkreditierten Partner für ISTQB-Schulungen.',
+        campaignIds: ['4'],
         createdAt: '2026-01-15',
         updatedAt: '2026-03-02',
     },
     {
         id: 'a3',
-        name: 'Kreativ-Klaus',
-        type: 'user',
-        segment: 'B2B',
-        color: '#f59e0b',
-        initials: 'KK',
-        age: '25–35',
-        gender: 'Männlich',
-        location: 'Remote / Freelancer',
-        income: '35.000 – 55.000 €/Jahr',
-        education: 'Design-Studium / Selbststudium',
-        jobTitle: 'Content Creator / Social Media Manager',
-        interests: ['Design', 'Storytelling', 'Social Media Trends', 'Fotografie', 'Video'],
-        painPoints: ['Abstimmungschaos im Team', 'Fehlende Briefings', 'Zu viele Revisionsschleifen'],
-        goals: ['Kreativen Prozess beschleunigen', 'Klare Briefings erhalten', 'Portfolio aufbauen'],
-        preferredChannels: ['Instagram', 'TikTok', 'Pinterest', 'Behance'],
-        buyingBehavior: 'Nutzt die Tools, die das Unternehmen vorgibt, aber empfiehlt intern aktiv',
-        decisionProcess: 'Beeinflusser im Kaufprozess, kein Budget-Inhaber',
-        journeyPhase: 'Activation → Retention',
-        description: 'Kreativ-Klaus ist der operative User, der täglich mit dem Tool arbeitet. Er schätzt Schnelligkeit, klare Kommunikation und visuelle Übersicht.',
-        campaignIds: ['1', '6'],
-        createdAt: '2026-02-01',
-        updatedAt: '2026-03-05',
-    },
-    {
-        id: 'a4',
-        name: 'E-Commerce-Eva',
+        name: 'Berufseinsteigerin Bea',
         type: 'buyer',
         segment: 'B2C',
         color: '#ec4899',
-        initials: 'EE',
-        age: '30–45',
+        initials: 'BB',
+        age: '22–30',
         gender: 'Weiblich',
-        location: 'Deutschland',
-        income: '30.000 – 55.000 €/Jahr',
-        education: 'Kaufmännische Ausbildung / Studium',
-        jobTitle: 'Online-Shopbetreiberin / E-Commerce-Managerin',
-        interests: ['Fashion', 'Interior Design', 'Nachhaltigkeit', 'Online-Shopping'],
-        painPoints: ['Hoher Wettbewerb', 'Sinkende organische Reichweite', 'Saisonale Peaks managen'],
-        goals: ['Umsatz steigern', 'Stammkundenbindung', 'Neue Zielgruppen erschließen'],
-        preferredChannels: ['Instagram', 'Pinterest', 'Google Shopping', 'E-Mail'],
-        buyingBehavior: 'Spontankäuferin bei Aktionen, loyale Wiederkäuferin bei guter Erfahrung',
-        decisionProcess: 'Emotional, beeinflusst durch visuelle Inhalte und Empfehlungen',
-        journeyPhase: 'Awareness → Purchase',
-        description: 'Eva betreibt einen erfolgreichen Online-Shop und sucht Wege, saisonal zu wachsen und Stammkunden langfristig zu binden.',
-        campaignIds: ['4', '1'],
+        location: 'DACH-Region',
+        income: 'Junior Gehalt / Teilzeit',
+        education: 'Studium Informatik/Wirtschaftsinformatik',
+        jobTitle: 'Junior QA Tester',
+        interests: ['Karriere-Aufstieg', 'Lebenslauf aufpolieren', 'Remote Work'],
+        painPoints: ['Viel Theorie im Studium, wenig Praxis', 'Steckt im Junior-Level fest', 'Fehlende Zertifizierung'],
+        goals: ['ISTQB Foundation Level Zertifikat erhalten', 'Selbstbewusstsein im Testing aufbauen'],
+        preferredChannels: ['Instagram', 'YouTube', 'TikTok'],
+        buyingBehavior: 'Sucht nach schnellen, flexiblen Online-Kursen. Zahlt ggf. selbst.',
+        decisionProcess: 'Vergleicht Preise und Tools. DiTeLe ist ein starkes Argument.',
+        journeyPhase: 'Consideration → Purchase',
+        description: 'Bea arbeitet schon in der IT, möchte aber den offiziellen ISTQB Stempel, um in ihrem Unternehmen oder am Markt aufzusteigen.',
+        campaignIds: ['2', '3'],
         createdAt: '2026-02-10',
         updatedAt: '2026-03-08',
     },
@@ -283,14 +257,12 @@ export const audiences = [
 // ─────────────────────────────────────────────
 
 export const companyKeywords = [
-    { id: 'ck1', term: 'DSGVO-konform', category: 'Compliance', description: 'Alle Kommunikation betont Datenschutz-Konformität' },
-    { id: 'ck2', term: 'Made in Europe', category: 'Brand', description: 'Unterstreicht europäischen Ursprung & Werte' },
-    { id: 'ck3', term: 'Nachhaltigkeit', category: 'Brand', description: 'Zentrales Markenwert-Thema' },
-    { id: 'ck4', term: 'Premium-Qualität', category: 'Brand', description: 'Positionierung im Premium-Segment' },
-    { id: 'ck5', term: 'Kundenfokus', category: 'Value', description: 'Customer-First Ansatz' },
-    { id: 'ck6', term: 'Innovation', category: 'Brand', description: 'Technologischer Vorreiter' },
-    { id: 'ck7', term: 'Vertrauen', category: 'Value', description: 'Kernversprechen der Marke' },
-    { id: 'ck8', term: 'DACH-Markt', category: 'Geographic', description: 'Primäre geografische Ausrichtung' },
+    { id: 'ck1', term: 'ISTQB®', category: 'Compliance', description: 'Nur offizielle Schreibweise nutzen: ISTQB® Certified Tester' },
+    { id: 'ck2', term: 'DiTeLe', category: 'Brand', description: 'Unser exklusives Praxis-Tool für +300 Testszenarien' },
+    { id: 'ck3', term: 'Ohne Programmieren', category: 'Value', description: 'Wichtigstes Verkaufsargument für Quereinsteiger' },
+    { id: 'ck4', term: 'Bildungsgutschein', category: 'Value', description: 'Förderung durch die Arbeitsagentur (Kostenübernahme)' },
+    { id: 'ck5', term: 'Praxisnähe', category: 'Brand', description: 'Nicht nur Folien, sondern echtes Testing' },
+    { id: 'ck6', term: 'Akkreditierter Trainer', category: 'Compliance', description: 'Geprüft und zertifiziert. Vertrauenssignal.' },
 ];
 
 // ─────────────────────────────────────────────
@@ -300,261 +272,179 @@ export const companyKeywords = [
 export const campaigns = [
     {
         id: '1',
-        name: 'Frühlings-Launch 2026',
+        name: 'Frühlings-Kurs: Präsenz in Eschborn',
         status: 'active',
-        startDate: '2026-03-01',
-        endDate: '2026-04-15',
+        startDate: '2026-01-19',
+        endDate: '2026-03-20',
         budget: 15000,
         spent: 8450,
-        channels: ['E-Mail', 'Social Media', 'Google Ads'],
-        description: 'Produktlaunch der neuen Frühlingskollektion über alle digitalen Kanäle.',
-        masterPrompt: `Du bist ein erfahrener Marketing-Texter für unsere Frühlingskollektion 2026.
+        channels: ['Google Ads', 'Meta Ads', 'E-Mail'],
+        description: 'Bewerbung des Präsenzkurses inkl. Live-Online ab Mitte März.',
+        masterPrompt: `Du bist Performance-Marketing Experte der WAMOCON Academy.
 
-**Marke & Ton:** Premium, frisch, einladend – spreche Kunden persönlich an. Nutze eine warme, enthusiastische Sprache, die Aufbruchsstimmung vermittelt.
-
-**Kernbotschaft:** „Der Frühling beginnt jetzt – entdecke unsere neue Kollektion und bring Farbe in deinen Alltag."
-
-**Zielgruppe:** Digital Dave (28-38 J., technikaffin) und E-Commerce-Eva (30-45 J., fashionorientiert).
+**Marke & Ton:** Ermutigend, zielgerichtet. Du sprichst Jobsuchende an.
+**Kernbotschaft:** „In 45 Tagen vom Jobsuchenden zum IT-Tester – 100% gefördert."
+**Zielgruppe:** Quereinsteiger Quirin (Arbeitssuchend).
 
 **USPs dieser Kampagne:**
-- Limitierte Frühlingskollektion, nur bis 15. April verfügbar
-- Kostenloser Versand ab 50€
-- Nachhaltig produziert (Made in Europe)
+- Präsenzkurs in Eschborn + Flexibilität (Live Online)
+- Start: Januar bis März
+- 100% finanzierbar über Bildungsgutschein
+- Keine Vorkenntnisse nötig
 
-**Dos:** Emotion wecken, Saisonalität betonen, Dringlichkeit erzeugen
-**Don'ts:** Kein Fachjargon, keine negativen Formulierungen, keine generischen Floskeln`,
-        targetAudiences: ['a1', 'a4'],
-        campaignKeywords: ['Frühlingskollektion', 'New Arrivals', 'Seasonal Sale', 'Limited Edition', 'Frühjahr 2026'],
+**Dos:** Dringlichkeit zum Kursstart erzeugen. Bildungsgutschein in der Headline erwähnen.
+**Don'ts:** Zu technische Fachbegriffe verwenden.`,
+        targetAudiences: ['a1'],
+        campaignKeywords: ['Präsenzkurs', 'Eschborn', 'Bildungsgutschein', 'Arbeitsamt'],
         kpis: { impressions: 245000, clicks: 12340, conversions: 387, ctr: 5.03 },
-        owner: 'Sarah Müller',
+        owner: 'Anna Schmidt',
         progress: 65,
     },
     {
         id: '2',
-        name: 'Brand Awareness Q1',
+        name: 'Launch DiTeLe Online-Kurs',
         status: 'active',
-        startDate: '2026-01-15',
-        endDate: '2026-03-31',
+        startDate: '2026-02-01',
+        endDate: '2026-04-30',
         budget: 25000,
         spent: 19200,
-        channels: ['Social Media', 'Display', 'YouTube'],
-        description: 'Langfristige Brand-Awareness-Kampagne für den DACH-Markt.',
-        masterPrompt: `Du bist Markenbotschafter für unsere Brand-Awareness-Kampagne im DACH-Raum, Q1 2026.
+        channels: ['YouTube', 'Instagram', 'Google Ads'],
+        description: 'Push für den reinen 8-Wochen Online-Kurs CTFL 4.0 mit DiTeLe.',
+        masterPrompt: `Du bewirbst unseren neuen 8-Wochen Online-Kurs für ISTQB CTFL 4.0.
 
-**Marke & Ton:** Professionell, vertrauenswürdig, modern. Wir sprechen Entscheider und Tech-Affine an.
-
-**Kernbotschaft:** „Wir sind die europäische Alternative – DSGVO-konform, leistungsstark und verlässlich."
-
-**Zielgruppe:** Manager Maria (B2B-Entscheider) und Digital Dave (Early Adopter).
+**Marke & Ton:** Modern, dynamisch, nutzenfokussiert.
+**Kernbotschaft:** „Lerne Softwaretesten. Nicht nur Folien. Hol dir das Zertifikat in 8 Wochen."
+**Zielgruppe:** Berufseinsteigerin Bea und ambitionierte Quereinsteiger.
 
 **USPs dieser Kampagne:**
-- Europäischer Anbieter mit DSGVO-Compliance
-- Fokus auf DACH-Markt Besonderheiten
-- Case Studies & Social Proof
+- Echtes Lernen am Praxis-Tool "DiTeLe" (300+ Übungen)
+- Zeitlich flexibel (8 Wochen Plan)
+- Akkreditierte Trainer beantworten Fragen
 
-**Dos:** Zahlen & Fakten nutzen, Vertrauen aufbauen, professionell und klar kommunizieren
-**Don'ts:** Keine Übertreibungen, keine US-zentrischen Formulierungen`,
-        targetAudiences: ['a1', 'a2'],
-        campaignKeywords: ['Brand Awareness', 'DACH-Markt', 'Markenbekanntheit', 'B2B Marketing', 'Thought Leadership'],
+**Dos:** Den "Nicht nur Folien"-Ansatz stark betonen. Praxis loben.
+**Don'ts:** Den Kurs als "einfach mal durchklicken" darstellen. Qualität muss rüberkommen.`,
+        targetAudiences: ['a1', 'a3'],
+        campaignKeywords: ['Online-Kurs', 'Selbststudium', 'DiTeLe Tool', '8 Wochen Plan'],
         kpis: { impressions: 890000, clicks: 34500, conversions: 1240, ctr: 3.88 },
-        owner: 'Max Weber',
+        owner: 'Tom Weber',
         progress: 85,
     },
     {
         id: '3',
-        name: 'Newsletter Relaunch',
-        status: 'planned',
-        startDate: '2026-04-01',
-        endDate: '2026-04-30',
-        budget: 5000,
-        spent: 0,
-        channels: ['E-Mail'],
-        description: 'Kompletter Relaunch des wöchentlichen Newsletters mit neuem Design.',
-        masterPrompt: `Du schreibst Inhalte für unseren relaunched Newsletter (ab April 2026).
-
-**Format & Ton:** Kurzweilig, informativ, persönlich. Subject Lines sollen neugierig machen, nicht clickbait sein.
-
-**Kernbotschaft:** „Dein wöchentliches Update – kompakt, relevant, inspirierend."
-
-**Zielgruppe:** Bestehende Abonnenten: Mix aus B2B-Entscheidern (Manager Maria) und kreativen Usern (Kreativ-Klaus).
-
-**Newsletter-Elemente:**
-- Opener: Persönliche Ansprache & Woche-Highlight
-- Main Content: 1 Hauptartikel + 2 Shorts
-- Quicklinks: 3 relevante externe Ressourcen
-- CTA: Immer klar, ein CTA pro Mail
-
-**Dos:** Scannable schreiben, Emojis sparsam einsetzen, Mehrwert vor Eigenwerbung
-**Don'ts:** Kein Spam-Stil, keine irrelevante Eigenwerbung`,
-        targetAudiences: ['a2', 'a3'],
-        campaignKeywords: ['Newsletter', 'E-Mail Marketing', 'Abonnenten', 'Open Rate', 'Re-Engagement'],
-        kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
-        owner: 'Lisa Chen',
-        progress: 20,
-    },
-    {
-        id: '4',
-        name: 'Sommer-Sale Teaser',
-        status: 'draft',
-        startDate: '2026-05-15',
-        endDate: '2026-06-30',
-        budget: 18000,
-        spent: 0,
-        channels: ['Social Media', 'E-Mail', 'Google Ads', 'Meta Ads'],
-        description: 'Vorab-Kampagne für den großen Sommer-Sale 2026.',
-        masterPrompt: `Du bereitest Teaser-Inhalte für unseren Sommer-Sale 2026 vor.
-
-**Ton:** Aufgeregt, erwartungsvoll, dringend – aber nicht aufdringlich. "Save the Date" Mentalität.
-
-**Kernbotschaft:** „Der größte Sale des Jahres kommt. Sei dabei, wenn es losgeht."
-
-**Zielgruppe:** E-Commerce-Eva und Digital Dave – kaufbereite Zielgruppe mit Interesse an Angeboten.
-
-**Teaser-Elemente:**
-- Countdown-Elemente nutzen
-- Exklusive Early-Access-Angebote für Newsletter-Abonnenten
-- "Kommt bald" – kein vollständiges Produktspektrum zeigen
-
-**Dos:** FOMO erzeugen, Exklusivität betonen, einfache CTAs wie "Erinnere mich"
-**Don'ts:** Keine finalen Preise nennen, nicht zu früh alles verraten`,
-        targetAudiences: ['a4', 'a1'],
-        campaignKeywords: ['Sommer-Sale', 'Deal Alert', 'Save the Date', 'Early Access', 'Summer 2026'],
-        kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
-        owner: 'Sarah Müller',
-        progress: 5,
-    },
-    {
-        id: '5',
-        name: 'Webinar-Serie: Marketing Trends',
-        status: 'completed',
+        name: 'Evergreen: Kostenloses Webinar',
+        status: 'active',
         startDate: '2026-01-01',
-        endDate: '2026-02-28',
-        budget: 8000,
-        spent: 7200,
-        channels: ['E-Mail', 'LinkedIn', 'YouTube'],
-        description: 'Vierteilige Webinar-Serie zu aktuellen Marketing-Trends.',
-        masterPrompt: `Du erstellst Inhalte für eine professionelle Webinar-Serie zu Marketing-Trends 2026.
+        endDate: '2026-12-31',
+        budget: 12000,
+        spent: 2400,
+        channels: ['Meta Ads', 'LinkedIn', 'E-Mail'],
+        description: 'Kontinuierliche Lead-Generierung über unser gratis Info-Webinar.',
+        masterPrompt: `E-Mail Automatisierung und Ad-Texte für unser Gratis-Webinar.
 
-**Ton:** Fachkundig, einladend, lehrreich. Wir positionieren uns als Thought Leader.
+**Format & Ton:** Persönliche Einladung von Daniel und Waleri. Reißt Hürden ein.
+**Kernbotschaft:** „Möchtest du wissen, ob Softwaretesting das Richtige für dich ist? Finde es im Webinar heraus."
+**Zielgruppe:** Quereinsteiger, die noch zögern (Quirin).
 
-**Kernbotschaft:** „Bleib voraus – lerne von den Besten, was 2026 im Marketing zählt."
+**Webinar-Inhalte:**
+- Was macht ein Softwaretester?
+- Ablauf der Ausbildung.
+- Live-Demo: So funktioniert das Testen.
 
-**Zielgruppe:** Manager Maria und Kreativ-Klaus – Marketing-Profis, die sich weiterentwickeln wollen.
-
-**Content-Vorgaben:**
-- Immer mit konkreten Daten und Beispielen arbeiten
-- Praxisrelevanz betonen
-- Sprecher/Experten vorstellen und Credibility aufbauen
-
-**Dos:** Fachbegriffe sind ok, aber immer erklären – inklusives Niveau
-**Don'ts:** Kein zu theoretischer Ansatz, immer mit Take-Aways enden`,
-        targetAudiences: ['a2', 'a3'],
-        campaignKeywords: ['Webinar', 'Marketing Trends 2026', 'Lead Generation', 'Thought Leadership', 'Education'],
+**Dos:** Niederschwellig. Kostenlos und unverbindlich klar hervorheben.
+**Don'ts:** "Jetzt buchen"-Druck aufbauen. Im Webinar geht es um Beratung.`,
+        targetAudiences: ['a1'],
+        campaignKeywords: ['Webinar', 'Kostenlos', 'IT-Einstieg', 'Beratung'],
         kpis: { impressions: 156000, clicks: 8900, conversions: 620, ctr: 5.71 },
-        owner: 'Max Weber',
+        owner: 'Lisa Bauer',
         progress: 100,
     },
     {
-        id: '6',
-        name: 'Influencer Kooperation',
-        status: 'paused',
-        startDate: '2026-02-15',
-        endDate: '2026-03-31',
-        budget: 12000,
-        spent: 4500,
-        channels: ['Instagram', 'TikTok'],
-        description: 'Kooperation mit 5 Micro-Influencern im Lifestyle-Bereich.',
-        masterPrompt: `Du briefst Influencer und erstellst Inhalte für unsere Influencer-Kooperation.
+        id: '4',
+        name: 'B2B: Corporate Inhouse Trainings',
+        status: 'planned',
+        startDate: '2026-04-01',
+        endDate: '2026-06-30',
+        budget: 5000,
+        spent: 0,
+        channels: ['LinkedIn Ads', 'Direct Mail'],
+        description: 'Gezielte Ansprache von HR & IT-Leitern für Team-Schulungen.',
+        masterPrompt: `B2B Leadgewinnung für unsere ISTQB Firmenschulungen.
 
-**Ton:** Authentisch, locker, lifestyle-orientiert. Wirbt, ohne wie Werbung zu wirken.
+**Ton:** Hochprofessionell, lösungsorientiert. Fokus auf ROI und Qualitätssicherung.
+**Kernbotschaft:** „Machen Sie Ihr Team fit für den ISTQB-Standard. Inhouse oder Remote."
+**Zielgruppe:** HR-Hannah & QA Leads.
 
-**Kernbotschaft:** „Von echten Menschen für echte Menschen – entdecke, was wirklich funktioniert."
-
-**Zielgruppe:** Kreativ-Klaus und E-Commerce-Eva – junge, social-media-affine Konsumenten.
-
-**Briefing-Framework für Influencer:**
-- Key Message & Kernwert in 1 Satz
-- Was gezeigt werden soll (Produkt in Nutzung, kein Studio-Stil)
-- Hashtags & Mentions (Pflicht)
-- Was NICHT kommuniziert werden darf
-
-**Dos:** Natürlichkeit und Persönlichkeit des Influencers bewahren, Story-Format bevorzugen
-**Don'ts:** Kein generischer "Werbung"-Stil, keine Fake-Testimonials`,
-        targetAudiences: ['a3', 'a4'],
-        campaignKeywords: ['Influencer Marketing', 'Micro-Influencer', 'UGC', 'Authentic Content', 'Lifestyle'],
-        kpis: { impressions: 89000, clicks: 4200, conversions: 156, ctr: 4.72 },
-        owner: 'Lisa Chen',
-        progress: 40,
+**Dos:** Effizienz und Akkreditierung betonen.
+**Don'ts:** Zu "B2C-mäßig" oder umgangssprachlich werden.`,
+        targetAudiences: ['a2'],
+        campaignKeywords: ['B2B', 'Inhouse', 'Firmenschulung', 'Teambuilding', 'Teamkurse'],
+        kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
+        owner: 'Anna Schmidt',
+        progress: 0,
     },
 ];
 
 export const tasks = [
-    { id: '1', title: 'Ad Creatives für Frühlings-Launch', status: 'done', priority: 'high', assignee: 'Lisa Chen', dueDate: '2026-03-05', campaign: 'Frühlings-Launch 2026' },
-    { id: '2', title: 'Landing Page erstellen', status: 'in-progress', priority: 'high', assignee: 'Max Weber', dueDate: '2026-03-12', campaign: 'Frühlings-Launch 2026' },
-    { id: '3', title: 'E-Mail-Template designen', status: 'in-progress', priority: 'medium', assignee: 'Sarah Müller', dueDate: '2026-03-15', campaign: 'Newsletter Relaunch' },
-    { id: '4', title: 'Social Media Posts planen', status: 'todo', priority: 'medium', assignee: 'Lisa Chen', dueDate: '2026-03-18', campaign: 'Brand Awareness Q1' },
-    { id: '5', title: 'Google Ads Keywords recherchieren', status: 'todo', priority: 'high', assignee: 'Max Weber', dueDate: '2026-03-20', campaign: 'Frühlings-Launch 2026' },
-    { id: '6', title: 'A/B Test auswerten', status: 'in-review', priority: 'medium', assignee: 'Sarah Müller', dueDate: '2026-03-10', campaign: 'Brand Awareness Q1' },
-    { id: '7', title: 'Influencer Briefing schreiben', status: 'todo', priority: 'low', assignee: 'Lisa Chen', dueDate: '2026-03-25', campaign: 'Influencer Kooperation' },
-    { id: '8', title: 'Webinar Aufzeichnungen schneiden', status: 'done', priority: 'low', assignee: 'Max Weber', dueDate: '2026-03-08', campaign: 'Webinar-Serie' },
-    { id: '9', title: 'Budget-Review Q1', status: 'in-review', priority: 'high', assignee: 'Sarah Müller', dueDate: '2026-03-14', campaign: null },
-    { id: '10', title: 'Sommer-Sale Konzept', status: 'todo', priority: 'medium', assignee: 'Sarah Müller', dueDate: '2026-03-30', campaign: 'Sommer-Sale Teaser' },
+    { id: '1', title: 'Ad Creatives für Webinar', status: 'done', priority: 'high', assignee: 'Lisa Bauer', dueDate: '2026-03-05', campaign: 'Evergreen: Kostenloses Webinar' },
+    { id: '2', title: 'Webinar Landingpage updaten', status: 'in-progress', priority: 'high', assignee: 'Tom Weber', dueDate: '2026-03-12', campaign: 'Evergreen: Kostenloses Webinar' },
+    { id: '3', title: 'LinkedIn Leads kontaktieren', status: 'in-progress', priority: 'medium', assignee: 'Anna Schmidt', dueDate: '2026-03-15', campaign: 'B2B: Corporate Inhouse Trainings' },
+    { id: '4', title: 'DiTeLe Demo für Ads abfilmen', status: 'todo', priority: 'medium', assignee: 'Daniel Moretz', dueDate: '2026-03-18', campaign: 'Launch DiTeLe Online-Kurs' },
+    { id: '5', title: 'Google Ads Keyword-Analyse', status: 'todo', priority: 'high', assignee: 'Tom Weber', dueDate: '2026-03-20', campaign: 'Frühlings-Kurs: Präsenz in Eschborn' },
+    { id: '6', title: 'Trustpilot Reviews einholen', status: 'in-review', priority: 'medium', assignee: 'Jana Klein', dueDate: '2026-03-10', campaign: null },
+    { id: '7', title: 'Broschüre Bildungsgutschein neu', status: 'todo', priority: 'low', assignee: 'Lisa Bauer', dueDate: '2026-03-25', campaign: 'Frühlings-Kurs: Präsenz in Eschborn' },
+    { id: '8', title: 'Webinar Termine anlegen (April)', status: 'done', priority: 'low', assignee: 'Waleri Moretz', dueDate: '2026-03-08', campaign: 'Evergreen: Kostenloses Webinar' },
 ];
 
 export const calendarEvents = [
-    { id: '1', title: 'Instagram Post: Frühling', date: '2026-03-10', type: 'primary', channel: 'Social Media' },
-    { id: '2', title: 'Newsletter Versand', date: '2026-03-12', type: 'info', channel: 'E-Mail' },
-    { id: '3', title: 'Google Ads Start', date: '2026-03-15', type: 'warning', channel: 'Ads' },
-    { id: '4', title: 'Blog Post veröffentlichen', date: '2026-03-17', type: 'success', channel: 'Content' },
-    { id: '5', title: 'LinkedIn Artikel', date: '2026-03-18', type: 'primary', channel: 'Social Media' },
-    { id: '6', title: 'Facebook Kampagne', date: '2026-03-20', type: 'info', channel: 'Social Media' },
-    { id: '7', title: 'Newsletter #13', date: '2026-03-22', type: 'info', channel: 'E-Mail' },
-    { id: '8', title: 'TikTok Video Launch', date: '2026-03-24', type: 'warning', channel: 'Social Media' },
-    { id: '9', title: 'Webinar: SEO Trends', date: '2026-03-26', type: 'success', channel: 'Content' },
-    { id: '10', title: 'Meta Ads Review', date: '2026-03-28', type: 'primary', channel: 'Ads' },
-    { id: '11', title: 'Monatsreport erstellen', date: '2026-03-31', type: 'warning', channel: 'Reporting' },
-    { id: '12', title: 'YouTube Video', date: '2026-03-14', type: 'success', channel: 'Content' },
-    { id: '13', title: 'Twitter/X Post', date: '2026-03-11', type: 'primary', channel: 'Social Media' },
-    { id: '14', title: 'Story Kampagne', date: '2026-03-19', type: 'info', channel: 'Social Media' },
+    { id: '1', title: 'Insta Post: Was ist ein Bug?', date: '2026-03-10', type: 'primary', channel: 'Social Media' },
+    { id: '2', title: 'E-Mail Invite: Live-Webinar', date: '2026-03-12', type: 'info', channel: 'E-Mail' },
+    { id: '3', title: 'Start Google Search Ads', date: '2026-03-15', type: 'warning', channel: 'Ads' },
+    { id: '4', title: 'Blog: Bildungsgutschein Antrag', date: '2026-03-17', type: 'success', channel: 'Content' },
+    { id: '5', title: 'LinkedIn: B2B Case Study', date: '2026-03-18', type: 'primary', channel: 'Social Media' },
+    { id: '6', title: 'Meta Ads Retargeting', date: '2026-03-20', type: 'info', channel: 'Social Media' },
+    { id: '7', title: 'Follow-Up E-Mail Absolventen', date: '2026-03-22', type: 'info', channel: 'E-Mail' },
+    { id: '8', title: 'TikTok: QA vs Dev', date: '2026-03-24', type: 'warning', channel: 'Social Media' },
+    { id: '9', title: 'Webinar Durchführung', date: '2026-03-26', type: 'success', channel: 'Event' },
+    { id: '10', title: 'Performance Review', date: '2026-03-28', type: 'primary', channel: 'Ads' },
 ];
 
 export const budgetData = {
-    total: 83000,
-    spent: 39350,
-    remaining: 43650,
+    total: 57000,
+    spent: 30050,
+    remaining: 26950,
     categories: [
-        { name: 'Google Ads', planned: 20000, spent: 12400, color: '#6366f1' },
-        { name: 'Meta Ads', planned: 18000, spent: 8900, color: '#06b6d4' },
-        { name: 'Content Produktion', planned: 15000, spent: 7200, color: '#10b981' },
-        { name: 'Influencer', planned: 12000, spent: 4500, color: '#f59e0b' },
-        { name: 'E-Mail Marketing', planned: 8000, spent: 3250, color: '#ef4444' },
-        { name: 'Tools & Software', planned: 5000, spent: 2100, color: '#8b5cf6' },
-        { name: 'Events & Webinare', planned: 5000, spent: 1000, color: '#ec4899' },
+        { name: 'Google Ads (Search)', planned: 20000, spent: 14400, color: '#6366f1' },
+        { name: 'Meta Ads', planned: 15000, spent: 8900, color: '#06b6d4' },
+        { name: 'LinkedIn (B2B)', planned: 8000, spent: 2200, color: '#10b981' },
+        { name: 'DiTeLe Content-Erweiterung', planned: 5000, spent: 1500, color: '#f59e0b' },
+        { name: 'Webinar Software/Tools', planned: 4000, spent: 1250, color: '#ef4444' },
+        { name: 'YouTube Video Prod.', planned: 5000, spent: 1800, color: '#8b5cf6' },
     ],
     monthlyTrend: [
-        { month: 'Jan', planned: 12000, actual: 10800 },
-        { month: 'Feb', planned: 13000, actual: 14200 },
-        { month: 'Mär', planned: 14000, actual: 14350 },
-        { month: 'Apr', planned: 12000, actual: 0 },
-        { month: 'Mai', planned: 11000, actual: 0 },
-        { month: 'Jun', planned: 10500, actual: 0 },
+        { month: 'Jan', planned: 9000, actual: 8800 },
+        { month: 'Feb', planned: 11000, actual: 12200 },
+        { month: 'Mär', planned: 12000, actual: 9050 },
+        { month: 'Apr', planned: 9000, actual: 0 },
+        { month: 'Mai', planned: 8000, actual: 0 },
+        { month: 'Jun', planned: 8000, actual: 0 },
     ],
 };
 
 export const activityFeed = [
-    { id: '1', user: 'Lisa Chen', action: 'hat Ad Creatives hochgeladen', target: 'Frühlings-Launch 2026', time: 'vor 15 Min.', icon: '📎' },
-    { id: '2', user: 'Max Weber', action: 'hat Landing Page erstellt', target: 'Frühlings-Launch 2026', time: 'vor 1 Std.', icon: '🌐' },
-    { id: '3', user: 'Sarah Müller', action: 'hat Budget genehmigt', target: 'Newsletter Relaunch', time: 'vor 2 Std.', icon: '💰' },
-    { id: '4', user: 'Max Weber', action: 'hat A/B Test gestartet', target: 'Brand Awareness Q1', time: 'vor 3 Std.', icon: '🧪' },
-    { id: '5', user: 'Lisa Chen', action: 'hat Kampagne pausiert', target: 'Influencer Kooperation', time: 'vor 5 Std.', icon: '⏸️' },
-    { id: '6', user: 'System', action: 'Budget-Alert: 80% erreicht', target: 'Brand Awareness Q1', time: 'vor 6 Std.', icon: '⚠️' },
+    { id: '1', user: 'Lisa Bauer', action: 'hat neue Ad Creatives hochgeladen', target: 'Evergreen: Kostenloses Webinar', time: 'vor 15 Min.', icon: '📎' },
+    { id: '2', user: 'Daniel Moretz', action: 'hat DiTeLe-Texte aktualisiert', target: 'Launch DiTeLe Online-Kurs', time: 'vor 1 Std.', icon: '✍️' },
+    { id: '3', user: 'Waleri Moretz', action: 'hat Webinar-Start freigegeben', target: 'Evergreen: Kostenloses Webinar', time: 'vor 2 Std.', icon: '✅' },
+    { id: '4', user: 'Tom Weber', action: 'hat Ads CTR optimiert', target: 'Frühlings-Kurs: Präsenz in Eschborn', time: 'vor 3 Std.', icon: '📈' },
+    { id: '5', user: 'Anna Schmidt', action: 'hat LinkedIn Post geplant', target: 'B2B: Corporate Inhouse Trainings', time: 'vor 5 Std.', icon: '📅' },
+    { id: '6', user: 'System', action: 'Budget-Alert: Ads Q1 Budget 75% ausgelastet', target: 'Gesamtbudget', time: 'vor 6 Std.', icon: '⚠️' },
 ];
 
 export const teamMembers = [
-    { id: '1', name: 'Sarah Müller', role: 'Marketing Manager', avatar: 'SM', status: 'online' },
-    { id: '2', name: 'Max Weber', role: 'Content Specialist', avatar: 'MW', status: 'online' },
-    { id: '3', name: 'Lisa Chen', role: 'Social Media Manager', avatar: 'LC', status: 'away' },
-    { id: '4', name: 'Tom Schmidt', role: 'SEA Expert', avatar: 'TS', status: 'offline' },
+    { id: '1', name: 'Waleri Moretz', role: 'Akkr. Trainer / Gründer', avatar: 'WM', status: 'online' },
+    { id: '2', name: 'Anna Schmidt', role: 'Marketing Managerin', avatar: 'AS', status: 'online' },
+    { id: '3', name: 'Lisa Bauer', role: 'Content & Social', avatar: 'LB', status: 'away' },
+    { id: '4', name: 'Tom Weber', role: 'Performance Experte', avatar: 'TW', status: 'offline' },
+    { id: '5', name: 'Jana Klein', role: 'Community Support', avatar: 'JK', status: 'online' },
 ];
 
 export const dashboardChartData = [
@@ -564,13 +454,12 @@ export const dashboardChartData = [
     { name: 'KW 8', impressions: 61000, clicks: 3100, conversions: 156 },
     { name: 'KW 9', impressions: 58000, clicks: 2900, conversions: 142 },
     { name: 'KW 10', impressions: 71000, clicks: 3600, conversions: 178 },
-    { name: 'KW 11', impressions: 65000, clicks: 3300, conversions: 163 },
 ];
 
 export const channelPerformance = [
-    { name: 'Google Ads', value: 35, color: '#6366f1' },
+    { name: 'Google Search Ads', value: 40, color: '#6366f1' },
     { name: 'Meta Ads', value: 25, color: '#06b6d4' },
-    { name: 'E-Mail', value: 20, color: '#10b981' },
-    { name: 'Social Organic', value: 12, color: '#f59e0b' },
+    { name: 'Webinar (Organic)', value: 15, color: '#10b981' },
+    { name: 'LinkedIn (B2B)', value: 12, color: '#f59e0b' },
     { name: 'SEO', value: 8, color: '#8b5cf6' },
 ];

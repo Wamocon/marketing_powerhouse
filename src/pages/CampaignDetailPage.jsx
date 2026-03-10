@@ -301,7 +301,7 @@ export default function CampaignDetailPage() {
                         <span style={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             Kampagnenspezifische Keywords
                         </span>
-                        <span style={{ fontSize: '0.6rem', background: 'rgba(99,102,241,0.15)', color: 'var(--color-primary)', padding: '1px 6px', borderRadius: 'var(--radius-full)', fontWeight: 600 }}>
+                        <span style={{ fontSize: '0.6rem', background: 'rgba(220,38,38,0.15)', color: 'var(--color-primary)', padding: '1px 6px', borderRadius: 'var(--radius-full)', fontWeight: 600 }}>
                             Editierbar
                         </span>
                     </div>
@@ -367,7 +367,7 @@ export default function CampaignDetailPage() {
                                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                 <XAxis dataKey="day" stroke="var(--text-tertiary)" fontSize={12} />
                                 <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                                 <Tooltip
@@ -392,7 +392,7 @@ export default function CampaignDetailPage() {
                     <div className="chart-container">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={performanceData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                                 <XAxis dataKey="day" stroke="var(--text-tertiary)" fontSize={12} />
                                 <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                                 <Tooltip
