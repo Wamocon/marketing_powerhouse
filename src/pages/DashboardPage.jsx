@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     TrendingUp,
     TrendingDown,
@@ -23,6 +24,11 @@ import {
 import { campaigns, activityFeed, dashboardChartData, channelPerformance, budgetData } from '../data/mockData';
 import { useNavigate } from 'react-router-dom';
 import PageHelp from '../components/PageHelp';
+import { useAuth } from '../context/AuthContext';
+import { useTasks } from '../context/TaskContext';
+import { useContents } from '../context/ContentContext';
+import TaskDetailModal from '../components/TaskDetailModal';
+import ContentDetailModal from '../components/ContentDetailModal';
 
 const stats = [
     { label: 'Impressionen', value: '1.38M', change: '+12.5%', positive: true, icon: Eye, color: 'primary' },
@@ -55,38 +61,86 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
+const getTaskColorLogic = (dueDateStr) => {
+    if (!dueDateStr) return { color: 'var(--border-color)', bgColor: 'transparent', label: 'Kein Datum' };
+    const due = new Date(dueDateStr);
+    const today = new Date('2026-03-10');
+
+    // reset hours to only compare dates
+    due.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return { color: 'var(--color-danger)', bgColor: 'var(--color-danger-bg)', label: 'Abgelaufen' };
+    if (diffDays <= 1) return { color: 'var(--color-danger)', bgColor: 'var(--color-danger-bg)', label: 'Kritisch (Innerhalb 1 Tag)' };
+    if (diffDays <= 3) return { color: 'var(--color-warning)', bgColor: 'var(--color-warning-bg)', label: 'Bald (Innerhalb 3 Tage)' };
+    return { color: 'var(--color-success)', bgColor: 'var(--color-success-bg)', label: 'Im Plan' };
+};
+
 export default function DashboardPage() {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
+    const { tasks } = useTasks();
+    const { contents } = useContents();
+
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [selectedContent, setSelectedContent] = useState(null);
 
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
+    const role = currentUser?.role || 'member';
 
-    return (
-        <div className="animate-in">
-            <div className="page-header">
-                <div className="page-header-left">
-                    <h1 className="page-title">Dashboard</h1>
-                    <p className="page-subtitle">Dein Marketing auf einen Blick — Stand: 10. März 2026</p>
+    const renderBudget = () => (
+        <div className="card">
+            <div className="card-header">
+                <div>
+                    <div className="card-title">Budget-Übersicht Q1 2026</div>
+                    <div className="card-subtitle">
+                        €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({Math.round(budgetData.spent / budgetData.total * 100)}%)
+                    </div>
                 </div>
-                <div className="page-header-actions">
-                    <PageHelp title="Das Dashboard">
-                        <p style={{ marginBottom: '12px' }}>Willkommen im Kontrollzentrum! Das Dashboard biete dir einen globalen Überblick über alle Marketingaktivitäten.</p>
-                        <ul className="help-list">
-                            <li><strong>Top-Metriken (KPIs):</strong> Zeigen Impressionen, Klicks, Conversions und Ausgaben über alle Kampagnen hinweg im Vergleich zum Vormonat.</li>
-                            <li><strong>Performance-Trend:</strong> Die interaktive Kurve (Area Chart) visualisiert die Entwicklung von Klicks und Impressionen über die letzen Wochen.</li>
-                            <li><strong>Kanal-Performance:</strong> Hier siehst du, welche Kanäle (Google, Meta, TikTok) am besten abschneiden (Tortendiagramm).</li>
-                            <li><strong>Aktive Kampagnen & Feed:</strong> Schneller Zugriff auf laufende Projekte und eine Timeline der letzten Aktivitäten deiner Teamkollegen.</li>
-                            <li><strong>Budget Checkout:</strong> Ein Kurzüberblick über die Kosten der verschiedenen Positionen. Den vollen Einblick gibt es unter dem Sidebar-Menü "Budget & Controlling".</li>
-                        </ul>
-                    </PageHelp>
-                    <button className="btn btn-secondary">Report erstellen</button>
-                    <button className="btn btn-primary" onClick={() => navigate('/campaigns')}>
-                        <Megaphone size={16} />
-                        Neue Kampagne
-                    </button>
-                </div>
+                <button className="btn btn-ghost btn-sm" onClick={() => navigate('/budget')}>
+                    Details <ArrowUpRight size={14} />
+                </button>
             </div>
+            <div className="progress-bar" style={{ height: '10px', marginBottom: '20px' }}>
+                <div
+                    className="progress-bar-fill primary"
+                    style={{ width: `${Math.round(budgetData.spent / budgetData.total * 100)}%` }}
+                />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                {budgetData.categories.slice(0, 5).map((cat) => (
+                    <div key={cat.name} style={{
+                        padding: '12px',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'var(--bg-elevated)',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color }} />
+                            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{cat.name}</span>
+                        </div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
+                            €{cat.spent.toLocaleString('de-DE')} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{cat.planned.toLocaleString('de-DE')}</span>
+                        </div>
+                        <div className="progress-bar" style={{ marginTop: '8px' }}>
+                            <div
+                                className="progress-bar-fill primary"
+                                style={{
+                                    width: `${Math.round(cat.spent / cat.planned * 100)}%`,
+                                    background: cat.color,
+                                }}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
-            {/* Stats */}
+    const renderAdminDashboard = () => (
+        <>
             <div className="stats-grid">
                 {stats.map((stat) => {
                     const Icon = stat.icon;
@@ -108,7 +162,6 @@ export default function DashboardPage() {
                 })}
             </div>
 
-            {/* Charts */}
             <div className="content-grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -200,7 +253,6 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Active Campaigns & Activity */}
             <div className="content-grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -287,52 +339,192 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Budget Quick View */}
+            {renderBudget()}
+        </>
+    );
+
+    const renderManagerDashboard = () => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div className="card">
                 <div className="card-header">
                     <div>
-                        <div className="card-title">Budget-Übersicht Q1 2026</div>
-                        <div className="card-subtitle">
-                            €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({Math.round(budgetData.spent / budgetData.total * 100)}%)
-                        </div>
+                        <div className="card-title">Kampagnen & Aufgaben-Übersicht</div>
+                        <div className="card-subtitle">Verfolgung des Content- und Aufgabenstatus für aktive Kampagnen.</div>
                     </div>
-                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/budget')}>
-                        Details <ArrowUpRight size={14} />
-                    </button>
                 </div>
-                <div className="progress-bar" style={{ height: '10px', marginBottom: '20px' }}>
-                    <div
-                        className="progress-bar-fill primary"
-                        style={{ width: `${Math.round(budgetData.spent / budgetData.total * 100)}%` }}
-                    />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-                    {budgetData.categories.slice(0, 5).map((cat) => (
-                        <div key={cat.name} style={{
-                            padding: '12px',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'var(--bg-elevated)',
+
+                {activeCampaigns.map(camp => {
+                    const campContents = contents.filter(c => c.campaignId === camp.id);
+                    return (
+                        <div key={camp.id} style={{
+                            marginBottom: '24px',
+                            padding: '20px',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--bg-surface)'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: cat.color }} />
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{cat.name}</span>
-                            </div>
-                            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-                                €{cat.spent.toLocaleString('de-DE')} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{cat.planned.toLocaleString('de-DE')}</span>
-                            </div>
-                            <div className="progress-bar" style={{ marginTop: '8px' }}>
-                                <div
-                                    className="progress-bar-fill primary"
-                                    style={{
-                                        width: `${Math.round(cat.spent / cat.planned * 100)}%`,
-                                        background: cat.color,
-                                    }}
-                                />
-                            </div>
+                            <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: '16px', color: 'var(--text-primary)' }}>
+                                {camp.name}
+                            </h3>
+
+                            {campContents.length === 0 ? (
+                                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>Kein Content zugeordnet.</p>
+                            ) : (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                                    {campContents.map(cnt => {
+                                        const cntTasks = tasks.filter(t => cnt.taskIds && cnt.taskIds.includes(t.id));
+                                        return (
+                                            <div key={cnt.id} style={{
+                                                background: 'var(--bg-hover)',
+                                                padding: '16px',
+                                                borderRadius: 'var(--radius-sm)'
+                                            }}>
+                                                <h4
+                                                    style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '12px', color: 'var(--text-primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                                                    onClick={() => setSelectedContent(cnt)}
+                                                >
+                                                    {cnt.title}
+                                                </h4>
+
+                                                {cntTasks.length === 0 ? (
+                                                    <div style={{
+                                                        padding: '10px',
+                                                        borderLeft: '4px solid var(--color-danger)',
+                                                        background: 'var(--color-danger-bg)',
+                                                        borderRadius: '4px',
+                                                        fontSize: 'var(--font-size-xs)'
+                                                    }}>
+                                                        Keine Aufgaben verknüpft! (Kritisch)
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {cntTasks.map(t => {
+                                                            const { color, bgColor, label } = getTaskColorLogic(t.dueDate);
+                                                            return (
+                                                                <div key={t.id} style={{
+                                                                    padding: '12px',
+                                                                    borderLeft: `4px solid ${color}`,
+                                                                    background: 'var(--bg-elevated)',
+                                                                    borderRadius: 'var(--radius-sm)',
+                                                                    boxShadow: 'var(--shadow-sm)'
+                                                                }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                                        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px' }} onClick={() => setSelectedTask(t)}>{t.title}</span>
+                                                                        <span style={{ fontSize: '10px', color: color, fontWeight: 700 }}>{label}</span>
+                                                                    </div>
+                                                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                                                        {t.assignee} | Fällig: {t.dueDate ? new Date(t.dueDate).toLocaleDateString('de-DE') : 'Kein Datum'}
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
                         </div>
-                    ))}
+                    )
+                })}
+            </div>
+
+            {renderBudget()}
+        </div>
+    );
+
+    const renderMemberDashboard = () => {
+        const myTasks = tasks.filter(t => t.assignee === currentUser?.name);
+        const sortedTasks = [...myTasks].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+        return (
+            <div className="card">
+                <div className="card-header" style={{ marginBottom: '16px' }}>
+                    <div>
+                        <div className="card-title">Meine zugewiesenen Aufgaben</div>
+                        <div className="card-subtitle">Alle To-Dos priorisiert nach Fälligkeit</div>
+                    </div>
+                </div>
+                {sortedTasks.length === 0 ? <p className="text-secondary" style={{ color: 'var(--text-secondary)' }}>Aktuell stehen keine Aufgaben an.</p> : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {sortedTasks.map(task => {
+                            const { color, bgColor, label } = getTaskColorLogic(task.dueDate);
+                            return (
+                                <div key={task.id} style={{
+                                    padding: '16px',
+                                    borderLeft: `6px solid ${color}`,
+                                    background: bgColor || 'var(--bg-elevated)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    boxShadow: 'var(--shadow-sm)',
+                                    cursor: 'pointer'
+                                }} onClick={() => setSelectedTask(task)}>
+                                    <div>
+                                        <h4 style={{ fontSize: 'var(--font-size-md)', fontWeight: 600, marginBottom: '4px' }}>{task.title}</h4>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
+                                            Fällig am: {task.dueDate ? new Date(task.dueDate).toLocaleDateString('de-DE') : 'Kein Datum'}
+                                            &nbsp;—&nbsp; Status: <span style={{ textTransform: 'uppercase', fontSize: '10px' }}>{task.status}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: color, background: 'var(--bg-surface)', padding: '4px 8px', borderRadius: '4px', border: `1px solid ${color}` }}>
+                                            {label}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="animate-in">
+            <div className="page-header">
+                <div className="page-header-left">
+                    <h1 className="page-title">Dashboard</h1>
+                    <p className="page-subtitle">Dein Marketing auf einen Blick — Stand: 10. März 2026</p>
+                </div>
+                <div className="page-header-actions">
+                    <PageHelp title="Das Dashboard">
+                        <p style={{ marginBottom: '12px' }}>Willkommen im Kontrollzentrum! Das Dashboard passt sich deiner Rolle an.</p>
+                        <ul className="help-list">
+                            <li><strong>Manager:</strong> Sehen aktive Kampagnen, deren Content + detaillierte Aufgaben in Farblogik sowie das Kampagnenbudget.</li>
+                            <li><strong>Member:</strong> Bekommen alle eigenen zugewiesenen Aufgaben in einer priorisierten Farblogik angezeigt (Rot = eilig, Gelb = demnächst, Grün = im Plan).</li>
+                            <li><strong>Admin:</strong> Bekommen die globale Statistik und Gesamtübersicht des Performance-Trends über alle Bereiche + das Budget.</li>
+                        </ul>
+                    </PageHelp>
+                    <button className="btn btn-secondary" onClick={() => navigate('/campaigns')}>Neue Kampagne</button>
+                    {role === 'manager' || role === 'admin' ? (
+                        <button className="btn btn-primary" onClick={() => navigate('/calendar')}>
+                            <Megaphone size={16} /> Content Kalender
+                        </button>
+                    ) : (
+                        <button className="btn btn-primary" onClick={() => navigate('/calendar')}>
+                            <Megaphone size={16} /> Meine To-Dos
+                        </button>
+                    )}
                 </div>
             </div>
+
+            <div style={{ marginBottom: '24px' }}>
+                <span className="badge" style={{ background: 'var(--color-primary-50)', color: 'var(--color-primary)' }}>
+                    Aktive Rolle: {role.toUpperCase()}
+                </span>
+            </div>
+
+            {role === 'admin' && renderAdminDashboard()}
+            {role === 'manager' && renderManagerDashboard()}
+            {role === 'member' && renderMemberDashboard()}
+
+            {selectedTask && <TaskDetailModal task={selectedTask} onClose={() => setSelectedTask(null)} />}
+            {selectedContent && <ContentDetailModal content={selectedContent} onClose={() => setSelectedContent(null)} />}
+
         </div>
     );
 }
