@@ -1,14 +1,15 @@
-# 🚀 Marketing Powerhouse — Konzept & Umsetzungsstand
+# 🚀 Momentum — Konzept & Umsetzungsstand
 
 > **Letzte Aktualisierung:** 10.03.2026
 > **Version:** 0.6.1 — Kanäle & Touchpoints Navigations-Integration
 > **Status:** Phase 0.5 — UI-Verfeinerung & Workflows (Navigation-Optimierung)
+> **Produktname:** Momentum | **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ---
 
 ## 1. Projektziel
 
-Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Das Tool vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung.
+Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Momentum vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung.
 
 ---
 

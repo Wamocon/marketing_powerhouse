@@ -1,6 +1,8 @@
-# 🚀 Marketing Powerhouse
+# 🚀 Momentum
 
-Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Marketing Powerhouse vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung.
+Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Momentum vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung.
+
+> **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ![Version](https://img.shields.io/badge/version-0.6.1-blue)
 ![Status](https://img.shields.io/badge/status-Phase%200.5-orange)

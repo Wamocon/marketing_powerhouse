@@ -76,22 +76,22 @@ export const ROLE_CONFIG = {
     admin: {
         label: 'Administrator',
         shortLabel: 'Admin',
-        color: '#ef4444',
-        bgColor: 'rgba(239, 68, 68, 0.12)',
+        color: '#c1292e',  /* Momentum Brand Red */
+        bgColor: 'rgba(193, 41, 46, 0.12)',
         description: 'Vollständige Lese- und Schreibrechte, User-Management',
     },
     manager: {
         label: 'Marketing Manager',
         shortLabel: 'Manager',
-        color: '#2563eb',
-        bgColor: 'rgba(37, 99, 235, 0.12)',
+        color: '#8b5cf6',  /* Data Purple */
+        bgColor: 'rgba(139, 92, 246, 0.12)',
         description: 'Kampagnen und Aufgaben erstellen, Team koordinieren',
     },
     member: {
         label: 'Team-Member',
         shortLabel: 'Member',
-        color: '#10b981',
-        bgColor: 'rgba(16, 185, 129, 0.12)',
+        color: '#14b8a6',  /* Data Teal */
+        bgColor: 'rgba(20, 184, 166, 0.12)',
         description: 'Eigene Aufgaben bearbeiten, Kampagnendaten einsehen',
     },
 };

@@ -4,20 +4,34 @@
 
 /* === CSS Variables === */
 :root {
-  /* Brand Colors (WAMOCON Red Theme) */
-  --color-primary: #dc2626;
-  /* Professional Red */
+  /* ========== MOMENTUM BRAND COLORS ========== */
+  /* Primary Brand Red (Corporate Intelligence) */
+  --color-primary: #c1292e;
   --color-primary-light: #ef4444;
-  --color-primary-dark: #b91c1c;
-  --color-primary-50: rgba(220, 38, 38, 0.08);
-  --color-primary-100: rgba(220, 38, 38, 0.15);
+  --color-primary-dark: #a01727;
+  --color-primary-50: rgba(193, 41, 46, 0.08);
+  --color-primary-100: rgba(193, 41, 46, 0.15);
 
-  /* Accent */
-  --color-accent: #2563eb;
-  /* A nice blue for accenting secondary elements */
+  /* Neutral Gray (Trust & Balance) */
+  --color-neutral: #6b7280;
+  --color-neutral-light: #9ca3af;
+  --color-neutral-dark: #4b5563;
+
+  /* Dark Charcoal (Text & High Contrast) */
+  --color-dark: #1f2937;
+
+  /* ========== DATA VISUALIZATION COLORS ========== */
+  /* Primary Accent (Data & Analytics) */
+  --color-accent: #0ea5e9;
   --color-accent-light: #3b82f6;
 
-  /* Status Colors (Adjusted for Light Mode contrast) */
+  /* Data Colors for Charts & Trends */
+  --color-data-blue: #0ea5e9;
+  --color-data-purple: #8b5cf6;
+  --color-data-teal: #14b8a6;
+  --color-data-amber: #ca8a04;
+
+  /* ========== STATUS COLORS ========== */
   --color-success: #10b981;
   --color-success-bg: rgba(16, 185, 129, 0.15);
   --color-warning: #f59e0b;
@@ -26,6 +40,11 @@
   --color-danger-bg: rgba(239, 68, 68, 0.15);
   --color-info: #0ea5e9;
   --color-info-bg: rgba(14, 165, 233, 0.15);
+
+  /* ========== ROLE BADGE COLORS ========== */
+  --color-role-admin: #c1292e;       /* Red */
+  --color-role-manager: #8b5cf6;     /* Purple */
+  --color-role-member: #14b8a6;      /* Teal */
 
   /* Light Theme Backgrounds */
   --bg-base: #f1f5f9;
@@ -42,17 +61,17 @@
   --border-color-strong: #cbd5e1;
 
   /* Text Colors */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-inverse: #ffffff;
+  --text-primary: #1f2937;         /* Dark Charcoal */
+  --text-secondary: #6b7280;       /* Neutral Gray */
+  --text-tertiary: #9ca3af;        /* Light Gray */
+  --text-inverse: #ffffff;         /* White for inverses */
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 20px rgba(220, 38, 38, 0.15);
-  /* Soft red glow */
+  --shadow-glow: 0 0 20px rgba(193, 41, 46, 0.15);
+  /* Soft momentum red glow */
 
   /* Spacing */
   --space-xs: 4px;

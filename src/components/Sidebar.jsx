@@ -62,12 +62,21 @@ export default function Sidebar({ onLogout }) {
 
     return (
         <aside className="sidebar">
-            {/* Logo */}
+            {/* Logo — The Nexus */}
             <div className="sidebar-header">
-                <div className="sidebar-logo">M</div>
+                <div className="sidebar-logo" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: 'var(--color-primary)',
+                    fontFamily: 'monospace',
+                    letterSpacing: '-2px',
+                }}>●</div>
                 <div>
-                    <div className="sidebar-brand-name">Marketing</div>
-                    <div className="sidebar-brand-sub">Powerhouse</div>
+                    <div className="sidebar-brand-name">Momentum</div>
+                    <div className="sidebar-brand-sub">Marketing OS</div>
                 </div>
             </div>
 
