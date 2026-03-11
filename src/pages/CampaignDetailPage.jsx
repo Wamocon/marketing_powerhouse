@@ -4,7 +4,7 @@ import {
     ArrowLeft, Calendar, Users, Edit, MoreVertical, Bot, Tag, Lock, Plus, X,
     ChevronLeft, ChevronRight, Instagram, Youtube, Linkedin, Facebook, Globe,
     Sparkles, Eye, CheckCircle2, Clock, Send, BarChart3, AlertCircle, RefreshCw,
-    FileText, Image, Video, MessageSquare, Target,
+    FileText, Image, Video, MessageSquare, Target, Trash2
 } from 'lucide-react';
 import { campaigns, audiences, companyKeywords, testUsers, CONTENT_TYPE_COLORS, touchpoints } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
@@ -193,6 +193,7 @@ export default function CampaignDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { can } = useAuth();
+    const canDelete = can('canDeleteItems');
     const campaign = campaigns.find(c => c.id === id) || campaigns[0];
     const status = statusConfig[campaign.status];
     const linkedAudiences = audiences.filter(a => campaign.targetAudiences?.includes(a.id));
@@ -280,6 +281,15 @@ export default function CampaignDetailPage() {
                                 <li><strong>Performance:</strong> Analytics und Spendings-Tracking speziell heruntergebrochen auf die laufende Kampagne.</li>
                             </ul>
                         </PageHelp>
+                        {canDelete && (
+                            <button className="btn btn-ghost" style={{ color: '#ef4444' }} onClick={() => {
+                                if (window.confirm('Möchtest du diese Kampagne wirklich löschen?')) {
+                                    navigate('/campaigns');
+                                }
+                            }}>
+                                <Trash2 size={16} /> Löschen
+                            </button>
+                        )}
                         <button className="btn btn-secondary"><Edit size={16} /> Bearbeiten</button>
                         <button className="btn btn-ghost btn-icon"><MoreVertical size={16} /></button>
                     </div>

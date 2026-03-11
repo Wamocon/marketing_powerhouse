@@ -283,8 +283,8 @@ export default function ManualPage() {
                                 <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) hast du als einziger die Macht, das Rollenkonzept zu steuern.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <li>Neuen Mitarbeitern musst du initial eine Rolle zuweisen. Standardmäßig sind neue Accounts "Member".</li>
-                                    <li><strong>Manager:</strong> Dürfen Kampagnen, Zielgruppen und Budgets erstellen und verwalten.</li>
-                                    <li><strong>Member:</strong> Können nur Aufgaben sehen und abarbeiten. Sie sehen keine Budgets oder Einstellungen.</li>
+                                    <li><strong>Manager:</strong> Dürfen Kampagnen, Zielgruppen und Budgets erstellen und verwalten. Zudem können sie Elemente (Kampagnen, Touchpoints, Personas, Content, Aufgaben etc.) löschen.</li>
+                                    <li><strong>Member:</strong> Können nur Aufgaben sehen und abarbeiten. Sie sehen keine Budgets, können keine wesentlichen Elemente löschen und haben keinen Zugriff auf Einstellungen.</li>
                                 </ul>
                                 <TipBox title="Sicherheit">
                                     Befördere Nutzer nur zum Admin, wenn sie wirklich globale Systemeinstellungen (wie API-Keys) ändern dürfen. In 90% der Fälle ist die Manager-Rolle für Teamleiter völlig ausreichend.
@@ -361,7 +361,7 @@ export default function ManualPage() {
                                 <p style={{ marginBottom: '16px' }}><strong>Navigation:</strong> `Marketing &gt; Kanäle & Touchpoints` oder Admin-Settings</p>
                                 <p style={{ marginBottom: '16px' }}>Die zentrale Übersicht aller Marketing-Kanäle ist das Fundament für erfolgreiche Multi-Channel-Kampagnen.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <li><strong>Single-Source-of-Truth:</strong> Hier ist der zentrale Ort, wo alle Marketingkanäle konsistent gepflegt werden. Sorge dafür, dass Links, Beschreibungen und Kanaltypen aktuell sind.</li>
+                                    <li><strong>Single-Source-of-Truth:</strong> Hier ist der zentrale Ort, wo alle Marketingkanäle konsistent gepflegt werden. Sorge dafür, dass Links, Beschreibungen und Kanaltypen aktuell sind. Manager und Admins können Touchpoints bearbeiten und überflüssige Kanäle löschen.</li>
                                     <li><strong>Bidirektionale Analyse:</strong> Klicke auf einen Kanal und sieh sofort: a) Welche Kampagnen spielen gerade auf diesem Kanal aus? b) Welche Content-Stücke sind verplant?</li>
                                     <li><strong>Tiefe Verknüpfung:</strong> Von jedem Touchpoint kannst du direkt in die zugehörigen Kampagnen und Content-Details springen.</li>
                                 </ul>

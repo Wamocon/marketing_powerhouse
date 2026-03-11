@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, FileText, ListChecks, AlertTriangle, CheckCircle, Plus, Clock, User, Edit2, Save, X } from 'lucide-react';
+import { Calendar, FileText, ListChecks, AlertTriangle, CheckCircle, Plus, Clock, User, Edit2, Save, X, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
@@ -10,7 +10,7 @@ const CONTENT_TYPE_LABELS = {
 };
 
 export default function ContentDetailModal({ content, onClose }) {
-    const { currentUser } = useAuth();
+    const { currentUser, can } = useAuth();
     const { updateContent } = useContents();
     const { tasks, addTask } = useTasks();
     const [isEditing, setIsEditing] = useState(false);
@@ -21,6 +21,7 @@ export default function ContentDetailModal({ content, onClose }) {
     const [newTaskAssignee, setNewTaskAssignee] = useState('');
 
     const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'manager';
+    const canDelete = can ? can('canDeleteItems') : canEdit;
 
     const getCampaignName = (cId) => {
         if (!cId) return 'Ohne Kampagne';
@@ -89,6 +90,15 @@ export default function ContentDetailModal({ content, onClose }) {
                         {canEdit && !isEditing && (
                             <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
                                 <Edit2 size={16} /> Bearbeiten
+                            </button>
+                        )}
+                        {canDelete && !isEditing && (
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                                if (window.confirm('Möchtest du diesen Content wirklich löschen?')) {
+                                    onClose();
+                                }
+                            }} title="Löschen">
+                                <Trash2 size={16} />
                             </button>
                         )}
                         <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
@@ -198,6 +208,30 @@ export default function ContentDetailModal({ content, onClose }) {
                                 <Clock size={14} />
                                 {content.createdAt ? new Date(content.createdAt).toLocaleDateString('de-DE') : '–'}
                             </div>
+
+                            <div style={{ color: 'var(--text-tertiary)' }}>Journey Phase:</div>
+                            {isEditing ? (
+                                <select className="form-select" style={{ padding: '4px' }} value={edited.journeyPhase || ''} onChange={e => setEdited({ ...edited, journeyPhase: e.target.value || null })}>
+                                    <option value="">Keine Phase</option>
+                                    <optgroup label="ASIDAS">
+                                        <option value="Attention">Attention</option>
+                                        <option value="Search">Search</option>
+                                        <option value="Interest">Interest</option>
+                                        <option value="Desire">Desire</option>
+                                        <option value="Action">Action</option>
+                                        <option value="Share">Share</option>
+                                    </optgroup>
+                                    <optgroup label="Customer Journey">
+                                        <option value="Awareness">Awareness</option>
+                                        <option value="Consideration">Consideration</option>
+                                        <option value="Purchase">Purchase</option>
+                                        <option value="Retention">Retention</option>
+                                        <option value="Advocacy">Advocacy</option>
+                                    </optgroup>
+                                </select>
+                            ) : (
+                                <div style={{ fontWeight: 500 }}>{content.journeyPhase || 'Nicht verknüpft'}</div>
+                            )}
                         </div>
                     </div>
 

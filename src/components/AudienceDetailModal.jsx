@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Megaphone, X, Edit, Check, Settings2 } from 'lucide-react';
+import { Megaphone, X, Edit, Check, Settings2, Trash2 } from 'lucide-react';
 import { campaigns } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,6 +16,7 @@ const typeConfig = {
 export default function AudienceDetailModal({ audience, onClose }) {
     const { can } = useAuth();
     const canEdit = can('canEditAudiences');
+    const canDelete = can('canDeleteItems');
 
     const [editMode, setEditMode] = useState(false);
     // Wir nutzen hier lokalen State für die UI, da wir keine globale AudienceContext-Funktion haben (Mock)
@@ -62,6 +63,15 @@ export default function AudienceDetailModal({ audience, onClose }) {
                             ) : (
                                 <button className="btn btn-secondary btn-sm" onClick={() => setEditMode(true)}><Edit size={14} /> Bearbeiten</button>
                             )
+                        )}
+                        {canDelete && (
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                                if (window.confirm('Möchtest du diese Persona wirklich löschen?')) {
+                                    onClose();
+                                }
+                            }} title="Löschen">
+                                <Trash2 size={16} />
+                            </button>
                         )}
                         <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
                     </div>

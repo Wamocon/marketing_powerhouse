@@ -1,30 +1,31 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Share2, Plus, Edit, MoreVertical, TrendingUp, Users, Map, Target, Heart, Frown, Megaphone, Search, Zap, DollarSign, Store, ExternalLink, FileText } from 'lucide-react';
-import { customerJourneys, audiences, touchpoints, initialContents as allContent } from '../data/mockData';
+import { asidasJourneys, audiences, touchpoints, initialContents as allContent } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 import PageHelp from '../components/PageHelp';
 import ContentDetailModal from '../components/ContentDetailModal';
 import TouchpointDetailModal from '../components/TouchpointDetailModal';
 
-const PHASE_COLORS = {
-    Awareness: { bg: '#e0e7ff', border: '#818cf8', icon: <Megaphone size={16} /> },
-    Consideration: { bg: '#fef3c7', border: '#fbbf24', icon: <Search size={16} /> },
-    Purchase: { bg: '#dcfce7', border: '#34d399', icon: <DollarSign size={16} /> },
-    Retention: { bg: '#f3e8ff', border: '#c084fc', icon: <Heart size={16} /> },
-    Advocacy: { bg: '#ffedd5', border: '#fdba74', icon: <Share2 size={16} /> },
+const ASIDAS_COLORS = {
+    Attention: { bg: '#e0e7ff', border: '#818cf8', icon: <Megaphone size={16} /> },
+    Search: { bg: '#fef3c7', border: '#fbbf24', icon: <Search size={16} /> },
+    Interest: { bg: '#dcfce7', border: '#34d399', icon: <Target size={16} /> },
+    Desire: { bg: '#ffedd5', border: '#fdba74', icon: <Zap size={16} /> },
+    Action: { bg: '#fee2e2', border: '#ef4444', icon: <DollarSign size={16} /> },
+    Share: { bg: '#f3e8ff', border: '#c084fc', icon: <Heart size={16} /> },
 };
 
-export default function CustomerJourneyPage() {
+export default function AsidasFunnelPage() {
     const navigate = useNavigate();
     const { can } = useAuth();
     const canEdit = can('canEditPositioning');
 
-    const [selectedJourneyId, setSelectedJourneyId] = useState(customerJourneys[0].id);
+    const [selectedJourneyId, setSelectedJourneyId] = useState(asidasJourneys[0].id);
     const [selectedContent, setSelectedContent] = useState(null);
     const [selectedTouchpoint, setSelectedTouchpoint] = useState(null);
 
-    const selectedJourney = customerJourneys.find(j => j.id === selectedJourneyId);
+    const selectedJourney = asidasJourneys.find(j => j.id === selectedJourneyId);
     const audience = audiences.find(a => a.id === selectedJourney?.audienceId);
 
     if (!selectedJourney) return <div>Keine Journey gefunden.</div>;
@@ -41,16 +42,16 @@ export default function CustomerJourneyPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Customer Journey Map</h1>
-                    <p className="page-subtitle">Standard 5-Phasen Modell</p>
+                    <h1 className="page-title">ASIDAS Funnel</h1>
+                    <p className="page-subtitle">Strategisches Mapping nach dem ASIDAS-Modell</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title="Customer Journey (5 Phasen)">
-                        <p style={{ marginBottom: '12px' }}>Die Customer Journey verbindet deine Zielgruppen mit relevantem Content über den gesamten Lebenszyklus des Kunden hinweg.</p>
+                    <PageHelp title="Customer Journey (ASIDAS)">
+                        <p style={{ marginBottom: '12px' }}>Die Customer Journey verbindet deine Zielgruppen (Personas) mit konkretem Content in der richtigen Reihenfolge nach dem praxisbewährten <strong>ASIDAS-Modell</strong>.</p>
                         <ul className="help-list">
-                            <li><strong>Phasen:</strong> Geleite Kunden von der <i>Awareness</i> bis zur aktiven <i>Advocacy</i> (Weiterempfehlung).</li>
+                            <li><strong>Omnipräsenz in ASIDAS:</strong> Search und Share begleiten die Nutzer oft durchgehend. In dieser Ansicht sind sie als vertikale Ankerpunkte markiert.</li>
                             <li><strong>Touchpoints:</strong> Klicke auf einen Touchpoint, um direkt in das Kanal-Management zu wechseln.</li>
-                            <li><strong>Real-Content Linking:</strong> Verknüpfter Content kann direkt zur Ansicht geöffnet werden.</li>
+                            <li><strong>Real-Content Linking:</strong> Verknüpfter Content aus der Redaktionsplanung kann direkt zur Ansicht/Bearbeitung geöffnet werden.</li>
                         </ul>
                     </PageHelp>
 
@@ -60,7 +61,7 @@ export default function CustomerJourneyPage() {
                         onChange={e => setSelectedJourneyId(e.target.value)}
                         style={{ width: 'auto', backgroundColor: 'var(--bg-elevated)', maxWidth: '300px' }}
                     >
-                        {customerJourneys.map(j => (
+                        {asidasJourneys.map(j => (
                             <option key={j.id} value={j.id}>{j.name}</option>
                         ))}
                     </select>
@@ -105,11 +106,13 @@ export default function CustomerJourneyPage() {
                 display: 'flex',
                 gap: '20px',
                 overflowX: 'auto',
+                paddingTop: '32px',
                 paddingBottom: '24px',
                 minHeight: '650px'
             }}>
                 {selectedJourney.stages.map((stage, index) => {
-                    const styleConfig = PHASE_COLORS[stage.phase] || { bg: '#f1f5f9', border: '#cbd5e1', icon: null };
+                    const isOmnipresent = ['Search', 'Share'].includes(stage.phase);
+                    const styleConfig = ASIDAS_COLORS[stage.phase] || { bg: '#f1f5f9', border: '#cbd5e1', icon: null };
 
                     return (
                         <div key={stage.id} style={{
@@ -118,13 +121,18 @@ export default function CustomerJourneyPage() {
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '16px',
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border-color)',
+                            background: isOmnipresent ? 'rgba(var(--color-primary-rgb), 0.02)' : 'var(--bg-surface)',
+                            border: isOmnipresent ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
                             borderRadius: 'var(--radius-lg)',
                             padding: '18px',
                             position: 'relative',
-                            boxShadow: 'none'
+                            boxShadow: isOmnipresent ? '0 8px 30px rgba(99, 102, 241, 0.12)' : 'none'
                         }}>
+                            {isOmnipresent && (
+                                <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: 'var(--color-primary)', color: 'white', fontSize: '0.65rem', padding: '4px 12px', borderRadius: 'var(--radius-full)', fontWeight: 700, boxShadow: 'var(--shadow-md)' }}>
+                                    OMNIPRÄSENTE PHASE
+                                </div>
+                            )}
 
                             <div style={{
                                 background: styleConfig.bg,
@@ -254,22 +262,25 @@ export default function CustomerJourneyPage() {
                             </div>
 
                             {/* Sales Handoff */}
-                            {stage.phase === 'Purchase' && (
+                            {stage.phase === 'Action' && (
                                 <div style={{
                                     marginTop: '20px',
-                                    border: '2px dashed #10b981',
+                                    border: '2px dashed #ef4444',
                                     borderRadius: 'var(--radius-md)',
                                     padding: '18px',
-                                    background: '#ecfdf5',
+                                    background: '#fff1f2',
                                     textAlign: 'center',
                                     animation: 'pulse 3s infinite'
                                 }}>
-                                    <Store size={26} style={{ color: '#10b981', margin: '0 auto 10px' }} />
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#064e3b', textTransform: 'uppercase' }}>
+                                    <Store size={26} style={{ color: '#ef4444', margin: '0 auto 10px' }} />
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase' }}>
                                         Vertrieb (B2B/B2C)
                                     </div>
-                                    <div style={{ fontSize: '0.65rem', color: '#047857', marginTop: '6px', marginBottom: '12px', lineHeight: 1.4 }}>
-                                        Automatisierter Handoff an Sales Hub. <br />Pipeline-Trigger bei Purchase.
+                                    <div style={{ fontSize: '0.65rem', color: '#b91c1c', marginTop: '6px', marginBottom: '12px', lineHeight: 1.4 }}>
+                                        Automatisierter Handoff an Sales Hub. <br />Pipeline-Trigger bei Conversion.
+                                    </div>
+                                    <div style={{ background: 'white', border: '1px solid #fecaca', padding: '6px', borderRadius: 'var(--radius-sm)', fontSize: '0.6rem', color: '#ef4444', fontWeight: 700 }}>
+                                        Feature Coming Soon
                                     </div>
                                 </div>
                             )}

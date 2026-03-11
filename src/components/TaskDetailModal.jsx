@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText } from 'lucide-react';
+import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
@@ -11,7 +11,7 @@ const UI_STATE_LABELS = {
 };
 
 export default function TaskDetailModal({ task, onClose }) {
-    const { currentUser } = useAuth();
+    const { currentUser, can } = useAuth();
     const { updateTask } = useTasks();
     const { contents } = useContents();
     const [isEditing, setIsEditing] = useState(false);
@@ -19,6 +19,7 @@ export default function TaskDetailModal({ task, onClose }) {
 
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
+    const canDelete = can ? can('canDeleteItems') : (currentUser?.role === 'admin' || currentUser?.role === 'manager');
 
     // Find linked content(s) for this task
     const linkedContents = contents.filter(c => c.taskIds && c.taskIds.includes(task.id));
@@ -57,6 +58,15 @@ export default function TaskDetailModal({ task, onClose }) {
                         {canEdit && !isEditing && (
                             <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
                                 <Edit2 size={16} /> Bearbeiten
+                            </button>
+                        )}
+                        {canDelete && !isEditing && (
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                                if (window.confirm('Möchtest du diese Aufgabe wirklich löschen?')) {
+                                    onClose();
+                                }
+                            }} title="Löschen">
+                                <Trash2 size={16} />
                             </button>
                         )}
                         <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>

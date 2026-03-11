@@ -473,6 +473,7 @@ export const initialContents = [
         taskIds: ['cr1'],
         author: 'Lisa Bauer',
         contentType: 'social',
+        journeyPhase: 'Awareness',
         createdAt: '2026-02-20',
     },
     {
@@ -487,6 +488,7 @@ export const initialContents = [
         taskIds: ['cr4'],
         author: 'Anna Schmidt',
         contentType: 'email',
+        journeyPhase: 'Interest',
         createdAt: '2026-03-01',
     },
     {
@@ -501,6 +503,7 @@ export const initialContents = [
         taskIds: ['cr3'],
         author: 'Tom Weber',
         contentType: 'ads',
+        journeyPhase: 'Search',
         createdAt: '2026-03-02',
     },
     {
@@ -514,6 +517,7 @@ export const initialContents = [
         taskIds: [],
         author: 'Daniel Moretz',
         contentType: 'content',
+        journeyPhase: 'Search',
         createdAt: '2026-03-05',
     },
     {
@@ -527,6 +531,7 @@ export const initialContents = [
         taskIds: ['cr2'],
         author: 'Anna Schmidt',
         contentType: 'social',
+        journeyPhase: 'Awareness',
         createdAt: '2026-03-03',
     },
     {
@@ -540,6 +545,7 @@ export const initialContents = [
         taskIds: [],
         author: 'Tom Weber',
         contentType: 'ads',
+        journeyPhase: 'Interest',
         createdAt: '2026-03-06',
     },
     {
@@ -554,6 +560,7 @@ export const initialContents = [
         taskIds: [],
         author: 'Lisa Bauer',
         contentType: 'email',
+        journeyPhase: 'Advocacy',
         createdAt: '2026-03-08',
     },
     {
@@ -567,6 +574,7 @@ export const initialContents = [
         taskIds: [],
         author: 'Lisa Bauer',
         contentType: 'social',
+        journeyPhase: 'Awareness',
         createdAt: '2026-03-09',
     },
     {
@@ -580,6 +588,7 @@ export const initialContents = [
         taskIds: ['cr4'],
         author: 'Daniel Moretz',
         contentType: 'event',
+        journeyPhase: 'Interest',
         createdAt: '2026-02-15',
     },
     {
@@ -593,6 +602,7 @@ export const initialContents = [
         taskIds: [],
         author: 'Anna Schmidt',
         contentType: 'content',
+        journeyPhase: 'Retention',
         createdAt: '2026-03-10',
     },
 ];
@@ -664,17 +674,17 @@ export const channelPerformance = [
 
 
 export const touchpoints = [
-    { id: 'tp1', name: 'Google Search Ads', type: 'Paid Search', url: 'google.com/ads', status: 'active', description: 'Bezahlte Anzeigen auf Google für brand und non-brand Keywords.' },
-    { id: 'tp2', name: 'LinkedIn Ads', type: 'Paid Social', url: 'linkedin.com/campaign', status: 'active', description: 'Lead Gen Forms und Sponsored Content auf LinkedIn.' },
-    { id: 'tp3', name: 'Webinar Landingpage', type: 'Owned Website', url: 'test-it-academy.de/webinar', status: 'active', description: 'Die zentrale Anmeldeseite für das DiTeLe-Webinar.' },
-    { id: 'tp4', name: 'E-Mail Automation (ActiveCampaign)', type: 'Owned CRM', url: 'activecampaign.com', status: 'active', description: 'Follow-up Sequenz nach Webinar-Teilnahme.' },
-    { id: 'tp5', name: 'Sales Pipeline (Telefon)', type: 'Direct Sales', url: '-', status: 'planned', description: 'Telefongespräch durch B2B-Closer nach Leadgenerierung.' },
-    { id: 'tp6', name: 'Instagram Reels', type: 'Organic Social', url: 'instagram.com/testit', status: 'active', description: 'Kurzvideos für Awareness, um Quereinsteiger zu inspirieren.' },
-    { id: 'tp7', name: 'Trustpilot Reviews', type: 'Earned Media', url: 'trustpilot.com/review', status: 'active', description: 'Bewertungen von ehemaligen Schülern.' },
-    { id: 'tp8', name: 'Lern-Plattform (LMS)', type: 'Product', url: 'lms.test-it-academy.de', status: 'active', description: 'Die Moodle-basierte Lernumgebung für aktive Kursteilnehmer.' }
+    { id: 'tp1', name: 'Google Search Ads', type: 'Paid Search', journeyPhase: 'Search', url: 'google.com/ads', status: 'active', description: 'Bezahlte Anzeigen auf Google für brand und non-brand Keywords.' },
+    { id: 'tp2', name: 'LinkedIn Ads', type: 'Paid Social', journeyPhase: 'Attention', url: 'linkedin.com/campaign', status: 'active', description: 'Lead Gen Forms und Sponsored Content auf LinkedIn.' },
+    { id: 'tp3', name: 'Webinar Landingpage', type: 'Owned Website', journeyPhase: 'Interest', url: 'test-it-academy.de/webinar', status: 'active', description: 'Die zentrale Anmeldeseite für das DiTeLe-Webinar.' },
+    { id: 'tp4', name: 'E-Mail Automation (ActiveCampaign)', type: 'Owned CRM', journeyPhase: 'Desire', url: 'activecampaign.com', status: 'active', description: 'Follow-up Sequenz nach Webinar-Teilnahme.' },
+    { id: 'tp5', name: 'Sales Pipeline (Telefon)', type: 'Direct Sales', journeyPhase: 'Action', url: '-', status: 'planned', description: 'Telefongespräch durch B2B-Closer nach Leadgenerierung.' },
+    { id: 'tp6', name: 'Instagram Reels', type: 'Organic Social', journeyPhase: 'Awareness', url: 'instagram.com/testit', status: 'active', description: 'Kurzvideos für Awareness, um Quereinsteiger zu inspirieren.' },
+    { id: 'tp7', name: 'Trustpilot Reviews', type: 'Earned Media', journeyPhase: 'Advocacy', url: 'trustpilot.com/review', status: 'active', description: 'Bewertungen von ehemaligen Schülern.' },
+    { id: 'tp8', name: 'Lern-Plattform (LMS)', type: 'Product', journeyPhase: 'Retention', url: 'lms.test-it-academy.de', status: 'active', description: 'Die Moodle-basierte Lernumgebung für aktive Kursteilnehmer.' }
 ];
 
-export const customerJourneys = [
+export const asidasJourneys = [
     {
         id: 'j1',
         name: 'Quirin (Quereinsteiger) - B2C Full Flow',
@@ -715,6 +725,35 @@ export const customerJourneys = [
             { id: 's4', phase: 'Desire', title: 'Entscheidung für Premium-Kurs', description: 'Erkennt, dass Selbststudium zu schwer ist.', touchpoints: ['tp4'], contentFormats: ['E-Mail "Warum 60% im 1. Versuch durchfallen"'], emotions: ['Respekt vor Prüfung', 'Kaufbereit'], painPoints: ['Prüfungsgebühr'], metrics: { label: 'Open Rate', value: '55%', trend: '+5%' } },
             { id: 's5', phase: 'Action', title: 'Online-Buchung', description: 'Bucht per Kreditkarte das E-Learning Paket.', touchpoints: ['tp3'], contentFormats: ['Checkout-Page'], emotions: ['Erwartungsvoll'], painPoints: ['Geld-zurück-Garantie?'], metrics: { label: 'Checkouts', value: '120', trend: '+15%' } },
             { id: 's6', phase: 'Share', title: 'Prüfungszeugnis auf Social Media', description: 'Postet stolz das Zertifikat.', touchpoints: ['tp2', 'tp7'], contentFormats: ['Zertifikats-Post Vorlage'], emotions: ['Stolz', 'Gehaltserhöhung in Sicht'], painPoints: ['-'], metrics: { label: 'Mentions', value: '60', trend: '+8%' } }
+        ]
+    }
+];
+
+export const customerJourneys = [
+    {
+        id: 'cj1',
+        name: 'Quirin (Quereinsteiger) - 5-Phasen Journey',
+        audienceId: 'a1',
+        description: 'Standard 5-Phasen Customer Journey von ersten Problembewusstsein bis zur Weiterempfehlung nach der Schulung.',
+        stages: [
+            { id: 'phs1', phase: 'Awareness', title: 'Bewusstsein für Relevanz', description: 'Erfährt über Social Media, dass IT-Quereinstieg auch ohne Programmieren möglich ist.', touchpoints: ['tp6', 'tp2'], contentFormats: ['Social Media Video', 'Anzeigen'], emotions: ['Neugierig'], painPoints: ['IT scheint zu komplex'], metrics: { label: 'Reichweite', value: '50.000', trend: '+10%' }, contentIds: ['cnt1'] },
+            { id: 'phs2', phase: 'Consideration', title: 'Erwägung & Abwägung', description: 'Sucht nach Informationen zu Bildungsgutschein und Voraussetzungen.', touchpoints: ['tp1', 'tp3'], contentFormats: ['Blogbeiträge', 'Webinar'], emotions: ['Wissbegierig'], painPoints: ['Finanzierung unklar'], metrics: { label: 'Webinar Anmeldungen', value: '400', trend: '+15%' }, contentIds: ['cnt4', 'cnt2'] },
+            { id: 'phs3', phase: 'Purchase', title: 'Kauf & Entscheidung', description: 'Entscheidet sich für den ISTQB-Kurs und meldet sich nach Klärung mit der Agentur für Arbeit an.', touchpoints: ['tp4', 'tp5'], contentFormats: ['E-Mail', 'Beratungsgespräch'], emotions: ['Erwartungsvoll'], painPoints: ['Antrag beim Amt dauert'], metrics: { label: 'Abschlüsse', value: '50', trend: '+5%' }, contentIds: [] },
+            { id: 'phs4', phase: 'Retention', title: 'Bindung & Begleitung', description: 'Nimmt aktiv am Kurs teil und nutzt die DiTeLe Plattform.', touchpoints: ['tp8', 'tp4'], contentFormats: ['Lern-Inhalte', 'Check-ins'], emotions: ['Motiviert'], painPoints: ['Lernstress'], metrics: { label: 'Kursfortschritt', value: '85%', trend: '+2%' }, contentIds: [] },
+            { id: 'phs5', phase: 'Advocacy', title: 'Loyalität & Weiterempfehlung', description: 'Bestes Testimonials – erfolgreicher Abschluss und neuer Job in der IT.', touchpoints: ['tp7', 'tp2'], contentFormats: ['Bewertung', 'Alumni-Netzwerk'], emotions: ['Stolz', 'Dankbar'], painPoints: ['Neue Jobsuche'], metrics: { label: 'Bewertungen', value: '25', trend: '+15%' }, contentIds: [] }
+        ]
+    },
+    {
+        id: 'cj2',
+        name: 'Hannah (HR) - B2B 5-Phasen Journey',
+        audienceId: 'a2',
+        description: 'Von der Problemerkennung im eigenen Team bis zur langfristigen Partnerschaft für Inhouse-Schulungen.',
+        stages: [
+            { id: 'phs1', phase: 'Awareness', title: 'Bedarf erkennen', description: 'Die Qualität im QA-Team sinkt, ein Standard muss her.', touchpoints: ['tp2'], contentFormats: ['Whitepaper'], emotions: ['Gestresst'], painPoints: ['Fehlerhafte Releases'], metrics: { label: 'Impressions', value: '12.000', trend: '+5%' }, contentIds: ['cnt5'] },
+            { id: 'phs2', phase: 'Consideration', title: 'Optionen prüfen', description: 'Vergleicht Anbieter von ISTQB Inhouse Schulungen.', touchpoints: ['tp1', 'tp3'], contentFormats: ['B2B Landingpage'], emotions: ['Analytisch'], painPoints: ['Zertifizierter Trainer gesucht'], metrics: { label: 'B2B Traffic', value: '900', trend: '+2%' }, contentIds: [] },
+            { id: 'phs3', phase: 'Purchase', title: 'Beauftragung', description: 'Entscheidet sich für Test-IT Academy aufgrund von Praxisnähe.', touchpoints: ['tp5'], contentFormats: ['Angebot', 'Pitch'], emotions: ['Erleichtert'], painPoints: ['Budgetfreigabe'], metrics: { label: 'Won Deals', value: '5', trend: '0%' }, contentIds: [] },
+            { id: 'phs4', phase: 'Retention', title: 'Schulungserfahrung', description: 'Das Inhouse-Training läuft erfolgreich und das Team wendet das Wissen an.', touchpoints: ['tp8', 'tp5'], contentFormats: ['Feedbackbogen'], emotions: ['Zufrieden'], painPoints: ['Terminkoordination intern'], metrics: { label: 'Teilnehmer Feedback', value: '4.8/5', trend: '+0.1' }, contentIds: [] },
+            { id: 'phs5', phase: 'Advocacy', title: 'Folgeaufträge & Empfehlungen', description: 'Hannah bucht einen weiteren Kurs und empfiehlt die Academy intern weiter.', touchpoints: ['tp4', 'tp2'], contentFormats: ['Case Study'], emotions: ['Erfolgreich'], painPoints: ['Keine'], metrics: { label: 'Upsell', value: '2', trend: '+1' }, contentIds: ['cnt5'] }
         ]
     }
 ];

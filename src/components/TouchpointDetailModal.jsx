@@ -1,0 +1,220 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Megaphone, ExternalLink, ListTodo, Edit2, Trash2, X } from 'lucide-react';
+import { campaigns, initialContents as content } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+
+const TYPE_COLORS = {
+    'Paid Search': 'badge-warning',
+    'Paid Social': 'badge-warning',
+    'Owned Website': 'badge-primary',
+    'Owned CRM': 'badge-primary',
+    'Direct Sales': 'badge-danger',
+    'Organic Social': 'badge-info',
+    'Earned Media': 'badge-success',
+    'Product': 'badge-default'
+};
+
+export default function TouchpointDetailModal({ touchpoint, onClose, onDelete }) {
+    const { can } = useAuth();
+    const navigate = useNavigate();
+    const canManage = can('canManageTouchpoints');
+    const canDelete = can('canDeleteItems');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedTp, setEditedTp] = useState({ ...touchpoint });
+
+    if (!touchpoint) return null;
+
+    const getLinkedCampaigns = (tpId) => {
+        return campaigns.filter(c => c.touchpointIds && c.touchpointIds.includes(tpId));
+    };
+
+    const getLinkedContent = (tpId) => {
+        return content.filter(c => c.touchpointId === tpId);
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+            <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
+                margin: 0, maxHeight: '90vh', height: '100%', width: '100%', maxWidth: '600px',
+                borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
+                animation: 'fadeIn 0.2s ease-out', display: 'flex', flexDirection: 'column', overflow: 'hidden'
+            }}>
+                <div className="modal-header" style={{ background: 'var(--bg-surface)' }}>
+                    <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Megaphone size={18} style={{ color: 'var(--color-primary)' }} />
+                        Touchpoint-Details
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        {canManage && !isEditing && (
+                            <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
+                                <Edit2 size={16} /> Bearbeiten
+                            </button>
+                        )}
+                        {canDelete && !isEditing && (
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                                if (window.confirm('Möchtest du diesen Kanal/Touchpoint wirklich löschen?')) {
+                                    if (onDelete) onDelete(touchpoint.id);
+                                    onClose();
+                                }
+                            }} title="Löschen">
+                                <Trash2 size={16} />
+                            </button>
+                        )}
+                        <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                    </div>
+                </div>
+
+                <div className="modal-body" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
+                    <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid var(--color-primary)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                            {isEditing ? (
+                                <input
+                                    className="form-input"
+                                    style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, padding: '4px' }}
+                                    value={editedTp.name}
+                                    onChange={e => setEditedTp({ ...editedTp, name: e.target.value })}
+                                />
+                            ) : (
+                                <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, margin: 0 }}>{touchpoint.name}</h2>
+                            )}
+                        </div>
+
+                        {isEditing ? (
+                            <textarea
+                                className="form-textarea"
+                                style={{ minHeight: '80px', fontSize: 'var(--font-size-sm)', marginBottom: '16px' }}
+                                value={editedTp.description || ''}
+                                onChange={e => setEditedTp({ ...editedTp, description: e.target.value })}
+                            />
+                        ) : (
+                            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0, marginBottom: '16px' }}>
+                                {touchpoint.description}
+                            </p>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '12px', fontSize: 'var(--font-size-sm)', alignItems: 'center' }}>
+                            <div style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem' }}>Typ</div>
+                            <div>
+                                {isEditing ? (
+                                    <select className="form-select" value={editedTp.type} onChange={e => setEditedTp({ ...editedTp, type: e.target.value })}>
+                                        <option value="Paid Search">Paid Search</option>
+                                        <option value="Paid Social">Paid Social</option>
+                                        <option value="Owned Website">Owned Website</option>
+                                        <option value="Owned CRM">Owned CRM</option>
+                                        <option value="Direct Sales">Direct Sales</option>
+                                        <option value="Organic Social">Organic Social</option>
+                                        <option value="Earned Media">Earned Media</option>
+                                        <option value="Product">Product</option>
+                                    </select>
+                                ) : (
+                                    <span className={`badge ${TYPE_COLORS[touchpoint.type] || 'badge-default'}`}>{touchpoint.type}</span>
+                                )}
+                            </div>
+
+                            <div style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem' }}>URL</div>
+                            <div>
+                                {isEditing ? (
+                                    <input className="form-input" value={editedTp.url} onChange={e => setEditedTp({ ...editedTp, url: e.target.value })} />
+                                ) : (
+                                    <span style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 500 }}>{touchpoint.url}</span>
+                                )}
+                            </div>
+
+                            <div style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem' }}>Status</div>
+                            <div>
+                                {isEditing ? (
+                                    <select className="form-select" value={editedTp.status} onChange={e => setEditedTp({ ...editedTp, status: e.target.value })}>
+                                        <option value="active">Aktiv</option>
+                                        <option value="planned">Geplant</option>
+                                    </select>
+                                ) : (
+                                    <span className={`badge ${touchpoint.status === 'active' ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '0.65rem' }}>
+                                        {touchpoint.status === 'active' ? 'Aktiv' : 'Geplant'}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem' }}>Journey Phase</div>
+                            <div>
+                                {isEditing ? (
+                                    <select className="form-select" value={editedTp.journeyPhase || ''} onChange={e => setEditedTp({ ...editedTp, journeyPhase: e.target.value || null })}>
+                                        <option value="">Keine Phase</option>
+                                        <optgroup label="ASIDAS">
+                                            <option value="Attention">Attention</option>
+                                            <option value="Search">Search</option>
+                                            <option value="Interest">Interest</option>
+                                            <option value="Desire">Desire</option>
+                                            <option value="Action">Action</option>
+                                            <option value="Share">Share</option>
+                                        </optgroup>
+                                        <optgroup label="Customer Journey">
+                                            <option value="Awareness">Awareness</option>
+                                            <option value="Consideration">Consideration</option>
+                                            <option value="Purchase">Purchase</option>
+                                            <option value="Retention">Retention</option>
+                                            <option value="Advocacy">Advocacy</option>
+                                        </optgroup>
+                                    </select>
+                                ) : (
+                                    <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{touchpoint.journeyPhase || 'Nicht verknüpft'}</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ marginBottom: '16px' }}>
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Megaphone size={14} /> Zugeordnete Kampagnen
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {getLinkedCampaigns(touchpoint.id).map(c => (
+                                <div
+                                    key={c.id}
+                                    onClick={() => { onClose(); navigate(`/campaigns/${c.id}`); }}
+                                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
+                                >
+                                    <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>{c.name}</span>
+                                    <ExternalLink size={12} style={{ color: 'var(--color-primary)' }} />
+                                </div>
+                            ))}
+                            {getLinkedCampaigns(touchpoint.id).length === 0 && (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', padding: '10px', background: 'var(--bg-hover)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>Keine Kampagnen verknüpft.</div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <ListTodo size={14} /> Content & Assets
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {getLinkedContent(touchpoint.id).map(c => (
+                                <div
+                                    key={c.id}
+                                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}
+                                >
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>{c.title}</span>
+                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{c.platform}</span>
+                                    </div>
+                                    <span className="badge badge-primary" style={{ fontSize: '0.55rem' }}>{c.status}</span>
+                                </div>
+                            ))}
+                            {getLinkedContent(touchpoint.id).length === 0 && (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', padding: '10px', background: 'var(--bg-hover)', borderRadius: '4px', border: '1px dashed var(--border-color)' }}>Kein Content hinterlegt.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {isEditing && (
+                    <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
+                        <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Abbrechen</button>
+                        <button className="btn btn-primary" onClick={() => setIsEditing(false)}>Speichern</button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

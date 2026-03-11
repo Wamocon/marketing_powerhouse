@@ -19,6 +19,9 @@ export const PERMISSIONS = {
         canCreateCampaigns: true,
         canEditCampaigns: true,
         canViewAllCampaigns: true,
+        canDeleteItems: true, // Löschn von Elementen (Kampagnen, Touchpoints etc.)
+        // Touchpoints
+        canManageTouchpoints: true,
         // Zielgruppen
         canEditAudiences: true,
         canViewAudiences: true,
@@ -41,6 +44,8 @@ export const PERMISSIONS = {
         canCreateCampaigns: true,
         canEditCampaigns: true,
         canViewAllCampaigns: true,
+        canDeleteItems: true,
+        canManageTouchpoints: true,
         canEditAudiences: true,
         canViewAudiences: true,
         canSeeBudget: true,
@@ -59,6 +64,8 @@ export const PERMISSIONS = {
         canCreateCampaigns: false,
         canEditCampaigns: false,
         canViewAllCampaigns: false, // nur zugewiesene Kampagnen
+        canDeleteItems: false,
+        canManageTouchpoints: false,
         canEditAudiences: false,
         canViewAudiences: true,
         canSeeBudget: false,

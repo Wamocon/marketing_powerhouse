@@ -65,7 +65,8 @@ Marketing_powerhouse/
         ├── ContentOverviewPage.jsx   ← Content-Übersicht mit KPIs
         ├── BudgetPage.jsx            ← Zugangssperre für Members
         ├── TasksPage.jsx
-        ├── CustomerJourneyPage.jsx   ← ASIDAS-Funnel mit Touchpoint-Navigation
+        ├── CustomerJourneyPage.jsx   ← 5-Phasen Standard-Modell
+        ├── AsidasFunnelPage.jsx      ← ASIDAS-Funnel Ansicht
         ├── TouchpointsPage.jsx       ← 🆕 Kanäle & Touchpoints (in Navigation)
         ├── PositioningPage.jsx       ← Digitale Positionierung
         ├── ManualPage.jsx            ← Rollenspezifische Anleitung
@@ -99,8 +100,11 @@ Marketing_powerhouse/
 | Zielgruppen einsehen | ✅ | ✅ | ✅ |
 | Budget einsehen | ✅ | ✅ | ❌ |
 | Budget bearbeiten | ✅ | ✅ | ❌ |
-| Aufgaben zuweisen | ✅ | ✅ | ❌ |
 | Aufgaben in Kampagnen erstellen | ✅ | ✅ | ❌ |
+| Aufgaben zuweisen | ✅ | ✅ | ❌ |
+| Eigene Aufgaben bearbeiten | ✅ | ✅ | ✅ |
+| Touchpoints verwalten | ✅ | ✅ | ❌ |
+| Elemente löschen (Kampagnen, Personas, etc.) | ✅ | ✅ | ❌ |
 | Eigene Aufgaben bearbeiten | ✅ | ✅ | ✅ |
 
 ### Technische Umsetzung
@@ -192,20 +196,22 @@ const { can, isRole, currentUser } = useAuth();
 - [x] Modal für neue Persona
 - [ ] Persona bearbeiten/löschen / Templates
 
-### 🆕 ✅ Customer Journey (`/journeys`)
-- [x] **ASIDAS-Funnel Ansicht** (Attention, Search, Interest, Desire, Action, Share)
-- [x] **Omnipräsenz-Matrix**: Search und Share werden als kontinuierliche, omnipräsente Verhaltensweisen visualisiert, die den Nutzer durchgehend begleiten.
+### 🆕 ✅ Customer Journey (`/journeys`) & ASIDAS-Funnel (`/asidas`)
+- [x] **Customer Journey (5-Phasen)**: (Awareness, Consideration, Purchase, Retention, Advocacy)
+- [x] **ASIDAS-Funnel Ansicht** (Attention, Search, Interest, Desire, Action, Share) ausgelagert in ein separates Modul
+- [x] **Omnipräsenz-Matrix (ASIDAS)**: Search und Share werden als kontinuierliche, omnipräsente Verhaltensweisen visualisiert, die den Nutzer durchgehend begleiten.
 - [x] **Deep-Linking Content**: Realer Content aus der Redaktionsplanung (`initialContents`) ist direkt in den Stages verlinkt und kann per Modal geöffnet werden.
-- [x] **Touchpoint-Navigation**: Klick auf einen Journey-Touchpoint führt direkt in das Kanal-Management mit Fokus auf diesen Kanal.
+- [x] **Touchpoint-Integration**: Klick auf einen Journey-Touchpoint öffnet nun direkt das Detail-Modal ohne Seitenwechsel.
 - [x] **Vertriebs-Handoff**: Visueller Trigger für den Übergang von Marketing zu Sales in der Action-Phase.
 - [x] **KPIs & Metriken**: Trends und Kennzahlen pro Stage zur Erfolgsmessung der Journey.
 
 ### ✅ Kanäle & Touchpoints (`/touchpoints`)
-- [x] **In Navigation sichtbar**: Eigener Menüpunkt im berereich "Marketing" mit Badge (6 Kanäle)
-- [x] **Single-Source-of-Truth**: Alle eingesetzten Kanäle zentral angelegt (Google Ads, LinkedIn, E-Mail CRM, Webinar-LP, Sales Pipeline, Instagram Reels)
-- [x] **Bidirektionale Analyse**: Einblick, welche Kampagnen UND welcher Content gerade auf diesem Kanal ausgespielt werden
-- [x] **Navigation State**: Unterstützung von Deep-Links aus anderen Modulen (Journeys/Kampagnen)
-- [x] **Navigation**: Direkte Verlinkung zurück zur Kampagnen-Detailseite
+- [x] **In Navigation sichtbar**: Eigener Menüpunkt im Bereich "Marketing" mit Badge
+- [x] **Single-Source-of-Truth**: Alle eingesetzten Kanäle zentral angelegt und bearbeitbar (für Admin & Manager)
+- [x] **Bidirektionale Analyse**: Einblick, welche Kampagnen UND welcher Content auf diesem Kanal ausgespielt werden
+- [x] **Journey-Einordnung**: Touchpoints und Content besitzen nun das Attribut `journeyPhase` für die 1:n Zuordnung zu Phasen im ASIDAS-Funnel oder der Customer Journey.
+- [x] **Navigation State**: Unterstützung von Deep-Links aus anderen Modulen
+- [x] **Datenverwaltung**: Löschen und Bearbeiten von Touchpoints (nur Admin/Manager)
 - [x] **Suche & Filter**: Nach Touchpoint-Name/Description und Typ (Paid, Owned, Earned, Direct)
 
 ### 🆕 ✅ Digitale Positionierung (`/positioning`)
