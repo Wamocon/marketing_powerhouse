@@ -1,8 +1,8 @@
 # 🚀 Momentum — Konzept & Umsetzungsstand
 
-> **Letzte Aktualisierung:** 11.03.2026
-> **Version:** 0.6.2 — Formular-Synchronisierung (Erstellung vs. Edit)
-> **Status:** Phase 0.5 — UI-Verfeinerung & Workflows (Konsistente Formulare)
+> **Letzte Aktualisierung:** 13.03.2026
+> **Version:** 0.7.0 — Migration auf Next.js + TypeScript + Tailwind CSS
+> **Status:** Phase 0.6 — Framework-Migration (Next.js App Router)
 > **Produktname:** Momentum | **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ---
@@ -17,13 +17,17 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 
 | Schicht | Technologie | Status |
 |---|---|---|
-| **Frontend** | React + Vite | ✅ Aktiv |
-| **Styling** | Vanilla CSS (Design System) | ✅ Aktiv |
-| **Routing** | React Router v7 | ✅ Aktiv |
+| **Framework** | Next.js 16 (App Router, Turbopack) | ✅ Aktiv |
+| **Sprache** | TypeScript (strict mode) | ✅ Aktiv |
+| **Frontend** | React 19 | ✅ Aktiv |
+| **Styling** | Tailwind CSS v4 + Design System (CSS Custom Properties) | ✅ Aktiv |
+| **Routing** | Next.js App Router (dateibasiert) | ✅ Aktiv |
 | **State / Auth** | React Context (AuthContext, TaskContext, ContentContext) | ✅ Aktiv |
 | **Charts** | Recharts | ✅ Aktiv |
 | **Icons** | Lucide React | ✅ Aktiv |
 | **Typografie** | Google Fonts (Inter) | ✅ Aktiv |
+| **Build-Tool** | Turbopack (integriert in Next.js) | ✅ Aktiv |
+| **Linting** | ESLint + @typescript-eslint | ✅ Aktiv |
 | **Backend** | Supabase (geplant) | 🔜 Ausstehend |
 | **Auth (Prod)** | Supabase Auth (geplant) | 🔜 Ausstehend |
 | **Hosting** | Vercel (geplant) | 🔜 Ausstehend |
@@ -34,43 +38,95 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 
 ```
 Marketing_powerhouse/
-├── index.html
+├── next.config.ts                    ← Next.js Konfiguration
+├── postcss.config.mjs                ← PostCSS mit Tailwind CSS v4
+├── tsconfig.json                     ← TypeScript-Konfiguration
 ├── package.json
-├── vite.config.js
 ├── KONZEPT.md                        ← Dieses Dokument
+├── app/                              ← Next.js App Router (Seiten-Routing)
+│   ├── layout.tsx                    ← Root-Layout (HTML, Fonts, Providers)
+│   ├── providers.tsx                 ← Client-seitiger Context-Provider-Wrapper
+│   ├── client-shell.tsx              ← Auth-Gate + Layout (Sidebar/Header)
+│   ├── page.tsx                      ← Dashboard (/)
+│   ├── campaigns/
+│   │   ├── page.tsx                  ← Kampagnen-Liste (/campaigns)
+│   │   └── [id]/page.tsx             ← Kampagnen-Detail (/campaigns/:id)
+│   ├── audiences/page.tsx            ← Zielgruppen (/audiences)
+│   ├── journeys/page.tsx             ← Customer Journey (/journeys)
+│   ├── asidas/page.tsx               ← ASIDAS Funnel (/asidas)
+│   ├── touchpoints/page.tsx          ← Kanäle & Touchpoints (/touchpoints)
+│   ├── content/page.tsx              ← Content-Kalender (/content)
+│   ├── content-overview/page.tsx     ← Content-Übersicht (/content-overview)
+│   ├── budget/page.tsx               ← Budget (/budget)
+│   ├── tasks/page.tsx                ← Aufgaben (/tasks)
+│   ├── positioning/page.tsx          ← Digitale Positionierung (/positioning)
+│   ├── settings/page.tsx             ← Einstellungen (/settings)
+│   └── manual/page.tsx               ← Handbuch (/manual)
 └── src/
-    ├── main.jsx
-    ├── App.jsx                       ← AuthProvider-Wrapper, Routing
-    ├── index.css                     ← Design System (vollständig)
+    ├── index.css                     ← Tailwind CSS v4 + Design System
+    ├── types/
+    │   ├── index.ts                  ← Zentrale TypeScript-Typdefinitionen
+    │   └── dashboard.ts              ← Dashboard-spezifische Typen
     ├── context/
-    │   └── AuthContext.jsx           ← 🆕 RBAC: Rollen, Permissions, useAuth()
+    │   ├── AuthContext.tsx            ← RBAC: Rollen, Permissions, useAuth()
+    │   ├── ContentContext.tsx         ← Content-State-Management
+    │   └── TaskContext.tsx            ← Aufgaben-State-Management
     ├── data/
-    │   └── mockData.js               ← Testnutzer, Positionierung, Kampagnen, ...
-    ├── components/
-    │   ├── Layout.jsx
-    │   ├── Sidebar.jsx               ← Rollen-sensitiv, Navigation mit Kanäle & Touchpoints
-    │   ├── Header.jsx                ← Rollen-Badge, Nutzeranzeige
-    │   ├── AudienceDetailModal.jsx
-    │   ├── ContentDetailModal.jsx
-    │   ├── NewContentModal.jsx
-    │   ├── TaskDetailModal.jsx
-    │   └── PageHelp.jsx
-    └── pages/
-        ├── LoginPage.jsx             ← Echter Login + Dev-Panel (Schnellzugang)
-        ├── DashboardPage.jsx
-        ├── CampaignsPage.jsx         ← Button-Sichtbarkeit rollenbasiert
-        ├── CampaignDetailPage.jsx    ← Master-Prompt, Personas, Keywords
-        ├── AudiencesPage.jsx         ← Zielgruppen & Avatare
-        ├── ContentCalendarPage.jsx
-        ├── ContentOverviewPage.jsx   ← Content-Übersicht mit KPIs
-        ├── BudgetPage.jsx            ← Zugangssperre für Members
-        ├── TasksPage.jsx
-        ├── CustomerJourneyPage.jsx   ← 5-Phasen Standard-Modell (Primär)
-        ├── AsidasFunnelPage.jsx      ← ASIDAS-Funnel Ansicht (Sekundär)
-        ├── TouchpointsPage.jsx       ← 🆕 Kanäle & Touchpoints (in Navigation)
-        ├── PositioningPage.jsx       ← Digitale Positionierung
-        ├── ManualPage.jsx            ← Rollenspezifische Anleitung
-        └── SettingsPage.jsx          ← Admin-Tab (Benutzerverwaltung)
+    │   ├── mockData.ts               ← Zentrale Re-Exports
+    │   ├── users.ts                  ← Testnutzer
+    │   ├── campaigns.ts              ← Kampagnen, Zielgruppen, Touchpoints
+    │   ├── positioning.ts            ← Unternehmenspositionierung, Keywords
+    │   ├── dashboard.ts              ← Dashboard-Daten, Budget
+    │   └── journeys.ts               ← Customer Journey & ASIDAS-Daten
+    ├── styles/
+    │   ├── variables.css              ← CSS Custom Properties (Farben, Spacing)
+    │   ├── base.css                  ← Reset & Basis-Stile
+    │   ├── layout.css                ← App-Layout, Sidebar, Header
+    │   ├── components.css            ← Karten, Buttons, Badges, Forms
+    │   ├── ui.css                    ← Tabs, Modals, Tooltips
+    │   ├── features.css              ← Kanban, Kalender, Charts
+    │   ├── pages.css                 ← Seitenspezifische Stile
+    │   └── pages-extra.css           ← Persona/Avatar-Stile
+    ├── components/                   ← Wiederverwendbare UI-Komponenten
+    │   ├── Layout.tsx                ← App-Shell (Sidebar + Header + Content)
+    │   ├── Sidebar.tsx               ← Navigation (next/link, usePathname)
+    │   ├── Header.tsx                ← Breadcrumb, Rollen-Badge
+    │   ├── PageHelp.tsx              ← Kontextuelle Hilfe-Komponente
+    │   ├── DashboardViews.tsx        ← Admin/Manager/Member Dashboard-Ansichten
+    │   ├── DashboardComponents.tsx   ← Dashboard-Statistiken, BudgetOverview
+    │   ├── CampaignDetailComponents.tsx ← Kampagnen-UI-Bausteine
+    │   ├── CampaignDetailTabs.tsx    ← OverviewTab, NewCreativeModal
+    │   ├── ChannelKpiSection.tsx     ← Kanal-KPI Aufschlüsselung (reusable)
+    │   ├── PositioningComponents.tsx ← SectionHeader, Field, CommsContent
+    │   ├── ManualComponents.tsx      ← Handbuch-UI-Bausteine
+    │   ├── ManualTabs.tsx            ← ManagerTab, WorkflowsTab
+    │   ├── SettingsAdmin.tsx         ← Admin-Einstellungen-Tab
+    │   ├── TaskAiAgent.tsx           ← KI-Assistent für Aufgaben
+    │   ├── ContentLinkedTasks.tsx    ← Verknüpfte Aufgaben im Content-Modal
+    │   ├── AudienceDetailModal.tsx
+    │   ├── ContentDetailModal.tsx
+    │   ├── TaskDetailModal.tsx
+    │   ├── TouchpointDetailModal.tsx
+    │   ├── NewCampaignModal.tsx      ← 3-Schritt Kampagnen-Erstellung
+    │   ├── NewContentModal.tsx
+    │   ├── NewTaskModal.tsx
+    │   └── NewTouchpointModal.tsx
+    └── views/                        ← Seiten-Komponenten (von app/ importiert)
+        ├── LoginPage.tsx
+        ├── DashboardPage.tsx
+        ├── CampaignsPage.tsx
+        ├── CampaignDetailPage.tsx
+        ├── AudiencesPage.tsx
+        ├── ContentCalendarPage.tsx
+        ├── ContentOverviewPage.tsx
+        ├── BudgetPage.tsx
+        ├── TasksPage.tsx
+        ├── CustomerJourneyPage.tsx
+        ├── AsidasFunnelPage.tsx
+        ├── TouchpointsPage.tsx
+        ├── PositioningPage.tsx
+        ├── ManualPage.tsx
+        └── SettingsPage.tsx
 ```
 
 ---
@@ -109,8 +165,8 @@ Marketing_powerhouse/
 
 ### Technische Umsetzung
 
-```javascript
-// src/context/AuthContext.jsx
+```typescript
+// src/context/AuthContext.tsx
 const { can, isRole, currentUser } = useAuth();
 
 // Beispiel-Nutzung im UI:
@@ -188,6 +244,7 @@ const { can, isRole, currentUser } = useAuth();
 - [x] **Detailseite (3 Tabs)**: Übersicht, Creatives & Aufgaben, Performance
 - [x] **Creative-Workflow (10 Stufen)**: Entwurf → KI-Generierung → KI-Vorschlag → Review → Überarbeitung → Freigabe → Einplanung → Posting → Beobachtung → KI-Analyse
 - [x] Aufgaben nach Scope (Übergreifend vs. kanalspezifisch)
+- [x] **Kanal-KPIs (Performance-Tab)**: Aufschlüsselung der Campaign-KPIs nach verknüpftem Touchpoint/Kanal (Impressions, Clicks, Conversions, CTR, Spend, CPC, CPA) direkt im Performance-Reiter der Kampagnendetailseite
 - [x] Modal für neues Creative (Typen: Post, Reel, Ad, Mail)
 - [ ] Kampagne bearbeiten/löschen (Grunddaten)
 
@@ -210,6 +267,8 @@ const { can, isRole, currentUser } = useAuth();
 - [x] **In Navigation sichtbar**: Eigener Menüpunkt im Bereich "Marketing" mit Badge
 - [x] **Single-Source-of-Truth**: Alle eingesetzten Kanäle zentral angelegt und bearbeitbar (für Admin & Manager)
 - [x] **Bidirektionale Analyse**: Einblick, welche Kampagnen UND welcher Content auf diesem Kanal ausgespielt werden
+- [x] **Kanal-KPIs (aggregiert)**: Jeder Touchpoint zeigt seine Gesamt-Performance (Impressions, Clicks, CTR, Conversions, Spend, CPC, CPA) in der Kartenübersicht und im Detail-Modal
+- [x] **KPI-Aufschlüsselung nach Kampagne**: Im Touchpoint-Detail-Modal sieht man, welche Kampagne welche KPI-Werte auf diesem Kanal erzielt
 - [x] **Journey-Einordnung**: Touchpoints und Content besitzen nun das Attribut `journeyPhase` für die 1:n Zuordnung zu Phasen in der Customer Journey (5-Phasen). Dropdowns wurden auf dieses Modell vereinheitlicht.
 - [x] **Navigation State**: Unterstützung von Deep-Links aus anderen Modulen
 - [x] **Datenverwaltung**: Löschen und Bearbeiten von Touchpoints (nur Admin/Manager)
@@ -272,7 +331,7 @@ const { can, isRole, currentUser } = useAuth();
 
 ---
 
-## 7. Datenmodell (Mock — `mockData.js`)
+## 7. Datenmodell (Mock — `mockData.ts`)
 
 ### Test-Nutzer (`testUsers`)
 ```
@@ -337,6 +396,8 @@ const { can, isRole, currentUser } = useAuth();
 ## 8. Design-System (`src/index.css`)
 
 - **Dark Theme** mit CSS Custom Properties (Farben, Spacing, Typografie, Radii, Schatten)
+- **Tailwind CSS v4**: Integriert über `@tailwindcss/postcss` PostCSS-Plugin
+- **Modulares CSS**: Aufgeteilt in 8 Dateien (variables, base, layout, components, ui, features, pages, pages-extra)
 - **Komponenten-Klassen**: Sidebar, Header, Cards, Stats, Buttons, Badges, Tables, Modal, Form, Progress, Kanban, Calendar, Tabs
 - **Persona-Avatare**: `.persona-avatar`, `.persona-avatar--lg`, `.persona-avatar--sm`
 - **Keyword-Tags**: `.keyword-tag--read`, `.keyword-tag--company`, `.keyword-tag--campaign`, `.keyword-tag--add`
@@ -375,6 +436,11 @@ Inhaltsebene (Member arbeitet)
 ## 10. Nächste Schritte
 
 ### Phase 0.5 — UI-Verfeinerung
+- [x] TypeScript-Migration (vollständig, strict mode)
+- [x] Tailwind CSS v4 Integration
+- [x] Migration auf Next.js App Router (Turbopack)
+- [x] Dateibasiertes Routing (kein React Router mehr)
+- [x] Wiederverwendbare Komponenten extrahiert (max. 300 Zeilen/Datei)
 - [ ] Responsive Design (Tablet)
 - [ ] Drag & Drop im Kanban
 - [ ] Wochenansicht im Kalender
@@ -411,7 +477,7 @@ Inhaltsebene (Member arbeitet)
 
 | Frage | Optionen | Status |
 |---|---|---|
-| Next.js oder Vite? | Plan: Next.js, Aktuell: Vite | Vite (Prototyp) |
+| Next.js oder Vite? | Plan: Next.js, Aktuell: Next.js 16 | ✅ Next.js (App Router) |
 | E-Mail-Modul oder Integration? | Eigen vs. Mailchimp/Brevo | Offen |
 | CRM eingebaut oder Connector? | Eigen vs. HubSpot/Salesforce | Offen |
 | KI-Provider | OpenAI, Anthropic, Gemini? | Offen |
@@ -420,5 +486,7 @@ Inhaltsebene (Member arbeitet)
 
 ---
 
-> **Hinweis:** Diese Datei wird bei jedem Entwicklungsschritt aktualisiert.  
-> Dev-Server: `npm run dev` → http://localhost:5173
+> **Hinweis:** Diese Datei wird bei jedem Entwicklungsschritt aktualisiert.
+> Dev-Server: `npm run dev` → http://localhost:3000
+> Build: `npm run build` (Turbopack)
+> Typencheck: `npm run typecheck`
