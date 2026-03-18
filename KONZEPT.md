@@ -1,8 +1,8 @@
 # 🚀 Momentum — Konzept & Umsetzungsstand
 
-> **Letzte Aktualisierung:** 13.03.2026
-> **Version:** 0.7.0 — Migration auf Next.js + TypeScript + Tailwind CSS
-> **Status:** Phase 0.6 — Framework-Migration (Next.js App Router)
+> **Letzte Aktualisierung:** 16.07.2025
+> **Version:** 0.8.0 — Supabase Backend-Integration (vollständig)
+> **Status:** Phase 1 — Backend-Anbindung (Supabase)
 > **Produktname:** Momentum | **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ---
@@ -22,14 +22,15 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 | **Frontend** | React 19 | ✅ Aktiv |
 | **Styling** | Tailwind CSS v4 + Design System (CSS Custom Properties) | ✅ Aktiv |
 | **Routing** | Next.js App Router (dateibasiert) | ✅ Aktiv |
-| **State / Auth** | React Context (AuthContext, TaskContext, ContentContext) | ✅ Aktiv |
+| **State / Auth** | React Context (AuthContext, DataContext, TaskContext, ContentContext) | ✅ Aktiv |
 | **Charts** | Recharts | ✅ Aktiv |
 | **Icons** | Lucide React | ✅ Aktiv |
 | **Typografie** | Google Fonts (Inter) | ✅ Aktiv |
 | **Build-Tool** | Turbopack (integriert in Next.js) | ✅ Aktiv |
 | **Linting** | ESLint + @typescript-eslint | ✅ Aktiv |
-| **Backend** | Supabase (geplant) | 🔜 Ausstehend |
-| **Auth (Prod)** | Supabase Auth (geplant) | 🔜 Ausstehend |
+| **Backend / DB** | Supabase (PostgreSQL, eu-central-1) | ✅ Aktiv |
+| **API-Schicht** | `src/lib/api.ts` — vollständige CRUD-Funktionen | ✅ Aktiv |
+| **Auth** | Datenbank-Login (Supabase RLS) | ✅ Aktiv |
 | **Hosting** | Vercel (geplant) | 🔜 Ausstehend |
 
 ---
@@ -42,7 +43,10 @@ Marketing_powerhouse/
 ├── postcss.config.mjs                ← PostCSS mit Tailwind CSS v4
 ├── tsconfig.json                     ← TypeScript-Konfiguration
 ├── package.json
+├── .env.local                        ← Supabase-Credentials (nicht im Git)
 ├── KONZEPT.md                        ← Dieses Dokument
+├── scripts/
+│   └── migrate.mjs                   ← DB-Schema + Seed-Daten Migrationsskript
 ├── app/                              ← Next.js App Router (Seiten-Routing)
 │   ├── layout.tsx                    ← Root-Layout (HTML, Fonts, Providers)
 │   ├── providers.tsx                 ← Client-seitiger Context-Provider-Wrapper
@@ -64,20 +68,20 @@ Marketing_powerhouse/
 │   └── manual/page.tsx               ← Handbuch (/manual)
 └── src/
     ├── index.css                     ← Tailwind CSS v4 + Design System
+    ├── lib/
+    │   ├── supabase.ts               ← Supabase-Client (Singleton)
+    │   ├── api.ts                    ← Vollständige CRUD-API (~500 Zeilen)
+    │   └── constants.ts              ← Content-Type-Farben
     ├── types/
     │   ├── index.ts                  ← Zentrale TypeScript-Typdefinitionen
     │   └── dashboard.ts              ← Dashboard-spezifische Typen
     ├── context/
-    │   ├── AuthContext.tsx            ← RBAC: Rollen, Permissions, useAuth()
-    │   ├── ContentContext.tsx         ← Content-State-Management
-    │   └── TaskContext.tsx            ← Aufgaben-State-Management
+    │   ├── AuthContext.tsx            ← RBAC: Rollen, Permissions, Login via Supabase
+    │   ├── DataContext.tsx            ← Zentraler Daten-Provider (Supabase CRUD)
+    │   ├── ContentContext.tsx         ← Content-State-Management (async)
+    │   └── TaskContext.tsx            ← Aufgaben-State-Management (async)
     ├── data/
-    │   ├── mockData.ts               ← Zentrale Re-Exports
-    │   ├── users.ts                  ← Testnutzer
-    │   ├── campaigns.ts              ← Kampagnen, Zielgruppen, Touchpoints
-    │   ├── positioning.ts            ← Unternehmenspositionierung, Keywords
-    │   ├── dashboard.ts              ← Dashboard-Daten, Budget
-    │   └── journeys.ts               ← Customer Journey & ASIDAS-Daten
+    │   └── mockData.ts               ← (Legacy, nicht mehr verwendet)
     ├── styles/
     │   ├── variables.css              ← CSS Custom Properties (Farben, Spacing)
     │   ├── base.css                  ← Reset & Basis-Stile
@@ -219,11 +223,13 @@ const { can, isRole, currentUser } = useAuth();
 
 ### ✅ Login-Seite
 - [x] Split-Screen Layout
-- [x] E-Mail/Passwort-Formular mit Validierung gegen testUsers
+- [x] E-Mail/Passwort-Formular mit Validierung gegen Supabase-Datenbank
 - [x] Fehlermeldung bei ungültigen Credentials
 - [x] **Dev-Panel**: Ausklappbarer Schnellzugang mit allen 3 Rollen
 - [x] Passwort-Sichtbarkeit Toggle
-- [ ] Supabase Auth (Produktion)
+- [x] Login via Datenbank (Supabase, `api.loginUser`)
+- [x] Nutzer-Status (online/offline) bei Login/Logout
+- [ ] Supabase Auth (JWT-basiert, Produktion)
 - [ ] Registrierung & Passwort-Reset
 
 ### ✅ Dashboard
@@ -246,13 +252,15 @@ const { can, isRole, currentUser } = useAuth();
 - [x] Aufgaben nach Scope (Übergreifend vs. kanalspezifisch)
 - [x] **Kanal-KPIs (Performance-Tab)**: Aufschlüsselung der Campaign-KPIs nach verknüpftem Touchpoint/Kanal (Impressions, Clicks, Conversions, CTR, Spend, CPC, CPA) direkt im Performance-Reiter der Kampagnendetailseite
 - [x] Modal für neues Creative (Typen: Post, Reel, Ad, Mail)
-- [ ] Kampagne bearbeiten/löschen (Grunddaten)
+- [x] **Kampagne löschen**: Über delete-Button in der Detailansicht (Supabase CRUD)
+- [x] **Kampagne erstellen**: Formular-State → `addCampaign()` → Supabase
 
 ### ✅ Zielgruppen & Avatare
 - [x] Persona-Karten mit Avatar, Filter (B2B/B2C), Suche
 - [x] Detail-Panel (Slide-In): Demografie, Pains, Ziele, Kanäle, Journey
 - [x] Modal für neue Persona (Synchronisiert mit allen Detail-Ansichts-Feldern)
-- [ ] Persona bearbeiten/löschen / Templates
+- [x] **Persona bearbeiten**: `updateAudience()` via Supabase
+- [x] **Persona löschen**: `deleteAudience()` via Supabase
 
 ### 🆕 ✅ Customer Journey (`/journeys`) — 5-Phasen-Modell
 - [x] **Customer Journey (5-Phasen)**: (Awareness, Consideration, Purchase, Retention, Advocacy) als primäres Modell
@@ -262,6 +270,7 @@ const { can, isRole, currentUser } = useAuth();
 - [x] **Touchpoint-Integration**: Klick auf einen Journey-Touchpoint öffnet nun direkt das Detail-Modal ohne Seitenwechsel.
 - [x] **Vertriebs-Handoff**: Visueller Trigger für den Übergang von Marketing zu Sales in der Action-Phase.
 - [x] **KPIs & Metriken**: Trends und Kennzahlen pro Stage zur Erfolgsmessung der Journey.
+- [x] **Neue Journey erstellen**: Inline-Formular in beiden Ansichten (ASIDAS + 5-Phasen) mit Zielgruppen-Auswahl und automatischer Stage-Erzeugung
 
 ### ✅ Kanäle & Touchpoints (`/touchpoints`)
 - [x] **In Navigation sichtbar**: Eigener Menüpunkt im Bereich "Marketing" mit Badge
@@ -305,7 +314,8 @@ const { can, isRole, currentUser } = useAuth();
 ### ✅ Budget & Controlling
 - [x] KPIs, Plan vs. Ist Chart, Kategorie-Pie, Detail-Tabelle
 - [x] **Members**: Zugangssperre mit Erklärung
-- [x] **Manager/Admin**: "Ausgabe erfassen"-Button
+- [x] **Manager/Admin**: "Ausgabe erfassen"-Button (Info-Placeholder)
+- [x] **CSV-Export**: Alle Budget-Daten als CSV mit Semikolon-Separator
 - [ ] Echte Eingaben, Budget-Forecast
 
 ### ✅ Aufgaben-Management & Creatives (Unified Model)
@@ -327,13 +337,58 @@ const { can, isRole, currentUser } = useAuth();
 - [x] Allgemein, Team-Übersicht, Integrationen, Benachrichtigungen
 - [x] Felder disabled für Members
 - [x] **Admin**: Tab "Benutzerverwaltung" mit Rollen-Dropdown pro User
-- [ ] Echtes Speichern, API-Key Management
+- [x] **Speichern/Verwerfen**: Workspace-Einstellungen (lokal)
+- [x] **Team-Aktionen**: Placeholder für Einladen, Bearbeiten, Entfernen
+- [ ] Echtes Speichern in DB, API-Key Management
 
 ---
 
-## 7. Datenmodell (Mock — `mockData.ts`)
+## 7. Datenmodell (Supabase PostgreSQL)
 
-### Test-Nutzer (`testUsers`)
+> Alle Daten liegen in einer Supabase PostgreSQL-Datenbank (EU-Central-1).
+> Row Level Security (RLS) ist auf allen Tabellen aktiviert.
+> Die API-Schicht (`src/lib/api.ts`) übernimmt die CRUD-Operationen inkl. snake_case ↔ camelCase Konvertierung.
+
+### Datenbank-Tabellen (17 Tabellen)
+
+| Tabelle | Beschreibung | CRUD-Funktionen |
+|---|---|---|
+| `users` | Testnutzer mit Rollen | `fetchUsers`, `loginUser`, `updateUserStatus` |
+| `campaigns` | Kampagnen-Daten | `fetchCampaigns`, `createCampaign`, `updateCampaign`, `deleteCampaign` |
+| `audiences` | Zielgruppen/Personas | `fetchAudiences`, `createAudience`, `updateAudience`, `deleteAudience` |
+| `touchpoints` | Kanäle & Touchpoints | `fetchTouchpoints`, `createTouchpoint`, `updateTouchpoint`, `deleteTouchpoint` |
+| `tasks` | Aufgaben/Creatives | `fetchTasks`, `createTask`, `updateTask`, `deleteTask` |
+| `contents` | Content-Einträge | `fetchContents`, `createContent`, `updateContent`, `deleteContent` |
+| `company_positioning` | Unternehmenspositionierung | `fetchPositioning`, `savePositioning` |
+| `company_keywords` | Unternehmensweite Keywords | `fetchKeywords`, `createKeyword`, `deleteKeyword` |
+| `budget_overview` | Budget-Gesamtübersicht | `fetchBudgetData`, `updateBudgetOverview` |
+| `budget_categories` | Budget-Kategorien | `updateBudgetCategory`, `createBudgetCategory` |
+| `monthly_trends` | Monatliche Budget-Trends | (via `fetchBudgetData`) |
+| `activity_feed` | Aktivitäts-Feed | `fetchActivityFeed`, `createActivity` |
+| `team_members` | Team-Mitglieder | `fetchTeamMembers` |
+| `dashboard_chart_data` | Dashboard-Diagramm-Daten | `fetchChartData` |
+| `channel_performance` | Kanal-Performance-Daten | `fetchChannelPerformance` |
+| `journeys` | Customer Journeys (5-Phasen + ASIDAS) | `fetchJourneys`, `createJourney`, `deleteJourney` |
+| `journey_stages` | Journey-Phasen/Stages | (via `fetchJourneys`, `createJourney`) |
+
+### Supabase-Konfiguration
+
+```
+Projekt: Momentum
+Region: eu-central-1
+URL: ftbkqtteavvdqmhbmzoy.supabase.co
+RLS: Aktiviert auf allen 17 Tabellen
+Policies: "Allow all for anon" (Entwicklungsmodus)
+```
+
+### Umgebungsvariablen (`.env.local`)
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://ftbkqtteavvdqmhbmzoy.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+```
+
+### Test-Nutzer (in `users`-Tabelle)
 ```
 { id, name, email, password, role ('admin'|'manager'|'member'),
   jobTitle, avatar, status, department, phone, joinedAt }
@@ -435,7 +490,7 @@ Inhaltsebene (Member arbeitet)
 
 ## 10. Nächste Schritte
 
-### Phase 0.5 — UI-Verfeinerung
+### Phase 0.5 — UI-Verfeinerung ✅
 - [x] TypeScript-Migration (vollständig, strict mode)
 - [x] Tailwind CSS v4 Integration
 - [x] Migration auf Next.js App Router (Turbopack)
@@ -447,17 +502,19 @@ Inhaltsebene (Member arbeitet)
 - [ ] Content erstellen/bearbeiten im Kalender
 - [ ] Dark/Light Mode Toggle
 
-### Phase 1 — Backend (Supabase)
-- [ ] Projekt + Datenbank-Schema aufsetzen:
-  - `users` (mit `role` column)
-  - `company_positioning`
-  - `company_keywords`
-  - `audiences` + `campaign_audiences`
-  - `campaigns` (master_prompt, campaign_keywords[])
-  - `tasks` + `content` + `budget_entries`
-- [ ] Supabase Auth (Login, Register, Logout, Reset)
-- [ ] Row Level Security (RLS) nach Rollenmatrix
-- [ ] CRUD für alle Entitäten
+### Phase 1 — Backend (Supabase) ✅
+- [x] Supabase-Projekt + 17 Datenbank-Tabellen erstellt
+- [x] Migrationsskript (`scripts/migrate.mjs`) für Schema + Seed-Daten
+- [x] Supabase-Client (`src/lib/supabase.ts`)
+- [x] Vollständige CRUD-API-Schicht (`src/lib/api.ts`, ~500 Zeilen)
+- [x] snake_case ↔ camelCase Konvertierung
+- [x] Row Level Security (RLS) auf allen Tabellen aktiviert
+- [x] 4 Contexts refactored zu Supabase (DataContext, ContentContext, TaskContext, AuthContext)
+- [x] Mock-Daten-Imports in 14 Dateien durch `useData()` Context ersetzt
+- [x] Login via Datenbank (`loginUser` + Passworvergleich)
+- [x] CRUD für: Kampagnen, Zielgruppen, Touchpoints, Content, Aufgaben, Positionierung, Keywords, Journeys
+- [ ] Supabase Auth (JWT-basiert, statt Klartext-Passwort)
+- [ ] Echtzeit-Updates (Supabase Realtime subscriptions)
 
 ### Phase 2 — Kernfunktionalität
 - [ ] Kampagnen-Workflow (Statusübergänge)
@@ -478,11 +535,13 @@ Inhaltsebene (Member arbeitet)
 | Frage | Optionen | Status |
 |---|---|---|
 | Next.js oder Vite? | Plan: Next.js, Aktuell: Next.js 16 | ✅ Next.js (App Router) |
+| Backend/DB? | Supabase PostgreSQL (eu-central-1) | ✅ Supabase |
+| Auth-Methode? | DB-Login (aktuell) vs. Supabase Auth (JWT) | DB-Login (v0.8), JWT geplant |
 | E-Mail-Modul oder Integration? | Eigen vs. Mailchimp/Brevo | Offen |
 | CRM eingebaut oder Connector? | Eigen vs. HubSpot/Salesforce | Offen |
 | KI-Provider | OpenAI, Anthropic, Gemini? | Offen |
 | Personas: Flat oder Template-System? | Freiform vs. strukturiert | Freiform (v0) |
-| RLS-Granularität | Row-Level oder App-Level? | App-Level (v0), RLS (v1) |
+| RLS-Granularität | Row-Level oder App-Level? | RLS aktiviert (anon-all), rollenbasiert geplant |
 
 ---
 

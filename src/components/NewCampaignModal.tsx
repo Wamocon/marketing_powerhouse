@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { Plus, Users, Bot, Tag, MapPin } from 'lucide-react';
-import { audiences as allAudiences, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
 
 interface NewCampaignModalProps {
     onClose: () => void;
 }
 
 export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
+    const { audiences: allAudiences, touchpoints, addCampaign } = useData();
     const [modalStep, setModalStep] = useState(1);
+    const [campaignName, setCampaignName] = useState('');
+    const [description, setDescription] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [budget, setBudget] = useState('');
     const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
     const [campaignKeywords, setCampaignKeywords] = useState('');
     const [selectedTouchpoints, setSelectedTouchpoints] = useState<string[]>([]);
@@ -49,25 +55,25 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                             <div className="form-group">
                                 <label className="form-label">Kampagnenname</label>
-                                <input type="text" className="form-input" placeholder="z.B. Sommer-Sale 2026" />
+                                <input type="text" className="form-input" placeholder="z.B. Sommer-Sale 2026" value={campaignName} onChange={e => setCampaignName(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Beschreibung</label>
-                                <textarea className="form-input form-textarea" placeholder="Beschreibe das Ziel der Kampagne…" />
+                                <textarea className="form-input form-textarea" placeholder="Beschreibe das Ziel der Kampagne…" value={description} onChange={e => setDescription(e.target.value)} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <div className="form-group">
                                     <label className="form-label">Startdatum</label>
-                                    <input type="date" className="form-input" />
+                                    <input type="date" className="form-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Enddatum</label>
-                                    <input type="date" className="form-input" />
+                                    <input type="date" className="form-input" value={endDate} onChange={e => setEndDate(e.target.value)} />
                                 </div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Budget (€)</label>
-                                <input type="number" className="form-input" placeholder="z.B. 15000" />
+                                <input type="number" className="form-input" placeholder="z.B. 15000" value={budget} onChange={e => setBudget(e.target.value)} />
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -223,7 +229,26 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                 Weiter →
                             </button>
                         ) : (
-                            <button className="btn btn-primary" onClick={onClose}>
+                            <button className="btn btn-primary" onClick={async () => {
+                                await addCampaign({
+                                    name: campaignName || 'Neue Kampagne',
+                                    status: 'planned',
+                                    startDate,
+                                    endDate,
+                                    budget: Number(budget) || 0,
+                                    spent: 0,
+                                    channels: selectedTouchpoints.map(tpId => touchpoints.find(t => t.id === tpId)?.name || ''),
+                                    touchpointIds: selectedTouchpoints,
+                                    description,
+                                    masterPrompt: '',
+                                    targetAudiences: selectedAudiences,
+                                    campaignKeywords: campaignKeywords.split(',').map(k => k.trim()).filter(Boolean),
+                                    kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
+                                    owner: '',
+                                    progress: 0,
+                                });
+                                onClose();
+                            }}>
                                 Kampagne erstellen
                             </button>
                         )}

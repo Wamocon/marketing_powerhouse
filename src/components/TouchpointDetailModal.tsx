@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Megaphone, ExternalLink, ListTodo, Edit2, Trash2, X, BarChart3, Eye, MousePointerClick, TrendingUp, DollarSign, Target } from 'lucide-react';
-import { campaigns, initialContents as content } from '../data/mockData';
+import { useData } from '../context/DataContext';
+import { useContents } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 import type { Touchpoint } from '../types';
 
@@ -25,6 +26,8 @@ interface TouchpointDetailModalProps {
 
 export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, onSave }: TouchpointDetailModalProps) {
     const { can } = useAuth();
+    const { campaigns } = useData();
+    const { contents } = useContents();
     const router = useRouter();
     const canManage = can('canManageTouchpoints');
     const canDelete = can('canDeleteItems');
@@ -38,7 +41,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
     };
 
     const getLinkedContent = (tpId: string) => {
-        return content.filter(c => c.touchpointId === tpId);
+        return contents.filter(c => c.touchpointId === tpId);
     };
 
     return (

@@ -27,6 +27,19 @@ export default function SettingsPage() {
     const { can, currentUser } = useAuth();
     const { teamMembers } = useData();
     const [activeTab, setActiveTab] = useState('general');
+    const [wsName, setWsName] = useState('WAMOCON Academy');
+    const [wsDesc, setWsDesc] = useState('Zentraler Workspace für alle Marketing-Aktivitäten unseres Teams.');
+    const [savedMsg, setSavedMsg] = useState('');
+
+    const handleSaveSettings = () => {
+        setSavedMsg('Einstellungen gespeichert!');
+        setTimeout(() => setSavedMsg(''), 3000);
+    };
+
+    const handleDiscardSettings = () => {
+        setWsName('WAMOCON Academy');
+        setWsDesc('Zentraler Workspace für alle Marketing-Aktivitäten unseres Teams.');
+    };
 
     const tabs = [
         { id: 'general', label: 'Allgemein', icon: Settings },
@@ -89,11 +102,11 @@ export default function SettingsPage() {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Workspace-Name</label>
-                                <input type="text" className="form-input" defaultValue="WAMOCON Academy" disabled={!can('canManageSettings')} />
+                                <input type="text" className="form-input" value={wsName} onChange={e => setWsName(e.target.value)} disabled={!can('canManageSettings')} />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Beschreibung</label>
-                                <textarea className="form-input form-textarea" defaultValue="Zentraler Workspace für alle Marketing-Aktivitäten unseres Teams." disabled={!can('canManageSettings')} />
+                                <textarea className="form-input form-textarea" value={wsDesc} onChange={e => setWsDesc(e.target.value)} disabled={!can('canManageSettings')} />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Standard-Währung</label>
@@ -116,9 +129,10 @@ export default function SettingsPage() {
                                 </select>
                             </div>
                             {can('canManageSettings') && (
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
-                                    <button className="btn btn-secondary">Verwerfen</button>
-                                    <button className="btn btn-primary">Speichern</button>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px', alignItems: 'center' }}>
+                                    {savedMsg && <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', marginRight: 'auto' }}><Check size={14} /> {savedMsg}</span>}
+                                    <button className="btn btn-secondary" onClick={handleDiscardSettings}>Verwerfen</button>
+                                    <button className="btn btn-primary" onClick={handleSaveSettings}>Speichern</button>
                                 </div>
                             )}
                         </div>
@@ -133,7 +147,7 @@ export default function SettingsPage() {
                                     <div className="card-subtitle">{teamMembers.length} Mitglieder</div>
                                 </div>
                                 {can('canManageUsers') && (
-                                    <button className="btn btn-primary btn-sm"><Plus size={14} /> Einladen</button>
+                                    <button className="btn btn-primary btn-sm" onClick={() => alert('Einladungsfunktion wird in der nächsten Version verfügbar sein.')}><Plus size={14} /> Einladen</button>
                                 )}
                             </div>
                             <div className="table-container">
@@ -174,8 +188,8 @@ export default function SettingsPage() {
                                                 {can('canManageUsers') && (
                                                     <td>
                                                         <div style={{ display: 'flex', gap: '4px' }}>
-                                                            <button className="btn btn-ghost btn-sm">Bearbeiten</button>
-                                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }}>Entfernen</button>
+                                                            <button className="btn btn-ghost btn-sm" onClick={() => alert(`Bearbeitung von ${member.name} wird in der nächsten Version verfügbar.`)}>Bearbeiten</button>
+                                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }} onClick={() => alert(`Entfernung von ${member.name} wird in der nächsten Version verfügbar.`)}>Entfernen</button>
                                                         </div>
                                                     </td>
                                                 )}

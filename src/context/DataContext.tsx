@@ -1,15 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { Audience, CompanyPositioning, CompanyKeyword, Touchpoint, AsidasJourney, User } from '../types';
-import type { BudgetData, TeamMember } from '../types/dashboard';
-import type { Campaign } from '../types';
-
-import { testUsers } from '../data/users';
-import { companyPositioning, companyKeywords as initialKeywords, audiences as initialAudiences } from '../data/positioning';
-import { campaigns as initialCampaigns } from '../data/campaigns';
-import { budgetData as initialBudget, teamMembers as initialTeamMembers, touchpoints as initialTouchpoints } from '../data/dashboard';
-import { asidasJourneys as initialAsidasJourneys, customerJourneys as initialCustomerJourneys } from '../data/journeys';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import type { Audience, Touchpoint, AsidasJourney, User, Campaign } from '../types';
+import type { CompanyPositioning, CompanyKeyword, BudgetData, TeamMember, ActivityItem, ChartDataPoint, ChannelPerformanceItem } from '../types/dashboard';
+import * as api from '../lib/api';
 
 interface DataContextValue {
     // Read-only data
@@ -23,59 +17,181 @@ interface DataContextValue {
     customerJourneys: AsidasJourney[];
     positioning: CompanyPositioning;
     companyKeywords: CompanyKeyword[];
+    activityFeed: ActivityItem[];
+    dashboardChartData: ChartDataPoint[];
+    channelPerformance: ChannelPerformanceItem[];
+    loading: boolean;
 
     // Mutators
-    addAudience: (audience: Omit<Audience, 'id'>) => void;
-    savePositioning: (pos: CompanyPositioning) => void;
-    addKeyword: (kw: Omit<CompanyKeyword, 'id'>) => void;
-    deleteKeyword: (id: string) => void;
+    addAudience: (audience: Omit<Audience, 'id'>) => Promise<void>;
+    updateAudience: (id: string, updates: Partial<Audience>) => Promise<void>;
+    deleteAudience: (id: string) => Promise<void>;
+    addCampaign: (campaign: Omit<Campaign, 'id'>) => Promise<Campaign>;
+    updateCampaign: (id: string, updates: Partial<Campaign>) => Promise<void>;
+    deleteCampaign: (id: string) => Promise<void>;
+    addTouchpoint: (tp: Omit<Touchpoint, 'id'>) => Promise<Touchpoint>;
+    updateTouchpoint: (id: string, updates: Partial<Touchpoint>) => Promise<void>;
+    deleteTouchpoint: (id: string) => Promise<void>;
+    savePositioning: (pos: CompanyPositioning) => Promise<void>;
+    addKeyword: (kw: Omit<CompanyKeyword, 'id'>) => Promise<void>;
+    deleteKeyword: (id: string) => Promise<void>;
+    addJourney: (journey: Omit<AsidasJourney, 'id'>, type: 'asidas' | 'customer') => Promise<AsidasJourney>;
+    deleteJourney: (id: string, type: 'asidas' | 'customer') => Promise<void>;
+    refreshData: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-export function DataProvider({ children }: { children: ReactNode }) {
-    const [audiences, setAudiences] = useState<Audience[]>(initialAudiences);
-    const [positioning, setPositioning] = useState<CompanyPositioning>(companyPositioning);
-    const [keywords, setKeywords] = useState<CompanyKeyword[]>(initialKeywords);
+const emptyBudget: BudgetData = { total: 0, spent: 0, remaining: 0, categories: [], monthlyTrend: [] };
+const emptyPositioning: CompanyPositioning = {
+    name: '', tagline: '', founded: '', industry: '', headquarters: '',
+    legalForm: '', employees: '', website: '', vision: '', mission: '',
+    values: [], toneOfVoice: { adjectives: [], description: '', personality: '' },
+    dos: [], donts: [], primaryMarket: '', secondaryMarkets: [],
+    targetCompanySize: '', targetIndustries: [], lastUpdated: '', updatedBy: '',
+};
 
-    const addAudience = useCallback((audience: Omit<Audience, 'id'>) => {
-        setAudiences(prev => [
-            ...prev,
-            { ...audience, id: 'a' + (prev.length + 1) } as Audience,
-        ]);
+export function DataProvider({ children }: { children: ReactNode }) {
+    const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState<User[]>([]);
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [audiences, setAudiences] = useState<Audience[]>([]);
+    const [budgetData, setBudgetData] = useState<BudgetData>(emptyBudget);
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [touchpoints, setTouchpoints] = useState<Touchpoint[]>([]);
+    const [asidasJourneys, setAsidasJourneys] = useState<AsidasJourney[]>([]);
+    const [customerJourneys, setCustomerJourneys] = useState<AsidasJourney[]>([]);
+    const [positioning, setPositioning] = useState<CompanyPositioning>(emptyPositioning);
+    const [keywords, setKeywords] = useState<CompanyKeyword[]>([]);
+    const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
+    const [dashboardChartData, setDashboardChartData] = useState<ChartDataPoint[]>([]);
+    const [channelPerformance, setChannelPerformance] = useState<ChannelPerformanceItem[]>([]);
+
+    const loadAll = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [u, c, a, b, tm, tp, aj, cj, p, kw, af, cd, cp] = await Promise.all([
+                api.fetchUsers(),
+                api.fetchCampaigns(),
+                api.fetchAudiences(),
+                api.fetchBudgetData(),
+                api.fetchTeamMembers(),
+                api.fetchTouchpoints(),
+                api.fetchJourneys('asidas'),
+                api.fetchJourneys('customer'),
+                api.fetchPositioning(),
+                api.fetchKeywords(),
+                api.fetchActivityFeed(),
+                api.fetchChartData(),
+                api.fetchChannelPerformance(),
+            ]);
+            setUsers(u); setCampaigns(c); setAudiences(a); setBudgetData(b);
+            setTeamMembers(tm); setTouchpoints(tp); setAsidasJourneys(aj);
+            setCustomerJourneys(cj); setPositioning(p); setKeywords(kw);
+            setActivityFeed(af); setDashboardChartData(cd); setChannelPerformance(cp);
+        } catch (err) {
+            console.error('Failed to load data:', err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const savePositioning = useCallback((pos: CompanyPositioning) => {
+    useEffect(() => { loadAll(); }, [loadAll]);
+
+    // ── Audience CRUD ──
+    const addAudience = useCallback(async (audience: Omit<Audience, 'id'>) => {
+        const created = await api.createAudience(audience);
+        setAudiences(prev => [...prev, created]);
+    }, []);
+
+    const updateAudienceFn = useCallback(async (id: string, updates: Partial<Audience>) => {
+        await api.updateAudience(id, updates);
+        setAudiences(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    }, []);
+
+    const deleteAudienceFn = useCallback(async (id: string) => {
+        await api.deleteAudience(id);
+        setAudiences(prev => prev.filter(a => a.id !== id));
+    }, []);
+
+    // ── Campaign CRUD ──
+    const addCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
+        const created = await api.createCampaign(campaign);
+        setCampaigns(prev => [...prev, created]);
+        return created;
+    }, []);
+
+    const updateCampaignFn = useCallback(async (id: string, updates: Partial<Campaign>) => {
+        await api.updateCampaign(id, updates);
+        setCampaigns(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    }, []);
+
+    const deleteCampaignFn = useCallback(async (id: string) => {
+        await api.deleteCampaign(id);
+        setCampaigns(prev => prev.filter(c => c.id !== id));
+    }, []);
+
+    // ── Touchpoint CRUD ──
+    const addTouchpoint = useCallback(async (tp: Omit<Touchpoint, 'id'>) => {
+        const created = await api.createTouchpoint(tp);
+        setTouchpoints(prev => [...prev, created]);
+        return created;
+    }, []);
+
+    const updateTouchpointFn = useCallback(async (id: string, updates: Partial<Touchpoint>) => {
+        await api.updateTouchpoint(id, updates);
+        setTouchpoints(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    }, []);
+
+    const deleteTouchpointFn = useCallback(async (id: string) => {
+        await api.deleteTouchpoint(id);
+        setTouchpoints(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    // ── Positioning ──
+    const savePositioningFn = useCallback(async (pos: CompanyPositioning) => {
+        await api.savePositioning(pos);
         setPositioning(pos);
     }, []);
 
-    const addKeyword = useCallback((kw: Omit<CompanyKeyword, 'id'>) => {
-        setKeywords(prev => [
-            ...prev,
-            { ...kw, id: 'kw' + (prev.length + 1) } as CompanyKeyword,
-        ]);
+    // ── Keywords ──
+    const addKeyword = useCallback(async (kw: Omit<CompanyKeyword, 'id'>) => {
+        const created = await api.createKeyword(kw);
+        setKeywords(prev => [...prev, created]);
     }, []);
 
-    const deleteKeyword = useCallback((id: string) => {
+    const deleteKeywordFn = useCallback(async (id: string) => {
+        await api.deleteKeyword(id);
         setKeywords(prev => prev.filter(k => k.id !== id));
+    }, []);
+
+    // ── Journey CRUD ──
+    const addJourney = useCallback(async (journey: Omit<AsidasJourney, 'id'>, type: 'asidas' | 'customer') => {
+        const created = await api.createJourney(journey, type);
+        if (type === 'asidas') setAsidasJourneys(prev => [...prev, created]);
+        else setCustomerJourneys(prev => [...prev, created]);
+        return created;
+    }, []);
+
+    const deleteJourneyFn = useCallback(async (id: string, type: 'asidas' | 'customer') => {
+        await api.deleteJourney(id);
+        if (type === 'asidas') setAsidasJourneys(prev => prev.filter(j => j.id !== id));
+        else setCustomerJourneys(prev => prev.filter(j => j.id !== id));
     }, []);
 
     return (
         <DataContext.Provider value={{
-            users: testUsers,
-            campaigns: initialCampaigns,
-            audiences,
-            budgetData: initialBudget,
-            teamMembers: initialTeamMembers,
-            touchpoints: initialTouchpoints,
-            asidasJourneys: initialAsidasJourneys,
-            customerJourneys: initialCustomerJourneys,
-            positioning,
-            companyKeywords: keywords,
-            addAudience,
-            savePositioning,
-            addKeyword,
-            deleteKeyword,
+            users, campaigns, audiences, budgetData, teamMembers,
+            touchpoints, asidasJourneys, customerJourneys,
+            positioning, companyKeywords: keywords,
+            activityFeed, dashboardChartData, channelPerformance, loading,
+            addAudience, updateAudience: updateAudienceFn, deleteAudience: deleteAudienceFn,
+            addCampaign, updateCampaign: updateCampaignFn, deleteCampaign: deleteCampaignFn,
+            addTouchpoint, updateTouchpoint: updateTouchpointFn, deleteTouchpoint: deleteTouchpointFn,
+            savePositioning: savePositioningFn,
+            addKeyword, deleteKeyword: deleteKeywordFn,
+            addJourney, deleteJourney: deleteJourneyFn,
+            refreshData: loadAll,
         }}>
             {children}
         </DataContext.Provider>

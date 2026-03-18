@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { User, Role, PermissionKey, PermissionMap, RoleConfig } from '../types';
+import * as api from '../lib/api';
 
 export const ROLES = {
     ADMIN: 'admin' as const,
@@ -55,6 +56,7 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
 interface AuthContextValue {
     currentUser: User | null;
     login: (user: User) => void;
+    loginWithCredentials: (email: string, password: string) => Promise<User | null>;
     logout: () => void;
     can: (permission: PermissionKey) => boolean;
     isRole: (role: Role) => boolean;
@@ -66,19 +68,37 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-    const login = (user: User) => setCurrentUser(user);
-    const logout = () => setCurrentUser(null);
+    const login = useCallback((user: User) => {
+        setCurrentUser(user);
+        api.updateUserStatus(user.id, 'online').catch(console.error);
+    }, []);
 
-    const can = (permission: PermissionKey): boolean => {
+    const loginWithCredentials = useCallback(async (email: string, password: string): Promise<User | null> => {
+        const user = await api.loginUser(email, password);
+        if (user) {
+            setCurrentUser(user);
+            api.updateUserStatus(user.id, 'online').catch(console.error);
+        }
+        return user;
+    }, []);
+
+    const logout = useCallback(() => {
+        if (currentUser) {
+            api.updateUserStatus(currentUser.id, 'offline').catch(console.error);
+        }
+        setCurrentUser(null);
+    }, [currentUser]);
+
+    const can = useCallback((permission: PermissionKey): boolean => {
         if (!currentUser) return false;
         const userPermissions = PERMISSIONS[currentUser.role] || PERMISSIONS.member;
         return userPermissions[permission] === true;
-    };
+    }, [currentUser]);
 
-    const isRole = (role: Role) => currentUser?.role === role;
+    const isRole = useCallback((role: Role) => currentUser?.role === role, [currentUser]);
 
     return (
-        <AuthContext.Provider value={{ currentUser, login, logout, can, isRole, ROLE_CONFIG }}>
+        <AuthContext.Provider value={{ currentUser, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG }}>
             {children}
         </AuthContext.Provider>
     );

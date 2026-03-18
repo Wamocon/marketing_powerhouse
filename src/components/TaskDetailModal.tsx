@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { TaskAiAgent } from './TaskAiAgent';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
-import { campaigns, testUsers, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import type { Task } from '../types';
 
 const UI_STATE_LABELS: Record<string, string> = {
@@ -20,8 +20,9 @@ interface TaskDetailModalProps {
 
 export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
     const { currentUser, can } = useAuth();
-    const { updateTask, executeAiAgent, sendAiFeedback } = useTasks();
+    const { updateTask, deleteTask, executeAiAgent, sendAiFeedback } = useTasks();
     const { contents } = useContents();
+    const { campaigns, users: testUsers, touchpoints } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
     const [aiFeedbackText, setAiFeedbackText] = useState('');
@@ -70,8 +71,9 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                             </button>
                         )}
                         {canDelete && !isEditing && (
-                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={async () => {
                                 if (window.confirm('Möchtest du diese Aufgabe wirklich löschen?')) {
+                                    await deleteTask(task.id);
                                     onClose();
                                 }
                             }} title="Löschen">

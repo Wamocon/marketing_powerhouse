@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Megaphone, BarChart3, Calendar, Wallet, Eye, EyeOff, FlaskConical, ChevronDown } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { ROLE_CONFIG } from '../context/AuthContext';
+import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import type { User, Role } from '../types';
 
 const features = [
@@ -11,19 +11,19 @@ const features = [
     { icon: Wallet, title: 'Budget-Kontrolle', text: 'Plan vs. Ist — immer den Überblick behalten.' },
 ];
 
-// Dev-Schnell-Login-Konten will be built from loaded users
-
 interface LoginPageProps {
     onLogin: (user: User) => void;
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
     const { users } = useData();
+    const { loginWithCredentials } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [showDevPanel, setShowDevPanel] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const devAccounts = [
         { user: users.find(u => u.role === 'admin'), label: 'Admin', hint: 'Alle Rechte, User-Management' },
@@ -31,20 +31,25 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         { user: users.find(u => u.role === 'member'), label: 'Member', hint: 'Aufgaben bearbeiten, lesen' },
     ].filter(a => a.user) as { user: User; label: string; hint: string }[];
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const found = users.find(
-            u => u.email === email.trim() && u.password === password
-        );
-        if (found) {
-            onLogin(found);
-        } else {
-            setError('E-Mail oder Passwort ungültig. Nutze die Dev-Zugänge unten.');
+        setIsLoading(true);
+        try {
+            const found = await loginWithCredentials(email.trim(), password);
+            if (found) {
+                onLogin(found);
+            } else {
+                setError('E-Mail oder Passwort ungültig.');
+            }
+        } catch {
+            setError('Verbindungsfehler. Bitte versuche es erneut.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleDevLogin = (user) => {
+    const handleDevLogin = (user: User) => {
         onLogin(user);
     };
 
@@ -113,8 +118,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                             </div>
                         )}
 
-                        <button type="submit" className="btn btn-primary btn-lg w-full" style={{ marginTop: '0' }}>
-                            Anmelden
+                        <button type="submit" className="btn btn-primary btn-lg w-full" style={{ marginTop: '0' }} disabled={isLoading}>
+                            {isLoading ? 'Wird angemeldet...' : 'Anmelden'}
                         </button>
 
                         <p style={{ textAlign: 'center', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>

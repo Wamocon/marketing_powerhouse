@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Megaphone, X, Edit, Check, Trash2 } from 'lucide-react';
-import { campaigns } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import type { Audience } from '../types';
 
@@ -21,18 +21,18 @@ interface AudienceDetailModalProps {
 
 export default function AudienceDetailModal({ audience, onClose }: AudienceDetailModalProps) {
     const { can } = useAuth();
+    const { campaigns, updateAudience, deleteAudience } = useData();
     const canEdit = can('canEditAudiences');
     const canDelete = can('canDeleteItems');
 
     const [editMode, setEditMode] = useState(false);
-    // Wir nutzen hier lokalen State für die UI, da wir keine globale AudienceContext-Funktion haben (Mock)
     const [editedAudience, setEditedAudience] = useState<Audience>({ ...audience });
 
     const getLinkedCampaigns = (audienceId: string) =>
         campaigns.filter(c => c.targetAudiences?.includes(audienceId));
 
-    const handleSave = () => {
-        // Hier würde normalerweise eine Kontext- oder API-Funktion aufgerufen
+    const handleSave = async () => {
+        await updateAudience(audience.id, editedAudience);
         setEditMode(false);
     };
 
@@ -71,8 +71,9 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
                             )
                         )}
                         {canDelete && (
-                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={async () => {
                                 if (window.confirm('Möchtest du diese Persona wirklich löschen?')) {
+                                    await deleteAudience(audience.id);
                                     onClose();
                                 }
                             }} title="Löschen">

@@ -20,12 +20,16 @@ const ASIDAS_COLORS = {
 export default function AsidasFunnelPage() {
     const { can } = useAuth();
     const canEdit = can('canEditPositioning');
-    const { asidasJourneys, audiences, touchpoints } = useData();
+    const { asidasJourneys, audiences, touchpoints, addJourney } = useData();
     const { contents: allContent } = useContents();
 
     const [selectedJourneyId, setSelectedJourneyId] = useState(asidasJourneys[0]?.id || '');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [selectedTouchpoint, setSelectedTouchpoint] = useState<Touchpoint | null>(null);
+    const [showNewJourney, setShowNewJourney] = useState(false);
+    const [newJourneyName, setNewJourneyName] = useState('');
+    const [newJourneyAudience, setNewJourneyAudience] = useState('');
+    const [newJourneyDesc, setNewJourneyDesc] = useState('');
 
     const selectedJourney = asidasJourneys.find(j => j.id === selectedJourneyId);
     const audience = audiences.find(a => a.id === selectedJourney?.audienceId);
@@ -38,6 +42,32 @@ export default function AsidasFunnelPage() {
 
     const resolveContent = (cntId: string) => {
         return allContent.find(c => c.id === cntId);
+    };
+
+    const handleCreateJourney = async () => {
+        if (!newJourneyName.trim()) return;
+        const created = await addJourney({
+            name: newJourneyName,
+            audienceId: newJourneyAudience || audiences[0]?.id || '',
+            description: newJourneyDesc,
+            stages: Object.keys(ASIDAS_COLORS).map(phase => ({
+                id: crypto.randomUUID(),
+                phase,
+                title: phase,
+                description: '',
+                touchpoints: [],
+                contentFormats: [],
+                emotions: [],
+                painPoints: [],
+                metrics: { label: '', value: '', trend: '' },
+                contentIds: [],
+            })),
+        }, 'asidas');
+        setSelectedJourneyId(created.id);
+        setShowNewJourney(false);
+        setNewJourneyName('');
+        setNewJourneyAudience('');
+        setNewJourneyDesc('');
     };
 
     return (
@@ -69,12 +99,38 @@ export default function AsidasFunnelPage() {
                     </select>
 
                     {canEdit && (
-                        <button className="btn btn-primary">
+                        <button className="btn btn-primary" onClick={() => setShowNewJourney(true)}>
                             <Plus size={16} /> Neue Journey
                         </button>
                     )}
                 </div>
             </div>
+
+            {/* New Journey Inline Form */}
+            {showNewJourney && (
+                <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+                    <div className="card-header"><div className="card-title">Neue ASIDAS Journey erstellen</div></div>
+                    <div className="form-group">
+                        <label className="form-label">Name</label>
+                        <input className="form-input" value={newJourneyName} onChange={e => setNewJourneyName(e.target.value)} placeholder="z.B. Launch-Journey für Produkt X" />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Zielgruppe</label>
+                        <select className="form-select" value={newJourneyAudience} onChange={e => setNewJourneyAudience(e.target.value)}>
+                            <option value="">Bitte wählen</option>
+                            {audiences.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Beschreibung</label>
+                        <textarea className="form-input form-textarea" value={newJourneyDesc} onChange={e => setNewJourneyDesc(e.target.value)} placeholder="Kurze Beschreibung der Journey..." />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+                        <button className="btn btn-secondary" onClick={() => setShowNewJourney(false)}>Abbrechen</button>
+                        <button className="btn btn-primary" onClick={handleCreateJourney} disabled={!newJourneyName.trim()}>Erstellen</button>
+                    </div>
+                </div>
+            )}
 
             {/* Meta-Info Card */}
             <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>

@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { ContentItem, ContentStatus } from '../types';
-import { initialContents } from '../data/mockData';
+import * as api from '../lib/api';
 
 export const CONTENT_STATUSES: Record<ContentStatus, { label: string; color: string; icon: string }> = {
     idea: { label: 'Idee', color: '#94a3b8', icon: '💡' },
@@ -17,33 +17,35 @@ export const CONTENT_STATUS_ORDER: ContentStatus[] = [
 
 interface ContentContextValue {
     contents: ContentItem[];
-    addContent: (content: Omit<ContentItem, 'id' | 'createdAt'>) => string;
-    updateContent: (id: string, updates: Partial<ContentItem>) => void;
-    deleteContent: (id: string) => void;
+    addContent: (content: Omit<ContentItem, 'id' | 'createdAt'>) => Promise<string>;
+    updateContent: (id: string, updates: Partial<ContentItem>) => Promise<void>;
+    deleteContent: (id: string) => Promise<void>;
 }
 
 const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-    const [contents, setContents] = useState<ContentItem[]>(initialContents);
+    const [contents, setContents] = useState<ContentItem[]>([]);
 
-    const addContent = (content: Omit<ContentItem, 'id' | 'createdAt'>): string => {
-        const newContent: ContentItem = {
-            id: 'cnt' + Date.now(),
-            createdAt: new Date().toISOString(),
-            ...content,
-        };
-        setContents(prev => [...prev, newContent]);
-        return newContent.id;
-    };
+    useEffect(() => {
+        api.fetchContents().then(setContents).catch(console.error);
+    }, []);
 
-    const updateContent = (id: string, updates: Partial<ContentItem>) => {
+    const addContent = useCallback(async (content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<string> => {
+        const created = await api.createContent(content);
+        setContents(prev => [...prev, created]);
+        return created.id;
+    }, []);
+
+    const updateContent = useCallback(async (id: string, updates: Partial<ContentItem>) => {
+        await api.updateContent(id, updates);
         setContents(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    };
+    }, []);
 
-    const deleteContent = (id: string) => {
+    const deleteContent = useCallback(async (id: string) => {
+        await api.deleteContent(id);
         setContents(prev => prev.filter(c => c.id !== id));
-    };
+    }, []);
 
     return (
         <ContentContext.Provider value={{ contents, addContent, updateContent, deleteContent }}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 import { useAuth } from '../context/AuthContext';
-import { campaigns, testUsers, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import type { Task } from '../types';
 
 interface NewTaskModalProps {
@@ -12,6 +12,7 @@ interface NewTaskModalProps {
 export default function NewTaskModal({ onClose }: NewTaskModalProps) {
     const { addTask } = useTasks();
     const { currentUser } = useAuth();
+    const { campaigns, users: testUsers, touchpoints } = useData();
     
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

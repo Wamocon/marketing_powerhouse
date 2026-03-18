@@ -4,7 +4,8 @@ import { Calendar, FileText, CheckCircle, Plus, Clock, User, Edit2, Save, X, Tra
 import { useAuth } from '../context/AuthContext';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
-import { campaigns, CONTENT_TYPE_COLORS, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
+import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { ContentLinkedTasks } from './ContentLinkedTasks';
 import type { ContentItem, ContentStatus } from '../types';
 
@@ -19,8 +20,9 @@ interface ContentDetailModalProps {
 
 export default function ContentDetailModal({ content, onClose }: ContentDetailModalProps) {
     const { currentUser, can } = useAuth();
-    const { updateContent } = useContents();
+    const { updateContent, deleteContent } = useContents();
     const { tasks, addTask } = useTasks();
+    const { campaigns, touchpoints } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [edited, setEdited] = useState({ ...content });
     const [showNewTask, setShowNewTask] = useState(false);
@@ -101,8 +103,9 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                             </button>
                         )}
                         {canDelete && !isEditing && (
-                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={() => {
+                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: '#ef4444' }} onClick={async () => {
                                 if (window.confirm('Möchtest du diesen Content wirklich löschen?')) {
+                                    await deleteContent(content.id);
                                     onClose();
                                 }
                             }} title="Löschen">

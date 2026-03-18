@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Share2, Plus, Edit, MoreVertical, TrendingUp, Users, Map, Target, Heart, Megaphone, CheckCircle2, Link as LinkIcon, ListTodo, ExternalLink, Edit2, Trash2, Eye, MousePointerClick, DollarSign } from 'lucide-react';
-import { touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import PageHelp from '../components/PageHelp';
 import TouchpointDetailModal from '../components/TouchpointDetailModal';
@@ -21,6 +21,7 @@ const TYPE_COLORS = {
 export default function TouchpointsPage() {
     const { can } = useAuth();
     const searchParams = useSearchParams();
+    const { touchpoints, addTouchpoint, updateTouchpoint, deleteTouchpoint } = useData();
     const canManage = can('canManageTouchpoints');
 
     const [selectedTpId, setSelectedTpId] = useState<string | null>(
@@ -29,15 +30,14 @@ export default function TouchpointsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('All');
     const [showNewModal, setShowNewModal] = useState(false);
-    const [localTouchpoints, setLocalTouchpoints] = useState(touchpoints);
 
-    const filtered = localTouchpoints.filter(tp => {
+    const filtered = touchpoints.filter(tp => {
         const matchSearch = tp.name.toLowerCase().includes(searchTerm.toLowerCase()) || tp.description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchType = filterType === 'All' || tp.type === filterType;
         return matchSearch && matchType;
     });
 
-    const selectedTp = localTouchpoints.find(tp => tp.id === selectedTpId);
+    const selectedTp = touchpoints.find(tp => tp.id === selectedTpId);
 
     return (
         <div className="animate-in">
@@ -81,7 +81,7 @@ export default function TouchpointsPage() {
                     style={{ maxWidth: '200px' }}
                 >
                     <option value="All">Alle Typen</option>
-                    {Array.from(new Set(localTouchpoints.map(tp => tp.type))).map(t => (
+                    {Array.from(new Set(touchpoints.map(tp => tp.type))).map(t => (
                         <option key={t} value={t}>{t}</option>
                     ))}
                 </select>
@@ -151,12 +151,12 @@ export default function TouchpointsPage() {
                 <TouchpointDetailModal
                     touchpoint={selectedTp}
                     onClose={() => setSelectedTpId(null)}
-                    onDelete={(id) => {
-                        setLocalTouchpoints(prev => prev.filter(t => t.id !== id));
+                    onDelete={async (id) => {
+                        await deleteTouchpoint(id);
                         setSelectedTpId(null);
                     }}
-                    onSave={(updatedTp) => {
-                        setLocalTouchpoints(prev => prev.map(t => t.id === updatedTp.id ? updatedTp : t));
+                    onSave={async (updatedTp) => {
+                        await updateTouchpoint(updatedTp.id, updatedTp);
                     }}
                 />
             )}
@@ -164,7 +164,10 @@ export default function TouchpointsPage() {
             {showNewModal && (
                 <NewTouchpointModal
                     onClose={() => setShowNewModal(false)}
-                    onCreate={(newTp) => setLocalTouchpoints([newTp as import('../types').Touchpoint, ...localTouchpoints])}
+                    onCreate={async (newTp) => {
+                        await addTouchpoint(newTp as Omit<import('../types').Touchpoint, 'id'>);
+                        setShowNewModal(false);
+                    }}
                 />
             )}
         </div>

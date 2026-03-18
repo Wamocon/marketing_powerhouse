@@ -3,7 +3,7 @@ import {
     Calendar, Users, Edit, Bot, Tag, Lock, Plus, X,
     Instagram, Youtube, Linkedin, Facebook, Globe, Target,
 } from 'lucide-react';
-import { companyKeywords, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { PLATFORM_ICONS, CREATIVE_TYPES, MiniCalendar } from './CampaignDetailComponents';
 
 interface OverviewTabProps {
@@ -32,6 +32,7 @@ export function CampaignOverviewTab({
     masterPromptExpanded, setMasterPromptExpanded, promptEditMode, setPromptEditMode,
     promptValue, setPromptValue,
 }: OverviewTabProps) {
+    const { touchpoints, companyKeywords } = useData();
     return (
         <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px', marginBottom: '24px' }}>

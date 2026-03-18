@@ -7,7 +7,8 @@ import {
     Sparkles, Eye, CheckCircle2, Clock, Send, BarChart3, AlertCircle, RefreshCw,
     FileText, Image, Video, MessageSquare, Target, Trash2
 } from 'lucide-react';
-import { campaigns, audiences, testUsers, CONTENT_TYPE_COLORS, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
+import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
@@ -27,10 +28,11 @@ export default function CampaignDetailPage() {
     const id = params.id as string;
     const router = useRouter();
     const { can } = useAuth();
+    const { campaigns, audiences, users: testUsers, touchpoints, deleteCampaign } = useData();
     const canDelete = can('canDeleteItems');
     const campaign = campaigns.find(c => c.id === id) || campaigns[0];
-    const status = statusConfig[campaign.status];
-    const linkedAudiences = audiences.filter(a => campaign.targetAudiences?.includes(a.id));
+    const status = campaign ? statusConfig[campaign.status] : statusConfig.planned;
+    const linkedAudiences = audiences.filter(a => campaign?.targetAudiences?.includes(a.id));
 
     // ─── Tabs ───
     const [activeTab, setActiveTab] = useState('overview');
@@ -117,8 +119,9 @@ export default function CampaignDetailPage() {
                             </ul>
                         </PageHelp>
                         {canDelete && (
-                            <button className="btn btn-ghost" style={{ color: '#ef4444' }} onClick={() => {
+                            <button className="btn btn-ghost" style={{ color: '#ef4444' }} onClick={async () => {
                                 if (window.confirm('Möchtest du diese Kampagne wirklich löschen?')) {
+                                    await deleteCampaign(campaign.id);
                                     router.push('/campaigns');
                                 }
                             }}>

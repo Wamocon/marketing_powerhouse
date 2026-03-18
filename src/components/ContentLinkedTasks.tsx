@@ -1,5 +1,5 @@
 import { ListChecks, AlertTriangle, Plus } from 'lucide-react';
-import { testUsers } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import type { Task } from '../types';
 
 interface ContentLinkedTasksProps {
@@ -22,6 +22,7 @@ export function ContentLinkedTasks({
     newTaskTitle, setNewTaskTitle, newTaskPlatform, setNewTaskPlatform,
     newTaskAssignee, setNewTaskAssignee, handleAddTask,
 }: ContentLinkedTasksProps) {
+    const { users: testUsers } = useData();
     return (
         <div className="card" style={{ borderLeft: hasTasks ? '4px solid var(--color-success)' : '4px solid #ef4444' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>

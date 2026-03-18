@@ -5,7 +5,7 @@ import {
     Wallet,
     ArrowUpRight,
 } from 'lucide-react';
-import { budgetData } from '../data/mockData';
+import { useData } from '../context/DataContext';
 
 export const dashboardStats = [
     { label: 'Impressionen', value: '1.38M', change: '+12.5%', positive: true, icon: Eye, color: 'primary' },
@@ -56,13 +56,14 @@ export const getTaskColorLogic = (dueDateStr: string) => {
 };
 
 export function BudgetOverview({ navigate }: { navigate: (path: string) => void }) {
+    const { budgetData } = useData();
     return (
         <div className="card">
             <div className="card-header">
                 <div>
                     <div className="card-title">Budget-Übersicht Q1 2026</div>
                     <div className="card-subtitle">
-                        €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({Math.round(budgetData.spent / budgetData.total * 100)}%)
+                        €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0}%)
                     </div>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => navigate('/budget')}>
@@ -70,7 +71,7 @@ export function BudgetOverview({ navigate }: { navigate: (path: string) => void 
                 </button>
             </div>
             <div className="progress-bar" style={{ height: '10px', marginBottom: '20px' }}>
-                <div className="progress-bar-fill primary" style={{ width: `${Math.round(budgetData.spent / budgetData.total * 100)}%` }} />
+                <div className="progress-bar-fill primary" style={{ width: `${budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0}%` }} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                 {budgetData.categories.slice(0, 5).map((cat) => (

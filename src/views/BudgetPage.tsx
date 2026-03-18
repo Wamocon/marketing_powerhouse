@@ -1,4 +1,5 @@
-import { Wallet, TrendingUp, TrendingDown, AlertTriangle, Lock } from 'lucide-react';
+import { useState } from 'react';
+import { Wallet, TrendingUp, TrendingDown, AlertTriangle, Lock, X } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell,
@@ -34,9 +35,33 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function BudgetPage() {
     const { can } = useAuth();
     const { budgetData } = useData();
+    const [showExpenseForm, setShowExpenseForm] = useState(false);
     if (!budgetData) return <div className="animate-in"><p>Lade Budget-Daten...</p></div>;
-    const percentSpent = Math.round(budgetData.spent / budgetData.total * 100);
+    const percentSpent = budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0;
     const isOverBudget = percentSpent > 90;
+
+    const handleExport = () => {
+        const rows = [
+            ['Kategorie', 'Geplant', 'Ausgegeben', 'Verbleibend', 'Auslastung %'],
+            ...budgetData.categories.map(cat => [
+                cat.name,
+                cat.planned.toString(),
+                cat.spent.toString(),
+                (cat.planned - cat.spent).toString(),
+                (cat.planned > 0 ? Math.round(cat.spent / cat.planned * 100) : 0).toString(),
+            ]),
+            [],
+            ['Gesamt', budgetData.total.toString(), budgetData.spent.toString(), budgetData.remaining.toString(), percentSpent.toString()],
+        ];
+        const csv = rows.map(r => r.join(';')).join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `budget_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // Zugriffsbeschränkung für Members
     if (!can('canSeeBudget')) {
@@ -81,9 +106,9 @@ export default function BudgetPage() {
                             <li><strong>Berechtigung:</strong> Nur berechtige Rollen (Manager/Admins) können diese Seite einsehen, normale Mitarbeiter haben keine Einsicht in diese Datenstrukturen.</li>
                         </ul>
                     </PageHelp>
-                    <button className="btn btn-secondary">Export</button>
+                    <button className="btn btn-secondary" onClick={handleExport}>Export</button>
                     {can('canEditBudget') && (
-                        <button className="btn btn-primary">
+                        <button className="btn btn-primary" onClick={() => setShowExpenseForm(true)}>
                             <Wallet size={16} /> Ausgabe erfassen
                         </button>
                     )}
@@ -91,6 +116,19 @@ export default function BudgetPage() {
             </div>
 
             {/* Top Stats */}
+            {showExpenseForm && (
+                <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+                    <div className="card-header">
+                        <div className="card-title">Neue Ausgabe erfassen</div>
+                        <button className="btn btn-ghost btn-sm" onClick={() => setShowExpenseForm(false)}><X size={16} /></button>
+                    </div>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                        Feature wird in der nächsten Version mit API-Anbindung verfügbar sein.
+                        Aktuell können Ausgaben direkt in der Supabase-Datenbank verwaltet werden.
+                    </p>
+                    <button className="btn btn-secondary" onClick={() => setShowExpenseForm(false)}>Schließen</button>
+                </div>
+            )}
             <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 <div className="stat-card primary">
                     <div className="stat-card-header">

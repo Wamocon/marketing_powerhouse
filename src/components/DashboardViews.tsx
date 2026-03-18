@@ -8,7 +8,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
-import { campaigns, activityFeed, dashboardChartData, channelPerformance } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { dashboardStats as stats, CustomTooltip, getTaskColorLogic, BudgetOverview } from './DashboardComponents';
 
 interface DashboardViewProps {
@@ -20,9 +20,9 @@ interface DashboardViewProps {
     currentUser?: { name: string; role: string } | null;
 }
 
-const activeCampaigns = campaigns.filter(c => c.status === 'active');
-
 export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedContent: _sc }: DashboardViewProps) {
+    const { campaigns, activityFeed, dashboardChartData, channelPerformance } = useData();
+    const activeCampaigns = campaigns.filter(c => c.status === 'active');
     return (
         <>
             <div className="stats-grid">
@@ -183,6 +183,8 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
 }
 
 export function ManagerDashboard({ navigate, tasks, contents, setSelectedTask, setSelectedContent }: DashboardViewProps) {
+    const { campaigns: mgrCampaigns } = useData();
+    const activeCampaigns = mgrCampaigns.filter(c => c.status === 'active');
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div className="card">

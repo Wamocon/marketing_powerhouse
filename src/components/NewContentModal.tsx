@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useContents } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
-import { campaigns, touchpoints } from '../data/mockData';
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 
 interface NewContentModalProps {
     onClose: () => void;
@@ -12,6 +13,8 @@ interface NewContentModalProps {
 export default function NewContentModal({ onClose, defaultCampaignId }: NewContentModalProps) {
     const { addContent, updateContent } = useContents();
     const { addTask } = useTasks();
+    const { campaigns, touchpoints } = useData();
+    const { currentUser } = useAuth();
 
     const [newContent, setNewContent] = useState({
         title: '', description: '', publishDate: '', platform: '',
@@ -19,10 +22,10 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
         touchpointId: '', journeyPhase: 'Awareness'
     });
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         if (!newContent.title.trim()) return;
 
-        const contentId = addContent({
+        const contentId = await addContent({
             title: newContent.title,
             description: newContent.description,
             publishDate: newContent.publishDate || null,
@@ -32,18 +35,16 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
             touchpointId: newContent.touchpointId || null,
             journeyPhase: newContent.journeyPhase || 'Awareness',
             taskIds: [],
-            author: 'Aktueller Nutzer',
+            author: currentUser?.name || 'Unbekannt',
             status: 'idea' as import('../types').ContentStatus,
         });
 
         if (newContent.createTasks && contentId) {
-            const taskId = 't' + Date.now();
-            addTask({
-                id: taskId,
+            await addTask({
                 title: `Aufgabe für: ${newContent.title}`,
                 status: 'draft' as import('../types').TaskStatus,
                 assignee: '',
-                author: 'Aktueller Nutzer',
+                author: currentUser?.name || 'Unbekannt',
                 dueDate: newContent.publishDate || '',
                 publishDate: null,
                 platform: newContent.platform || null,
@@ -54,7 +55,6 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
                 touchpointId: newContent.touchpointId || null,
                 scope: 'single',
             });
-            updateContent(contentId, { taskIds: [taskId] });
         }
 
         onClose();

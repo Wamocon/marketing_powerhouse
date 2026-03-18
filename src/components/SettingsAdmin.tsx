@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { User, RoleConfig } from '../types';
 import { Shield, Plus, Trash2 } from 'lucide-react';
-import { testUsers } from '../data/mockData';
+import { useData } from '../context/DataContext';
 import { ROLE_CONFIG } from '../context/AuthContext';
 
 interface AdminSettingsProps {
@@ -10,6 +10,7 @@ interface AdminSettingsProps {
 }
 
 export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
+    const { users: testUsers } = useData();
     return (
         <div className="animate-in">
             <div className="card" style={{ marginBottom: '16px', borderColor: 'rgba(239,68,68,0.25)' }}>
