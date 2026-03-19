@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════════════
+   PERSONA / AVATAR STYLES
+═══════════════════════════════════════════════ */
+
+.persona-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.persona-avatar--lg {
+  width: 60px;
+  height: 60px;
+  font-size: var(--font-size-md);
+  border-radius: 16px;
+}
+
+.persona-avatar--sm {
+  width: 36px;
+  height: 36px;
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-md);
+}
+
+/* ═══════════════════════════════════════════════
+   KEYWORD TAG STYLES
+═══════════════════════════════════════════════ */
+
+.keyword-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: all var(--transition-fast);
+}
+
+.keyword-tag--read {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.keyword-tag--company {
+  background: rgba(99, 102, 241, 0.08);
+  color: rgba(165, 167, 255, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  cursor: default;
+  user-select: none;
+  font-style: italic;
+}
+
+.keyword-tag--campaign {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  cursor: default;
+}
+
+.keyword-tag--campaign:hover {
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.keyword-tag--add {
+  background: transparent;
+  color: var(--text-tertiary);
+  border: 1px dashed var(--border-color-strong);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.keyword-tag--add:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border-color: var(--color-primary);
+}
+
+/* ═══════════════════════════════════════════════
+   MASTER PROMPT CARD
+═══════════════════════════════════════════════ */
+
+.master-prompt-card {
+  border-color: rgba(99, 102, 241, 0.25);
+  background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(99, 102, 241, 0.04) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.master-prompt-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+
+.master-prompt-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.master-prompt-content {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  border-left: 3px solid rgba(99, 102, 241, 0.4);
+}
+
+.master-prompt-textarea {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  background: var(--bg-elevated) !important;
+}
+
+.master-prompt-textarea:focus {
+  border-color: var(--color-primary) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ═══════════════════════════════════════════════
+   DETAIL PANEL SECTIONS (used in Audience sidebar)
+═══════════════════════════════════════════════ */
+
+.detail-section {
+  padding-bottom: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-section-title {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-md);
+}
