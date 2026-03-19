@@ -22,7 +22,7 @@
  *  createJourney   — without stages | with stages | error throws
  *  deleteJourney   — success | error throws
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // ─── Mock supabase module before any api import ───────────────────────────────
 vi.mock('@/lib/supabase', () => ({
@@ -230,7 +230,7 @@ describe('createTouchpoint()', () => {
 
   // BRANCH: kpis provided → row.kpis: {...}
   it('stores provided kpis object', async () => {
-    const kpis = { impressions: 500, clicks: 50, ctr: 0.1, conversions: 10 };
+    const kpis = { impressions: 500, clicks: 50, ctr: 0.1, conversions: 10, spend: 0, cpc: 0, cpa: 0 };
     mockFrom({ data: { ...dbTouchpointWithKpis, kpis }, error: null });
     const tp = await api.createTouchpoint({ ...base, kpis });
     expect(tp.kpis).toEqual(kpis);
@@ -249,7 +249,7 @@ describe('updateTouchpoint()', () => {
     await expect(api.updateTouchpoint('tp1', {
       name: 'New Name', type: 'Email', journeyPhase: 'Decision',
       url: 'http://new.url', status: 'inactive', description: 'Updated',
-      kpis: { impressions: 1 },
+      kpis: { impressions: 1, clicks: 0, ctr: 0, conversions: 0, spend: 0, cpc: 0, cpa: 0 },
     })).resolves.toBeUndefined();
   });
 
@@ -298,10 +298,10 @@ describe('fetchCampaigns()', () => {
 
 describe('createCampaign()', () => {
   const base = {
-    name: 'TestCamp', status: 'draft' as const, startDate: '2025-01-01',
+    name: 'TestCamp', status: 'planned' as const, startDate: '2025-01-01',
     endDate: '2025-12-31', budget: 5000, spent: 0, channels: [],
     description: '', masterPrompt: '', targetAudiences: [],
-    campaignKeywords: [], kpis: {}, owner: 'Test', progress: 0,
+    campaignKeywords: [], kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 }, owner: 'Test', progress: 0,
     responsibleManagerId: '', teamMemberIds: [] as string[],
   };
 
@@ -315,7 +315,7 @@ describe('createCampaign()', () => {
 
   // BRANCH: channelKpis provided
   it('creates campaign with channelKpis', async () => {
-    const channelKpis = { Instagram: { reach: 1000 } };
+    const channelKpis = { Instagram: { impressions: 1000, clicks: 50, conversions: 5, ctr: 0.05, spend: 100, cpc: 2, cpa: 20 } };
     mockFrom({ data: { ...dbCampaign, channel_kpis: channelKpis }, error: null });
     const c = await api.createCampaign({ ...base, channelKpis });
     expect(c.channelKpis).toEqual(channelKpis);
@@ -335,7 +335,7 @@ describe('updateCampaign()', () => {
       name: 'X', status: 'active', startDate: '2025-01-01', endDate: '2025-12-31',
       budget: 1000, spent: 100, channels: ['Instagram'], description: 'D',
       masterPrompt: 'M', targetAudiences: [], campaignKeywords: [],
-      kpis: {}, channelKpis: {}, owner: 'O', progress: 50,
+      kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 }, channelKpis: {}, owner: 'O', progress: 50,
     })).resolves.toBeUndefined();
   });
 
@@ -441,7 +441,7 @@ describe('createJourney()', () => {
     const stage = {
       id: 's1', phase: 'Awareness', title: 'Stage 1', description: '',
       touchpoints: [], contentFormats: [], emotions: [], painPoints: [],
-      metrics: {}, contentIds: [],
+      metrics: { label: '', value: '', trend: '' }, contentIds: [],
     };
     const result = await api.createJourney({ ...baseJourney, stages: [stage] }, 'customer');
     expect(result.stages).toHaveLength(1);
@@ -457,7 +457,7 @@ describe('createJourney()', () => {
     const stage = {
       id: 's1', phase: 'Awareness', title: 'Stage 1', description: '',
       touchpoints: [], contentFormats: [], emotions: [], painPoints: [],
-      metrics: {}, contentIds: [],
+      metrics: { label: '', value: '', trend: '' }, contentIds: [],
     };
     mockFromOnce([
       { data: null, error: null },
@@ -511,7 +511,7 @@ describe('updateAudience()', () => {
   it('resolves when all fields are provided', async () => {
     mockFrom({ data: null, error: null });
     await expect(api.updateAudience('a1', {
-      name: 'New', type: 'B2C', segment: 'secondary', color: '#fff',
+      name: 'New', type: 'B2C', segment: 'B2B', color: '#fff',
       initials: 'NN', age: '25-35', gender: 'female', location: 'DE',
       income: 'medium', education: 'bachelor', jobTitle: 'Manager',
       interests: [], painPoints: [], goals: [], preferredChannels: [],

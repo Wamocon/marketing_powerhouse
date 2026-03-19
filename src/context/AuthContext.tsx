@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .catch(() => localStorage.removeItem(SESSION_KEY))
                 .finally(() => setSessionLoading(false));
         } else {
-            setSessionLoading(false);
+            setTimeout(() => setSessionLoading(false), 0);
         }
     }, []);
 

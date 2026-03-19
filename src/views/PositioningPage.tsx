@@ -17,13 +17,13 @@ export default function PositioningPage() {
     const [editSection, setEditSection] = useState<string | null>(null);
     const [newKeywordTerm, setNewKeywordTerm] = useState('');
     const [newKeywordCategory, setNewKeywordCategory] = useState('');
-
-    useEffect(() => { if (positioning) setPos(positioning); }, [positioning]);
-
-    if (!pos) return <div className="animate-in"><p>Lade Positionierung...</p></div>;
     const [openSections, setOpenSections] = useState({
         dna: true, identity: true, comms: true, keywords: true, market: true,
     });
+
+    useEffect(() => { if (positioning) setTimeout(() => setPos(positioning), 0); }, [positioning]);
+
+    if (!pos) return <div className="animate-in"><p>Lade Positionierung...</p></div>;
 
     const canEdit = can('canEditPositioning');
 

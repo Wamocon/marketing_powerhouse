@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import type { Task, TaskStatus } from '../types';
 import { Plus, Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, LayoutList, GripVertical } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
@@ -14,18 +14,18 @@ const STATUS_GROUPS = [
     { id: 'review', title: 'In Review', statuses: ['review', 'revision'], color: 'var(--color-warning)', defaultStatus: 'review' as TaskStatus },
     { id: 'approved', title: 'Freigegeben', statuses: ['approved'], color: 'var(--color-info)', defaultStatus: 'approved' as TaskStatus },
     { id: 'scheduled', title: 'Eingeplant', statuses: ['scheduled'], color: 'var(--color-primary)', defaultStatus: 'scheduled' as TaskStatus },
-    { id: 'done', title: 'Live / Erledigt', statuses: ['posted', 'monitoring', 'analyzed'], color: 'var(--color-success)', defaultStatus: 'posted' as TaskStatus },
+    { id: 'done', title: 'Live / Erledigt', statuses: ['live', 'monitoring', 'analyzed'], color: 'var(--color-success)', defaultStatus: 'live' as TaskStatus },
 ];
 
 const UI_STATE_LABELS = {
     draft: 'Entwurf', ai_generating: 'KI generiert…', ai_ready: 'KI-Vorschlag', review: 'Im Review', revision: 'Überarbeitung',
-    approved: 'Freigegeben', scheduled: 'Eingeplant', posted: 'Gepostet', monitoring: 'Beobachtung', analyzed: 'Analysiert'
+    approved: 'Freigegeben', scheduled: 'Eingeplant', live: 'Live', monitoring: 'Beobachtung', analyzed: 'Analysiert'
 };
 
 const DONE_STATUSES = STATUS_GROUPS.find(g => g.id === 'done')!.statuses;
 
 function getDateUrgency(task: Task): 'overdue' | 'due-soon' | 'live' | 'normal' {
-    if (task.status === 'posted' || task.status === 'monitoring') return 'live';
+    if (task.status === 'live' || task.status === 'monitoring') return 'live';
     if (!task.dueDate || DONE_STATUSES.includes(task.status)) return 'normal';
     const today = new Date();
     today.setHours(0, 0, 0, 0);

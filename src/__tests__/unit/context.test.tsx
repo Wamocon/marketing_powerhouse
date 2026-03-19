@@ -19,6 +19,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import type { Campaign, Touchpoint } from '../../types';
 
 // ─── Mock the api module ──────────────────────────────────────────────────────
 vi.mock('@/lib/api', async () => {
@@ -76,7 +77,7 @@ async function mountAndWait() {
 
 // ─── Audience fixtures ────────────────────────────────────────────────────────
 const audienceBase = {
-  name: 'Entscheider', type: 'B2B', segment: 'primary' as const,
+  name: 'Entscheider', type: 'B2B', segment: 'B2C' as const,
   color: '#333', initials: 'EN', age: '35-50', gender: 'mixed',
   location: 'DACH', income: 'high', education: 'university', jobTitle: 'CEO',
   interests: [], painPoints: [], goals: [], preferredChannels: [],
@@ -138,9 +139,9 @@ describe('DataContext — Audience CRUD', () => {
 // Campaign CRUD
 // ═══════════════════════════════════════════════════════════════════════════════
 const campaignBase = {
-  name: 'Q1', status: 'draft' as const, startDate: '2025-01-01', endDate: '2025-03-31',
+  name: 'Q1', status: 'planned' as const, startDate: '2025-01-01', endDate: '2025-03-31',
   budget: 5000, spent: 0, channels: [], description: '', masterPrompt: '',
-  targetAudiences: [], campaignKeywords: [], kpis: {}, owner: 'Test', progress: 0,
+  targetAudiences: [], campaignKeywords: [], kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 }, owner: 'Test', progress: 0,
   responsibleManagerId: '', teamMemberIds: [] as string[],
 };
 const createdCampaign = { ...campaignBase, id: 'camp-new' };
@@ -155,7 +156,7 @@ describe('DataContext — Campaign CRUD', () => {
     vi.mocked(api.createCampaign).mockResolvedValue(createdCampaign);
     const result = await mountAndWait();
 
-    let returned: typeof createdCampaign | undefined;
+    let returned: Campaign | undefined;
     await act(async () => {
       returned = await result.current.addCampaign(campaignBase);
     });
@@ -205,7 +206,7 @@ describe('DataContext — Touchpoint CRUD', () => {
     vi.mocked(api.createTouchpoint).mockResolvedValue(createdTp);
     const result = await mountAndWait();
 
-    let returned: typeof createdTp | undefined;
+    let returned: Touchpoint | undefined;
     await act(async () => {
       returned = await result.current.addTouchpoint(tpBase);
     });

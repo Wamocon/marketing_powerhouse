@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { BarChart3, TrendingUp, MousePointerClick, Eye, DollarSign, Target } from 'lucide-react';
+import type { ElementType } from 'react';
 import type { ChannelKpi, Touchpoint } from '../types';
 
 interface ChannelKpiSectionProps {
@@ -76,7 +77,7 @@ export default function ChannelKpiSection({ channelKpis, touchpoints, title = 'P
     );
 }
 
-function KpiMiniCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function KpiMiniCard({ icon: Icon, label, value }: { icon: ElementType; label: string; value: string }) {
     return (
         <div style={{ padding: '8px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
             <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', marginBottom: '2px' }}>

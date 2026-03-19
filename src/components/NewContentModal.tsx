@@ -11,7 +11,7 @@ interface NewContentModalProps {
 }
 
 export default function NewContentModal({ onClose, defaultCampaignId }: NewContentModalProps) {
-    const { addContent, updateContent } = useContents();
+    const { addContent } = useContents();
     const { addTask } = useTasks();
     const { campaigns, touchpoints } = useData();
     const { currentUser } = useAuth();

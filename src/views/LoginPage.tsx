@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Megaphone, BarChart3, Calendar, Wallet, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { User } from '../types';
@@ -23,7 +23,7 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!email.trim() || !password) {
             setError('Bitte E-Mail und Passwort eingeben.');

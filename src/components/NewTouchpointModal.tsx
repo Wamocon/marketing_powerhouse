@@ -26,7 +26,7 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
         try {
             await onCreate({ ...newTp });
             // parent's onCreate calls setShowNewModal(false) on success
-        } catch (e) {
+        } catch {
             setError('Fehler beim Speichern. Bitte versuche es erneut.');
             setIsLoading(false);
         }
