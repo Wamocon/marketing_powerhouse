@@ -92,6 +92,8 @@ function toCamelCampaign(r: Record<string, unknown>): Campaign {
     channelKpis: (r.channel_kpis as Campaign['channelKpis']) ?? undefined,
     owner: r.owner as string,
     progress: r.progress as number,
+    responsibleManagerId: (r.responsible_manager_id as string) ?? '',
+    teamMemberIds: (r.team_member_ids as string[]) ?? [],
   };
 }
 
@@ -163,6 +165,12 @@ function toCamelPositioning(r: Record<string, unknown>): CompanyPositioning {
 
 // ─── Users ─────────────────────────────────────────────────
 
+export async function fetchUserById(id: string): Promise<User | null> {
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return toCamelUser(data);
+}
+
 export async function fetchUsers(): Promise<User[]> {
   const { data, error } = await supabase.from('users').select('*');
   if (error) throw error;
@@ -189,7 +197,7 @@ export async function updateUserStatus(id: string, status: User['status']): Prom
 
 export async function fetchCampaigns(): Promise<Campaign[]> {
   const { data, error } = await supabase.from('campaigns').select('*').order('created_at');
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? JSON.stringify(error));
   return (data ?? []).map(toCamelCampaign);
 }
 
@@ -213,9 +221,11 @@ export async function createCampaign(campaign: Omit<Campaign, 'id'>): Promise<Ca
     channel_kpis: campaign.channelKpis ?? null,
     owner: campaign.owner,
     progress: campaign.progress,
+    responsible_manager_id: campaign.responsibleManagerId ?? '',
+    team_member_ids: campaign.teamMemberIds ?? [],
   };
   const { data, error } = await supabase.from('campaigns').insert(row).select().single();
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? JSON.stringify(error));
   return toCamelCampaign(data);
 }
 
@@ -237,13 +247,15 @@ export async function updateCampaign(id: string, updates: Partial<Campaign>): Pr
   if (updates.channelKpis !== undefined) row.channel_kpis = updates.channelKpis;
   if (updates.owner !== undefined) row.owner = updates.owner;
   if (updates.progress !== undefined) row.progress = updates.progress;
+  if (updates.responsibleManagerId !== undefined) row.responsible_manager_id = updates.responsibleManagerId;
+  if (updates.teamMemberIds !== undefined) row.team_member_ids = updates.teamMemberIds;
   const { error } = await supabase.from('campaigns').update(row).eq('id', id);
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? JSON.stringify(error));
 }
 
 export async function deleteCampaign(id: string): Promise<void> {
   const { error } = await supabase.from('campaigns').delete().eq('id', id);
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? JSON.stringify(error));
 }
 
 // ─── Tasks ─────────────────────────────────────────────────

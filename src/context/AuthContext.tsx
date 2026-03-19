@@ -1,6 +1,8 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { User, Role, PermissionKey, PermissionMap, RoleConfig } from '../types';
 import * as api from '../lib/api';
+
+const SESSION_KEY = 'momentum_session_user_id';
 
 export const ROLES = {
     ADMIN: 'admin' as const,
@@ -53,8 +55,18 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
     },
 };
 
+/**
+ * Pure utility — testable without React context.
+ * Returns whether the given role has the given permission.
+ */
+export function computePermission(role: Role | null | undefined, permission: PermissionKey): boolean {
+    if (!role) return false;
+    return PERMISSIONS[role][permission] === true;
+}
+
 interface AuthContextValue {
     currentUser: User | null;
+    sessionLoading: boolean;
     login: (user: User) => void;
     loginWithCredentials: (email: string, password: string) => Promise<User | null>;
     logout: () => void;
@@ -67,8 +79,30 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [sessionLoading, setSessionLoading] = useState(true);
+
+    // Restore session from localStorage on mount
+    useEffect(() => {
+        const storedId = localStorage.getItem(SESSION_KEY);
+        if (storedId) {
+            api.fetchUserById(storedId)
+                .then(user => {
+                    if (user) {
+                        setCurrentUser(user);
+                        api.updateUserStatus(user.id, 'online').catch(console.error);
+                    } else {
+                        localStorage.removeItem(SESSION_KEY);
+                    }
+                })
+                .catch(() => localStorage.removeItem(SESSION_KEY))
+                .finally(() => setSessionLoading(false));
+        } else {
+            setSessionLoading(false);
+        }
+    }, []);
 
     const login = useCallback((user: User) => {
+        localStorage.setItem(SESSION_KEY, user.id);
         setCurrentUser(user);
         api.updateUserStatus(user.id, 'online').catch(console.error);
     }, []);
@@ -76,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loginWithCredentials = useCallback(async (email: string, password: string): Promise<User | null> => {
         const user = await api.loginUser(email, password);
         if (user) {
+            localStorage.setItem(SESSION_KEY, user.id);
             setCurrentUser(user);
             api.updateUserStatus(user.id, 'online').catch(console.error);
         }
@@ -86,19 +121,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentUser) {
             api.updateUserStatus(currentUser.id, 'offline').catch(console.error);
         }
+        localStorage.removeItem(SESSION_KEY);
         setCurrentUser(null);
     }, [currentUser]);
 
-    const can = useCallback((permission: PermissionKey): boolean => {
-        if (!currentUser) return false;
-        const userPermissions = PERMISSIONS[currentUser.role] || PERMISSIONS.member;
-        return userPermissions[permission] === true;
-    }, [currentUser]);
+    const can = useCallback((permission: PermissionKey): boolean =>
+        computePermission(currentUser?.role, permission), [currentUser]);
 
     const isRole = useCallback((role: Role) => currentUser?.role === role, [currentUser]);
 
     return (
-        <AuthContext.Provider value={{ currentUser, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG }}>
+        <AuthContext.Provider value={{ currentUser, sessionLoading, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG }}>
             {children}
         </AuthContext.Provider>
     );

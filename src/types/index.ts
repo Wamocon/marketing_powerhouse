@@ -83,6 +83,8 @@ export interface Campaign {
   channelKpis?: Record<string, ChannelKpi>;
   owner: string;
   progress: number;
+  responsibleManagerId: string;
+  teamMemberIds: string[];
 }
 
 // ─── Task Types ────────────────────────────────────────────

@@ -61,7 +61,9 @@ export function ManagerTab({ sections }: TabProps) {
                                 <p style={{ marginBottom: '16px' }}>Kampagnen sind das Herzstück. Hier laufen Budgets, Content und Performance-Daten zusammen.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <li><strong>Erstellung:</strong> Klicke auf "Neue Kampagne". Setze Start-/Enddatum, Zielsetzung (Brand Awareness, Lead Gen) und weise Zielgruppen zu.</li>
-                                    <li><strong>Detailansicht:</strong> Öffne eine laufende Kampagne. Du siehst nun ein Dashboard mit vier Reitern: Übersicht, Creatives & Aufgaben, Content, Performance.</li>
+                                    <li><strong>Verantwortlicher Manager:</strong> Weise jeder Kampagne einen verantwortlichen Manager zu. Dieser dient als Hauptansprechpartner und Entscheider für die Kampagne.</li>
+                                    <li><strong>Team-Mitglieder:</strong> Plane Team-Mitglieder für die Kampagne ein. Auf der Kampagnen-Karte und in der Detailansicht siehst du sofort, wer an der Kampagne arbeitet.</li>
+                                    <li><strong>Detailansicht:</strong> Öffne eine laufende Kampagne. Du siehst nun ein Dashboard mit vier Reitern: Übersicht, Creatives & Aufgaben, Content, Performance. In der Übersicht werden Manager und Team prominent angezeigt.</li>
                                     <li><strong>Kanal-KPIs (Performance-Tab):</strong> Im Performance-Reiter siehst du neben den aggregierten Kampagnen-KPIs auch eine <strong>Aufschlüsselung pro Kanal/Touchpoint</strong>. So erkennst du sofort, welcher Kanal die meisten Conversions bringt und wo der CPC am effizientesten ist.</li>
                                     <li>Nutze die Kampagnenansicht, um exakt für dieses Thema neuen Content und neue Aufträge an dein Team zu kreieren.</li>
                                 </ul>

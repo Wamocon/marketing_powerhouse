@@ -4,7 +4,7 @@ import type { Touchpoint } from '../types';
 
 interface NewTouchpointModalProps {
     onClose: () => void;
-    onCreate: (tp: Partial<Touchpoint>) => void;
+    onCreate: (tp: Omit<Touchpoint, 'id'>) => Promise<void>;
 }
 
 export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointModalProps) {
@@ -14,18 +14,22 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
         type: 'Owned Website',
         url: '',
         status: 'active' as 'active' | 'planned' | 'inactive',
-        journeyPhase: ''
+        journeyPhase: '',
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         if (!newTp.name.trim()) return;
-        
-        const newId = 'tp' + Date.now();
-        onCreate({
-            id: newId,
-            ...newTp
-        });
-        onClose();
+        setIsLoading(true);
+        setError('');
+        try {
+            await onCreate({ ...newTp });
+            // parent's onCreate calls setShowNewModal(false) on success
+        } catch (e) {
+            setError('Fehler beim Speichern. Bitte versuche es erneut.');
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -109,11 +113,22 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
                     </div>
                 </div>
 
-                <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
-                    <button className="btn btn-ghost" onClick={onClose}>Abbrechen</button>
-                    <button className="btn btn-primary" onClick={handleCreate} disabled={!newTp.name.trim()}>
-                        Kanal anlegen
-                    </button>
+                <div className="modal-footer" style={{ background: 'var(--bg-surface)', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+                    {error && (
+                        <div style={{
+                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                            borderRadius: 'var(--radius-sm)', padding: '8px 12px',
+                            fontSize: 'var(--font-size-xs)', color: '#ef4444',
+                        }}>
+                            {error}
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>Abbrechen</button>
+                        <button className="btn btn-primary" onClick={handleCreate} disabled={!newTp.name.trim() || isLoading}>
+                            {isLoading ? 'Wird gespeichert...' : 'Kanal anlegen'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

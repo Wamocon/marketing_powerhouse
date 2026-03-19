@@ -28,9 +28,9 @@ export default function CampaignDetailPage() {
     const id = params.id as string;
     const router = useRouter();
     const { can } = useAuth();
-    const { campaigns, audiences, users: testUsers, touchpoints, deleteCampaign } = useData();
+    const { campaigns, audiences, users: testUsers, touchpoints, deleteCampaign, loading } = useData();
     const canDelete = can('canDeleteItems');
-    const campaign = campaigns.find(c => c.id === id) || campaigns[0];
+    const campaign = campaigns.find(c => c.id === id);
     const status = campaign ? statusConfig[campaign.status] : statusConfig.planned;
     const linkedAudiences = audiences.filter(a => campaign?.targetAudiences?.includes(a.id));
 
@@ -40,10 +40,10 @@ export default function CampaignDetailPage() {
     // ─── Master Prompt ───
     const [masterPromptExpanded, setMasterPromptExpanded] = useState(false);
     const [promptEditMode, setPromptEditMode] = useState(false);
-    const [promptValue, setPromptValue] = useState(campaign.masterPrompt || '');
+    const [promptValue, setPromptValue] = useState(campaign?.masterPrompt || '');
 
     // ─── Keywords ───
-    const [kwList, setKwList] = useState(campaign.campaignKeywords || []);
+    const [kwList, setKwList] = useState(campaign?.campaignKeywords || []);
     const [newKw, setNewKw] = useState('');
     const [addingKw, setAddingKw] = useState(false);
 
@@ -93,6 +93,32 @@ export default function CampaignDetailPage() {
     const allPlatformCreatives = creatives.filter(c => c.scope === 'all');
 
     // ═══════════════════ RENDER ═══════════════════
+    if (loading) {
+        return (
+            <div className="animate-in">
+                <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
+                    <div className="empty-state-icon">⏳</div>
+                    <div className="empty-state-title">Kampagne wird geladen…</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!campaign) {
+        return (
+            <div className="animate-in">
+                <button className="btn btn-ghost" onClick={() => router.push('/campaigns')} style={{ marginBottom: '16px' }}>
+                    <ArrowLeft size={16} /> Zurück zu Kampagnen
+                </button>
+                <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
+                    <div className="empty-state-icon">🔍</div>
+                    <div className="empty-state-title">Kampagne nicht gefunden</div>
+                    <div className="empty-state-text">Die Kampagne mit der ID „{id}" existiert nicht.</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="animate-in">
             {/* Back + Title */}
@@ -113,6 +139,7 @@ export default function CampaignDetailPage() {
                             <p style={{ marginBottom: '12px' }}>Die Detailansicht einer Kampagne bündelt alle relevanten Workstreams zu diesem Projekt.</p>
                             <ul className="help-list">
                                 <li><strong>Übersicht:</strong> Eine Zusammenfassung der zugehörigen Zielgruppen, SEO-Keywords, sowie des Timings und der Zielsetzung der Kampagne.</li>
+                                <li><strong>Manager & Team:</strong> Jede Kampagne zeigt den verantwortlichen Manager und die eingeplanten Team-Mitglieder. So ist auf einen Blick klar, wer die Kampagne leitet und wer daran arbeitet.</li>
                                 <li><strong>Creatives & Aufgaben (Workflow):</strong> Hier siehst du das Mini-Kanban Board exklusiv für diese Kampagne. Ideal für Manager, um die Design-Realisierung zu überwachen.</li>
                                 <li><strong>Content (Redaktion):</strong> Hier siehst du alle geplanten Beiträge (Social Media, Blog, E-Mail) für diese Kampagne. Verknüpfe direkt Content mit den dazugehörigen Aufgaben.</li>
                                 <li><strong>Performance:</strong> Analytics und Spendings-Tracking speziell heruntergebrochen auf die laufende Kampagne. Die <strong>Kanal-KPIs</strong> zeigen Impressionen, Clicks, CTR, Conversions, Spend, CPC und CPA pro verknüpftem Touchpoint/Kanal – so siehst du auf einen Blick, welcher Kanal am besten performt.</li>

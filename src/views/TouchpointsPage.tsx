@@ -165,7 +165,7 @@ export default function TouchpointsPage() {
                 <NewTouchpointModal
                     onClose={() => setShowNewModal(false)}
                     onCreate={async (newTp) => {
-                        await addTouchpoint(newTp as Omit<import('../types').Touchpoint, 'id'>);
+                        await addTouchpoint(newTp);
                         setShowNewModal(false);
                     }}
                 />

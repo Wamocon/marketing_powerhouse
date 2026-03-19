@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import type { Campaign, Audience, PermissionKey } from '../types';
 import {
     Calendar, Users, Edit, Bot, Tag, Lock, Plus, X,
-    Instagram, Youtube, Linkedin, Facebook, Globe, Target,
+    Instagram, Youtube, Linkedin, Facebook, Globe, Target, UserCheck, UsersRound, Check,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { PLATFORM_ICONS, CREATIVE_TYPES, MiniCalendar } from './CampaignDetailComponents';
@@ -32,7 +33,44 @@ export function CampaignOverviewTab({
     masterPromptExpanded, setMasterPromptExpanded, promptEditMode, setPromptEditMode,
     promptValue, setPromptValue,
 }: OverviewTabProps) {
-    const { touchpoints, companyKeywords } = useData();
+    const { touchpoints, companyKeywords, users, updateCampaign } = useData();
+    const responsibleManager = users.find(u => u.id === campaign.responsibleManagerId);
+    const teamMembers = users.filter(u => campaign.teamMemberIds?.includes(u.id));
+    const managers = users.filter(u => u.role === 'admin' || u.role === 'manager');
+
+    // ─── Team Edit State ───
+    const [editingTeam, setEditingTeam] = useState(false);
+    const [editManagerId, setEditManagerId] = useState(campaign.responsibleManagerId ?? '');
+    const [editTeamIds, setEditTeamIds] = useState<string[]>(campaign.teamMemberIds ?? []);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+
+    const startEdit = () => {
+        setEditManagerId(campaign.responsibleManagerId ?? '');
+        setEditTeamIds(campaign.teamMemberIds ?? []);
+        setSaveError(null);
+        setEditingTeam(true);
+    };
+
+    const saveTeam = async () => {
+        setSaving(true);
+        setSaveError(null);
+        try {
+            await updateCampaign(campaign.id, {
+                responsibleManagerId: editManagerId,
+                teamMemberIds: editTeamIds,
+                owner: users.find(u => u.id === editManagerId)?.name ?? campaign.owner,
+            });
+            setEditingTeam(false);
+        } catch (err) {
+            setSaveError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const toggleEditMember = (uid: string) =>
+        setEditTeamIds(prev => prev.includes(uid) ? prev.filter(i => i !== uid) : [...prev, uid]);
     return (
         <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px', marginBottom: '24px' }}>
@@ -78,6 +116,144 @@ export function CampaignOverviewTab({
                     <div className="card-title" style={{ marginBottom: '12px' }}><Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} />Kampagnenzeitraum</div>
                     <MiniCalendar startDate={campaign.startDate} endDate={campaign.endDate} />
                 </div>
+            </div>
+
+            {/* Manager & Team */}
+            <div className="card" style={{ marginBottom: '24px' }}>
+                <div className="card-header" style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <UsersRound size={16} style={{ color: '#0ea5e9' }} />
+                        <span className="card-title" style={{ margin: 0 }}>Team & Verantwortung</span>
+                    </div>
+                    {can('canEditCampaigns') && !editingTeam && (
+                        <button className="btn btn-secondary btn-sm" onClick={startEdit}>
+                            <Edit size={14} /> Bearbeiten
+                        </button>
+                    )}
+                    {editingTeam && (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => { setEditingTeam(false); setSaveError(null); }}>Abbrechen</button>
+                            <button className="btn btn-primary btn-sm" onClick={saveTeam} disabled={saving}>
+                                <Check size={14} /> {saving ? 'Speichern…' : 'Speichern'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {editingTeam ? (
+                    <div>
+                        {saveError && (
+                            <div style={{
+                                marginBottom: '16px', padding: '10px 14px',
+                                background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444',
+                                borderRadius: 'var(--radius-sm)', color: '#ef4444',
+                                fontSize: 'var(--font-size-xs)',
+                            }}>
+                                ⚠ {saveError}
+                            </div>
+                        )}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        {/* Edit: Manager */}
+                        <div>
+                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <UserCheck size={12} style={{ color: '#8b5cf6' }} /> Verantwortlicher Manager
+                            </div>
+                            <select
+                                className="form-input"
+                                value={editManagerId}
+                                onChange={e => setEditManagerId(e.target.value)}
+                            >
+                                <option value="">— Kein Manager —</option>
+                                {managers.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name} ({m.jobTitle})</option>
+                                ))}
+                            </select>
+                        </div>
+                        {/* Edit: Team Members */}
+                        <div>
+                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <UsersRound size={12} style={{ color: '#0ea5e9' }} /> Team-Mitglieder
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '280px', overflowY: 'auto' }}>
+                                {users.map(u => {
+                                    const selected = editTeamIds.includes(u.id);
+                                    return (
+                                        <div
+                                            key={u.id}
+                                            onClick={() => toggleEditMember(u.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '10px',
+                                                padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                                                background: selected ? 'rgba(14,165,233,0.1)' : 'var(--bg-elevated)',
+                                                border: `1px solid ${selected ? '#0ea5e9' : 'transparent'}`,
+                                                cursor: 'pointer', transition: 'all 0.15s',
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: 14, height: 14, borderRadius: '3px', flexShrink: 0,
+                                                border: `2px solid ${selected ? '#0ea5e9' : 'var(--border-color)'}`,
+                                                background: selected ? '#0ea5e9' : 'transparent',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            }}>
+                                                {selected && <Check size={9} color="white" />}
+                                            </div>
+                                            <div style={{
+                                                width: 28, height: 28, borderRadius: '50%',
+                                                background: 'var(--color-primary)', color: '#fff',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '0.6rem', fontWeight: 700, flexShrink: 0,
+                                            }}>{u.avatar}</div>
+                                            <div>
+                                                <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>{u.name}</div>
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{u.jobTitle}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div>
+                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <UserCheck size={12} style={{ color: '#8b5cf6' }} /> Verantwortlicher Manager
+                            </div>
+                            {responsibleManager ? (
+                                <div style={{ display: 'flex', gap: '10px', padding: '12px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid #8b5cf6' }}>
+                                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#8b5cf6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0 }}>{responsibleManager.avatar}</div>
+                                    <div>
+                                        <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{responsibleManager.name}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{responsibleManager.jobTitle} · {responsibleManager.department}</div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Kein Manager zugewiesen</div>
+                            )}
+                        </div>
+                        <div>
+                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <UsersRound size={12} style={{ color: '#0ea5e9' }} /> Team-Mitglieder ({teamMembers.length})
+                            </div>
+                            {teamMembers.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {teamMembers.map(m => (
+                                        <div key={m.id} style={{ display: 'flex', gap: '10px', padding: '8px 12px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid #0ea5e9' }}>
+                                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#0ea5e9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>{m.avatar}</div>
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{m.name}</div>
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{m.jobTitle}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>Keine Team-Mitglieder zugewiesen</div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="card" style={{ marginBottom: '24px', borderLeft: '3px solid #8b5cf6' }}>

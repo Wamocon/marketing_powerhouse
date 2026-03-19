@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ContentItem } from '../types';
-import { Plus, Calendar, AlertTriangle, CheckCircle, FileText, Filter, X } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle, CheckCircle, FileText, Filter, X, LayoutGrid, GripVertical } from 'lucide-react';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { useData } from '../context/DataContext';
@@ -22,6 +22,7 @@ export default function ContentOverviewPage() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterTaskStatus, setFilterTaskStatus] = useState('all');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
     const [showNewContent, setShowNewContent] = useState(false);
 
     const getCampaignName = (cId) => {
@@ -65,6 +66,14 @@ export default function ContentOverviewPage() {
                     <p className="page-subtitle">Alle geplanten und veröffentlichten Inhalte im Überblick</p>
                 </div>
                 <div className="page-header-actions">
+                    <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
+                        <button className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('grid')}>
+                            <LayoutGrid size={14} /> Raster
+                        </button>
+                        <button className={`btn btn-sm ${viewMode === 'kanban' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('kanban')}>
+                            <GripVertical size={14} /> Kanban
+                        </button>
+                    </div>
                     <PageHelp title="Content-Übersicht">
                         <p style={{ marginBottom: '12px' }}>Hier laufen alle Redaktionsinhalte tabellarisch zusammen, egal auf welcher Plattform sie spielen.</p>
                         <ul className="help-list">
@@ -124,8 +133,8 @@ export default function ContentOverviewPage() {
                 </div>
             </div>
 
-            {/* Content Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+            {/* Grid View */}
+            {viewMode === 'grid' && (<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
                 {filteredContents.map(cnt => {
                     const st = CONTENT_STATUSES[cnt.status];
                     const hasTasks = cnt.taskIds && cnt.taskIds.length > 0;
@@ -177,15 +186,102 @@ export default function ContentOverviewPage() {
                         </div>
                     );
                 })}
-            </div>
+            </div>)}
 
-            {filteredContents.length === 0 && (
+            {viewMode === 'grid' && filteredContents.length === 0 && (
                 <div className="card">
                     <div className="empty-state">
                         <div className="empty-state-icon">📄</div>
                         <div className="empty-state-title">Keine Inhalte gefunden</div>
                         <div className="empty-state-text">Passe deine Filtereinstellungen an oder erstelle neuen Content.</div>
                     </div>
+                </div>
+            )}
+
+            {/* Kanban View */}
+            {viewMode === 'kanban' && (
+                <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', alignItems: 'flex-start', paddingBottom: '8px' }}>
+                    {CONTENT_STATUS_ORDER.map(status => {
+                        const st = CONTENT_STATUSES[status];
+                        const colContents = contents.filter(c => {
+                            if (c.status !== status) return false;
+                            if (filterStatus !== 'all' && filterStatus !== status) return false;
+                            if (filterTaskStatus === 'with' && (!c.taskIds || c.taskIds.length === 0)) return false;
+                            if (filterTaskStatus === 'without' && c.taskIds && c.taskIds.length > 0) return false;
+                            return true;
+                        });
+                        return (
+                            <div key={status} style={{
+                                flex: '0 0 260px', minWidth: '220px',
+                                background: 'var(--bg-elevated)',
+                                borderRadius: 'var(--radius-lg)',
+                                border: '1px solid var(--border-color)',
+                            }}>
+                                {/* Column header */}
+                                <div style={{
+                                    padding: '14px 16px 12px',
+                                    borderBottom: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
+                                        <span style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>
+                                            {st.icon} {st.label}
+                                        </span>
+                                    </div>
+                                    <span style={{
+                                        background: `${st.color}20`, color: st.color,
+                                        borderRadius: 'var(--radius-full)', padding: '2px 8px',
+                                        fontSize: '0.7rem', fontWeight: 700,
+                                    }}>{colContents.length}</span>
+                                </div>
+                                {/* Cards */}
+                                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '68vh', overflowY: 'auto' }}>
+                                    {colContents.map(cnt => {
+                                        const hasTasks = cnt.taskIds && cnt.taskIds.length > 0;
+                                        return (
+                                            <div key={cnt.id} onClick={() => setSelectedContent(cnt)} style={{
+                                                background: 'var(--bg-base)', borderRadius: 'var(--radius-md)',
+                                                padding: '12px', cursor: 'pointer', transition: 'all 0.15s',
+                                                border: '1px solid var(--border-color)',
+                                                borderLeft: hasTasks ? `3px solid ${st.color}` : '3px solid #ef4444',
+                                            }}
+                                                onMouseEnter={e => (e.currentTarget.style.boxShadow = 'var(--shadow-md)')}
+                                                onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
+                                            >
+                                                <div style={{ fontWeight: 600, fontSize: 'var(--font-size-xs)', marginBottom: '6px', lineHeight: 1.4 }}>{cnt.title}</div>
+                                                <div style={{ marginBottom: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                    <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.6rem' }}>{cnt.platform}</span>
+                                                    <span className="badge" style={{ background: 'var(--bg-hover)', fontSize: '0.6rem' }}>{getCampaignName(cnt.campaignId)}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                        <Calendar size={10} />
+                                                        {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : '—'}
+                                                    </span>
+                                                    {hasTasks ? (
+                                                        <span style={{ color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                            <CheckCircle size={10} /> {cnt.taskIds!.length}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                            <AlertTriangle size={10} />
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {colContents.length === 0 && (
+                                        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 'var(--font-size-xs)', padding: '28px 8px', opacity: 0.4 }}>
+                                            Keine Inhalte
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 

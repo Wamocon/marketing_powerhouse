@@ -23,6 +23,8 @@ export const campaigns: Campaign[] = [
         },
         owner: 'Anna Schmidt',
         progress: 65,
+        responsibleManagerId: 'u3',
+        teamMemberIds: ['u4', 'u5'],
     },
     {
         id: '2',
@@ -45,6 +47,8 @@ export const campaigns: Campaign[] = [
         },
         owner: 'Tom Weber',
         progress: 85,
+        responsibleManagerId: 'u2',
+        teamMemberIds: ['u4', 'u5', 'u6'],
     },
     {
         id: '3',
@@ -68,6 +72,8 @@ export const campaigns: Campaign[] = [
         },
         owner: 'Lisa Bauer',
         progress: 100,
+        responsibleManagerId: 'u3',
+        teamMemberIds: ['u4', 'u6'],
     },
     {
         id: '4',
@@ -85,6 +91,8 @@ export const campaigns: Campaign[] = [
         kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
         owner: 'Anna Schmidt',
         progress: 0,
+        responsibleManagerId: 'u3',
+        teamMemberIds: ['u5'],
     },
 ];
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Audience } from '../types';
 import { Plus, Search, Users, Target, Megaphone, ChevronRight, Tag, MapPin, Briefcase, Heart } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import PageHelp from '../components/PageHelp';
 import AudienceDetailModal from '../components/AudienceDetailModal';
 
@@ -17,6 +18,7 @@ const typeConfig = {
 
 export default function AudiencesPage() {
     const { audiences, campaigns, addAudience } = useData();
+    const { can } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [segmentFilter, setSegmentFilter] = useState('all');
     const [selectedAudience, setSelectedAudience] = useState<Audience | null>(null);
@@ -80,10 +82,12 @@ export default function AudiencesPage() {
                             <li><strong>Kampagnen-Kopplung:</strong> Wenn du auf eine Persona klickst, siehst du rechts im Detail-Reiter, in welchen aktuellen Kampagnen diese Person zielgenau beworben wird.</li>
                         </ul>
                     </PageHelp>
-                    <button className="btn btn-primary" onClick={() => setShowNewAudienceModal(true)}>
-                        <Plus size={16} />
-                        Neue Persona
-                    </button>
+                    {can('canEditAudiences') && (
+                        <button className="btn btn-primary" onClick={() => setShowNewAudienceModal(true)}>
+                            <Plus size={16} />
+                            Neue Persona
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Calendar, Users, Bot, Tag, MapPin } from 'lucide-react';
+import { Plus, Search, Calendar, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import PageHelp from '../components/PageHelp';
@@ -17,7 +17,7 @@ const statusConfig = {
 export default function CampaignsPage() {
     const router = useRouter();
     const { can } = useAuth();
-    const { campaigns } = useData();
+    const { campaigns, users } = useData();
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
@@ -35,10 +35,12 @@ export default function CampaignsPage() {
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title="Kampagnen-Management">
-                        <p style={{ marginBottom: '12px' }}>Die Kommandozentrale fÃ¼r all deine groÃŸen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.</p>
+                        <p style={{ marginBottom: '12px' }}>Die Kommandozentrale für all deine großen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.</p>
                         <ul className="help-list">
                             <li><strong>Dashboard-Sicht:</strong> Sehe sofort den Fortschritt und die Budget-Auslastung laufender Kampagnen in Kachelansicht.</li>
                             <li><strong>Neue Kampagnen erstellen:</strong> Vergib Budgets, eine Laufzeit (Start/Ende), Keywords und setze verbindlich Zielgruppen, die du zuvor mit dem Team erarbeitet hast.</li>
+                            <li><strong>Verantwortlicher Manager:</strong> Jede Kampagne hat einen verantwortlichen Manager, der als Ansprechpartner und Entscheider fungiert. Wähle ihn beim Erstellen oder Bearbeiten der Kampagne.</li>
+                            <li><strong>Team-Mitglieder:</strong> Plane Team-Mitglieder für die Kampagne ein. So sieht jeder auf einen Blick, wer an welcher Kampagne arbeitet.</li>
                             <li><strong>Deep-Dive:</strong> Mit einem Klick auf "Details" oder die Kachel gelangst du ins Herz (die Detailseite) der Kampagne. Dort planst du den Content, Creatives und checkst die Performance tiefergehend.</li>
                         </ul>
                     </PageHelp>
@@ -96,6 +98,8 @@ export default function CampaignsPage() {
                     const status = statusConfig[campaign.status];
                     const linkedAudienceCount = campaign.targetAudiences?.length || 0;
                     const keywordCount = campaign.campaignKeywords?.length || 0;
+                    const manager = users.find(u => u.id === campaign.responsibleManagerId);
+                    const teamCount = campaign.teamMemberIds?.length || 0;
                     return (
                         <div
                             key={campaign.id}
@@ -167,15 +171,23 @@ export default function CampaignsPage() {
                             </div>
 
                             {/* Meta Info */}
-                            <div style={{ display: 'flex', gap: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            <div style={{ display: 'flex', gap: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <Calendar size={12} />
-                                    <span>{new Date(campaign.startDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })} â€“ {new Date(campaign.endDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</span>
+                                    <span>{new Date(campaign.startDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })} – {new Date(campaign.endDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <Users size={12} />
-                                    <span>{campaign.owner}</span>
-                                </div>
+                                {manager && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <UserCheck size={12} style={{ color: '#8b5cf6' }} />
+                                        <span>{manager.name}</span>
+                                    </div>
+                                )}
+                                {teamCount > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <UsersRound size={12} style={{ color: '#0ea5e9' }} />
+                                        <span>{teamCount} Mitglied{teamCount !== 1 ? 'er' : ''}</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Channels */}

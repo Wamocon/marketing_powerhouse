@@ -60,7 +60,7 @@ const NAV: NavSection[] = [
         section: 'System',
         items: [
             { path: '/manual', icon: HelpCircle, label: 'Anleitung' },
-            { path: '/settings', icon: Settings, label: 'Einstellungen', requiredPermission: 'canManageSettings' },
+            { path: '/settings', icon: Settings, label: 'Einstellungen' },
         ],
     },
 ];

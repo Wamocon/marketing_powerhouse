@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Users, Bot, Tag, MapPin } from 'lucide-react';
+import { Plus, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 interface NewCampaignModalProps {
@@ -7,7 +7,7 @@ interface NewCampaignModalProps {
 }
 
 export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
-    const { audiences: allAudiences, touchpoints, addCampaign } = useData();
+    const { audiences: allAudiences, touchpoints, addCampaign, users } = useData();
     const [modalStep, setModalStep] = useState(1);
     const [campaignName, setCampaignName] = useState('');
     const [description, setDescription] = useState('');
@@ -17,7 +17,17 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
     const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
     const [campaignKeywords, setCampaignKeywords] = useState('');
     const [selectedTouchpoints, setSelectedTouchpoints] = useState<string[]>([]);
+    const [responsibleManagerId, setResponsibleManagerId] = useState('');
+    const [selectedTeamMemberIds, setSelectedTeamMemberIds] = useState<string[]>([]);
 
+    const managers = users.filter(u => u.role === 'admin' || u.role === 'manager');
+    const allMembers = users;
+
+    const toggleTeamMember = (id: string) => {
+        setSelectedTeamMemberIds(prev =>
+            prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+        );
+    };
     const toggleAudience = (id: string) => {
         setSelectedAudiences(prev =>
             prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
@@ -74,6 +84,67 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group">
                                 <label className="form-label">Budget (€)</label>
                                 <input type="number" className="form-input" placeholder="z.B. 15000" value={budget} onChange={e => setBudget(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <UserCheck size={14} style={{ color: '#8b5cf6' }} />
+                                    Verantwortlicher Manager
+                                </label>
+                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
+                                    Wähle den verantwortlichen Manager für diese Kampagne.
+                                </p>
+                                <select className="form-input" value={responsibleManagerId} onChange={e => setResponsibleManagerId(e.target.value)}>
+                                    <option value="">Bitte wählen…</option>
+                                    {managers.map(m => (
+                                        <option key={m.id} value={m.id}>{m.name} ({m.jobTitle})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <UsersRound size={14} style={{ color: '#0ea5e9' }} />
+                                    Team-Mitglieder
+                                </label>
+                                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
+                                    Wähle die Mitglieder, die für diese Kampagne eingeplant sind.
+                                </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    {allMembers.map(member => (
+                                        <div
+                                            key={member.id}
+                                            onClick={() => toggleTeamMember(member.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '8px',
+                                                padding: '8px 12px', borderRadius: 'var(--radius-md)',
+                                                background: selectedTeamMemberIds.includes(member.id) ? 'rgba(14,165,233,0.1)' : 'var(--bg-elevated)',
+                                                border: `1px solid ${selectedTeamMemberIds.includes(member.id) ? '#0ea5e9' : 'transparent'}`,
+                                                cursor: 'pointer', transition: 'all 0.2s ease',
+                                                fontSize: 'var(--font-size-xs)'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+                                                border: `2px solid ${selectedTeamMemberIds.includes(member.id) ? '#0ea5e9' : 'var(--border-color)'}`,
+                                                background: selectedTeamMemberIds.includes(member.id) ? '#0ea5e9' : 'var(--bg-surface)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            }}>
+                                                {selectedTeamMemberIds.includes(member.id) && <span style={{ color: 'white', fontSize: '12px' }}>✓</span>}
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <div style={{
+                                                    width: '24px', height: '24px', borderRadius: '50%',
+                                                    background: 'var(--color-primary)', color: '#fff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '0.6rem', fontWeight: 700, flexShrink: 0,
+                                                }}>{member.avatar}</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontWeight: 600 }}>{member.name}</span>
+                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.65rem' }}>{member.jobTitle}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -244,8 +315,10 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                     targetAudiences: selectedAudiences,
                                     campaignKeywords: campaignKeywords.split(',').map(k => k.trim()).filter(Boolean),
                                     kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
-                                    owner: '',
+                                    owner: responsibleManagerId ? (users.find(u => u.id === responsibleManagerId)?.name || '') : '',
                                     progress: 0,
+                                    responsibleManagerId,
+                                    teamMemberIds: selectedTeamMemberIds,
                                 });
                                 onClose();
                             }}>
