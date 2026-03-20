@@ -74,15 +74,36 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
                 // Restore last selected company from localStorage
                 const storedCompanyId = localStorage.getItem(ACTIVE_COMPANY_KEY);
-                const found = storedCompanyId ? companies.find(c => c.id === storedCompanyId) : null;
-                const target = found ?? companies[0] ?? null;
-                if (target) {
-                    setActiveCompany(target);
-                    setActiveRole(target.role);
-                    setActiveCompanyRole(target.role);
-                    localStorage.setItem(ACTIVE_COMPANY_KEY, target.id);
-                    const members = await api.fetchCompanyMembers(target.id);
+                let selected = false;
+                if (storedCompanyId) {
+                    const found = companies.find(c => c.id === storedCompanyId);
+                    if (found) {
+                        setActiveCompany(found);
+                        setActiveRole(found.role);
+                        setActiveCompanyRole(found.role);
+                        const members = await api.fetchCompanyMembers(found.id);
+                        setCompanyMembers(members);
+                        selected = true;
+                    } else {
+                        localStorage.removeItem(ACTIVE_COMPANY_KEY);
+                    }
+                }
+
+                if (!selected && companies.length > 0) {
+                    const first = companies[0];
+                    setActiveCompany(first);
+                    setActiveRole(first.role);
+                    setActiveCompanyRole(first.role);
+                    localStorage.setItem(ACTIVE_COMPANY_KEY, first.id);
+                    const members = await api.fetchCompanyMembers(first.id);
                     setCompanyMembers(members);
+                }
+
+                if (companies.length === 0) {
+                    setActiveCompany(null);
+                    setActiveRole(null);
+                    setActiveCompanyRole(null);
+                    setCompanyMembers([]);
                 }
             } catch (err) {
                 console.error('Failed to load companies:', err);

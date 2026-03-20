@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types';
+import { useCompany } from './CompanyContext';
 import * as api from '../lib/api';
 import { buildTaskPrompt, type PromptContext } from '../lib/promptBuilder';
 import { generateContent } from '../lib/gemini';
-import { useCompany } from './CompanyContext';
 
 interface TaskContextValue {
     tasks: Task[];
@@ -21,13 +21,20 @@ const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }) {
     const { activeCompany } = useCompany();
-    const companyId = activeCompany?.id;
+    const companyId = activeCompany?.id ?? null;
+    const prevCompanyId = useRef<string | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [promptCtx, setPromptCtx] = useState<Omit<PromptContext, 'task'> | null>(null);
 
     useEffect(() => {
-        if (!companyId) return;
-        api.fetchTasks(companyId).then(setTasks).catch(console.error);
+        if (prevCompanyId.current !== companyId) {
+            prevCompanyId.current = companyId;
+            if (companyId) {
+                api.fetchTasks(companyId).then(setTasks).catch(console.error);
+            } else {
+                setTasks([]);
+            }
+        }
     }, [companyId]);
 
     const addTask = useCallback(async (task: Omit<Task, 'id'> & { id?: string }) => {

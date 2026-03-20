@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { ContentItem, ContentStatus } from '../types';
-import * as api from '../lib/api';
 import { useCompany } from './CompanyContext';
+import * as api from '../lib/api';
 
 export const CONTENT_STATUSES: Record<ContentStatus, { label: string; color: string; icon: string }> = {
     idea: { label: 'Idee', color: '#94a3b8', icon: '💡' },
@@ -27,16 +27,23 @@ const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
     const { activeCompany } = useCompany();
-    const companyId = activeCompany?.id;
+    const companyId = activeCompany?.id ?? null;
+    const prevCompanyId = useRef<string | null>(null);
     const [contents, setContents] = useState<ContentItem[]>([]);
 
     useEffect(() => {
-        if (!companyId) return;
-        api.fetchContents(companyId).then(setContents).catch(console.error);
+        if (prevCompanyId.current !== companyId) {
+            prevCompanyId.current = companyId;
+            if (companyId) {
+                api.fetchContents(companyId).then(setContents).catch(console.error);
+            } else {
+                setContents([]);
+            }
+        }
     }, [companyId]);
 
     const addContent = useCallback(async (content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<string> => {
-        if (!companyId) throw new Error('No active company');
+        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
         const created = await api.createContent(content, companyId);
         setContents(prev => [...prev, created]);
         return created.id;

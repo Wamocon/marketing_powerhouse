@@ -4,6 +4,7 @@ import type { User } from '../types';
 import { Shield, Plus, Trash2 } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 import { ROLE_CONFIG, useAuth } from '../context/AuthContext';
+import * as api from '../lib/api';
 
 interface AdminSettingsProps {
     currentUser: User | null;
@@ -12,9 +13,11 @@ interface AdminSettingsProps {
 
 export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
     const { can, isSuperAdmin } = useAuth();
-    const { companyMembers, updateMemberRole, removeMember } = useCompany();
+    const { companyMembers, addMember, updateMemberRole, removeMember } = useCompany();
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteLoading, setInviteLoading] = useState(false);
 
     if (!can('canManageUsers')) {
         return null;
@@ -43,6 +46,35 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
         }
     };
 
+    const handleInviteByEmail = async () => {
+        const normalizedEmail = inviteEmail.trim().toLowerCase();
+        if (!normalizedEmail || !normalizedEmail.includes('@')) {
+            setError('Bitte eine gueltige E-Mail-Adresse eingeben.');
+            return;
+        }
+        try {
+            setInviteLoading(true);
+            setError('');
+            const user = await api.fetchUserByEmail(normalizedEmail);
+            if (!user) {
+                setError('Benutzer nicht gefunden. Bitte Benutzer zuerst anlegen und erneut zuweisen.');
+                return;
+            }
+            if (companyMembers.some(member => member.userId === user.id)) {
+                setError('Dieser Benutzer ist bereits Mitglied im Unternehmen.');
+                return;
+            }
+            await addMember(user.id, 'member');
+            setInviteEmail('');
+            setSuccess(`Benutzer ${user.name} als Member zugewiesen.`);
+            setTimeout(() => setSuccess(''), 2500);
+        } catch {
+            setError('Benutzer konnte nicht zugewiesen werden.');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
     return (
         <div className="animate-in">
             <div className="card" style={{ marginBottom: '16px', borderColor: 'rgba(239,68,68,0.25)' }}>
@@ -52,12 +84,22 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                             <Shield size={16} style={{ color: '#ef4444' }} /> Admin — Benutzerverwaltung
                         </div>
                         <div className="card-subtitle">
-                            Vollständige Kontrolle über alle Benutzer, Rollen und Berechtigungen
+                            Vollständige Kontrolle über Benutzer, Rollen und Berechtigungen im aktiven Unternehmen
                         </div>
                     </div>
-                    <button className="btn btn-primary btn-sm">
-                        <Plus size={14} /> Neuer Benutzer
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                            type="email"
+                            className="form-input"
+                            placeholder="E-Mail fuer Zuweisung"
+                            value={inviteEmail}
+                            onChange={e => setInviteEmail(e.target.value)}
+                            style={{ minWidth: '230px' }}
+                        />
+                        <button className="btn btn-primary btn-sm" onClick={handleInviteByEmail} disabled={inviteLoading}>
+                            <Plus size={14} /> {inviteLoading ? 'Pruefung...' : 'Per E-Mail zuweisen'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

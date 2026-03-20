@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Building2, Plus, ArrowRight, Shield, Crown,
     Users2, Settings, Trash2, Search, X,
@@ -10,6 +11,7 @@ import { useCompany } from '../context/CompanyContext';
 import type { CompanyRole } from '../types';
 
 export default function CompanySelectPage() {
+    const router = useRouter();
     const { currentUser, isSuperAdmin, logout } = useAuth();
     const { userCompanies, loading, selectCompany, createCompany } = useCompany();
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -30,6 +32,13 @@ export default function CompanySelectPage() {
 
     const getRoleConfig = (role: CompanyRole) => {
         return ROLE_CONFIG[role] || ROLE_CONFIG.member;
+    };
+
+    const handleCreateCompany = async (data: { name: string; description?: string; industry?: string }) => {
+        const createdCompany = await createCompany(data);
+        await selectCompany(createdCompany.id);
+        router.push('/setup?new=1');
+        return createdCompany;
     };
 
     if (loading) {
@@ -280,7 +289,7 @@ export default function CompanySelectPage() {
             {showCreateModal && (
                 <CreateCompanyModal
                     onClose={() => setShowCreateModal(false)}
-                    onCreate={createCompany}
+                    onCreate={handleCreateCompany}
                 />
             )}
         </div>

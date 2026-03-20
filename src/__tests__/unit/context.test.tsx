@@ -24,23 +24,7 @@ import type { Campaign, Touchpoint } from '../../types';
 // ─── Mock CompanyContext so DataProvider can call useCompany ───────────────────
 vi.mock('@/context/CompanyContext', () => ({
   useCompany: () => ({
-    activeCompany: { id: 'test-company', name: 'Test Co', slug: 'test', logo: '', description: '', industry: '', createdAt: '', createdBy: '' },
-    activeCompanyRole: 'company_admin',
-    userCompanies: [],
-    companyMembers: [],
-    loading: false,
-    selectCompany: vi.fn(),
-    deselectCompany: vi.fn(),
-    createCompany: vi.fn(),
-    updateCompany: vi.fn(),
-    deleteCompany: vi.fn(),
-    addMember: vi.fn(),
-    updateMemberRole: vi.fn(),
-    removeMember: vi.fn(),
-    refreshCompanies: vi.fn(),
-    refreshMembers: vi.fn(),
-    allCompanies: [],
-    loadAllCompanies: vi.fn(),
+    activeCompany: { id: 'c1' },
   }),
 }));
 
@@ -129,7 +113,7 @@ describe('DataContext — Audience CRUD', () => {
       await result.current.addAudience(audienceBase);
     });
 
-    expect(api.createAudience).toHaveBeenCalledWith(audienceBase, 'test-company');
+    expect(api.createAudience).toHaveBeenCalledWith(audienceBase, 'c1');
     expect(result.current.audiences).toHaveLength(2);
     expect(result.current.audiences.find(a => a.id === 'a-new')).toBeDefined();
   });

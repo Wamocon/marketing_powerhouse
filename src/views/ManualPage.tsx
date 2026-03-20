@@ -103,12 +103,12 @@ export default function ManualPage() {
 
                         <AccordionItem id="section-1" title="Systemeinstellungen & Integrationen" icon={Settings} color="#8b5cf6">
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                                <p style={{ marginBottom: '16px' }}>Unter "Einstellungen" managst du globale Parameter, Notifications und vor allem die API-Anbindungen.</p>
+                                <p style={{ marginBottom: '16px' }}>Unter "Einstellungen" managst du globale Parameter, Benachrichtigungen und vor allem die API-Anbindungen.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <li><strong>Firmenprofil:</strong> Ändere den Namen und das globale Branding.</li>
                                     <li><strong>Kanäle & Touchpoints (Verwaltung):</strong> Du hast Vollzugriff auf die Central-Verwaltung aller Marketing-Kanäle. Stelle sicher, dass alle verwendeten Touchpoints (Google Ads, LinkedIn, E-Mail-CRM, etc.) hier hinterlegt sind, damit Manager später darauf aufbauen können. Jeder Touchpoint zeigt automatisch seine aggregierten <strong>Kanal-KPIs</strong> (Impressions, Clicks, CTR, Spend, CPC, CPA).</li>
                                     <li><strong>Integrationen:</strong> Hier hinterlegst du in Zukunft API-Keys für OpenAI, Meta Ads, Google Analytics oder LinkedIn. Diese Keys werden systemweit verschlüsselt genutzt.</li>
-                                    <li><strong>Benachrichtigungen:</strong> Lege fest, ob das System bei neuen Kampagnen oder kritischen Budget-Grenzen Warnmails versendet.</li>
+                                    <li><strong>Benachrichtigungen:</strong> Lege fest, welche Hinweise (z.B. Kampagnen-Updates, Budget-Alerts, Deadline-Erinnerungen) im System aktiv sind. Die Einstellungen werden pro aktivem Unternehmen im Browser gespeichert.</li>
                                 </ul>
                                 <PlaceholderImage
                                     title="Einstellungs-Dashboard" icon={Settings} color="#8b5cf6"
@@ -119,12 +119,16 @@ export default function ManualPage() {
 
                         <AccordionItem id="section-2" title="Benutzerverwaltung & Berechtigungen" icon={Users2} color="#ec4899">
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                                <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) hast du als einziger die Macht, das Rollenkonzept zu steuern.</p>
+                                <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) steuerst du das Rollenkonzept und die Team-Zuweisung.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <li>Neuen Mitarbeitern musst du initial eine Rolle zuweisen. Standardmäßig sind neue Accounts "Member".</li>
+                                    <li>Bestehende Benutzer koennen im Team-Tab per E-Mail zum aktiven Unternehmen zugewiesen werden. Neue Zuweisungen starten standardmaessig als <strong>Member</strong>.</li>
+                                    <li>Wenn eine E-Mail noch nicht als Benutzer existiert, zeigt das System eine Fehlermeldung mit dem Hinweis, den Benutzer zuerst anzulegen.</li>
                                     <li><strong>Manager:</strong> Dürfen Kampagnen, Zielgruppen und Budgets erstellen und verwalten. Zudem können sie Elemente (Kampagnen, Touchpoints, Personas, Content, Aufgaben etc.) löschen.</li>
                                     <li><strong>Member:</strong> Können nur Aufgaben sehen und abarbeiten. Sie sehen keine Budgets, können keine wesentlichen Elemente löschen und haben keinen Zugriff auf Einstellungen.</li>
                                 </ul>
+                                <p style={{ marginBottom: '16px' }}>
+                                    Als <strong>Super-Admin</strong> kannst du zusaetzlich im Super-Admin-Panel Benutzer direkt bestehenden Unternehmen zuweisen und ihre Rolle pro Unternehmen sofort aendern.
+                                </p>
                                 <TipBox title="Sicherheit">
                                     Befördere Nutzer nur zum Admin, wenn sie wirklich globale Systemeinstellungen (wie API-Keys) ändern dürfen. In 90% der Fälle ist die Manager-Rolle für Teamleiter völlig ausreichend.
                                 </TipBox>

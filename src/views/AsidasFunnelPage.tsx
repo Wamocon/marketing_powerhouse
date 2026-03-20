@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ContentItem, Touchpoint } from '../types';
 import { Share2, Plus, Edit, MoreVertical, TrendingUp, Users, Map, Target, Heart, Frown, Megaphone, Search, Zap, DollarSign, Store, ExternalLink, FileText } from 'lucide-react';
 import { useData } from '../context/DataContext';
@@ -20,10 +20,10 @@ const ASIDAS_COLORS = {
 export default function AsidasFunnelPage() {
     const { can } = useAuth();
     const canEdit = can('canEditPositioning');
-    const { asidasJourneys, audiences, touchpoints, addJourney } = useData();
+    const { asidasJourneys, audiences, touchpoints, addJourney, loading } = useData();
     const { contents: allContent } = useContents();
 
-    const [selectedJourneyId, setSelectedJourneyId] = useState(asidasJourneys[0]?.id || '');
+    const [selectedJourneyId, setSelectedJourneyId] = useState('');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [selectedTouchpoint, setSelectedTouchpoint] = useState<Touchpoint | null>(null);
     const [showNewJourney, setShowNewJourney] = useState(false);
@@ -31,10 +31,40 @@ export default function AsidasFunnelPage() {
     const [newJourneyAudience, setNewJourneyAudience] = useState('');
     const [newJourneyDesc, setNewJourneyDesc] = useState('');
 
-    const selectedJourney = asidasJourneys.find(j => j.id === selectedJourneyId);
-    const audience = audiences.find(a => a.id === selectedJourney?.audienceId);
+    useEffect(() => {
+        if (asidasJourneys.length === 0) {
+            setSelectedJourneyId('');
+            return;
+        }
 
-    if (!selectedJourney) return <div>Keine Journey gefunden.</div>;
+        const hasSelectedJourney = asidasJourneys.some(journey => journey.id === selectedJourneyId);
+        if (!hasSelectedJourney) {
+            setSelectedJourneyId(asidasJourneys[0].id);
+        }
+    }, [asidasJourneys, selectedJourneyId]);
+
+    const selectedJourney = asidasJourneys.find(j => j.id === selectedJourneyId) ?? {
+        id: 'empty-asidas-shell',
+        name: loading ? 'ASIDAS Funnel wird geladen' : 'ASIDAS Funnel (Leerzustand)',
+        audienceId: '',
+        description: loading
+            ? 'Daten werden geladen. Die Struktur bleibt sichtbar.'
+            : 'Noch keine ASIDAS Journey vorhanden. Erstelle eine neue Journey, um echte Daten zu sehen.',
+        stages: Object.keys(ASIDAS_COLORS).map((phase, index) => ({
+            id: `empty-${phase.toLowerCase()}`,
+            phase,
+            title: phase,
+            description: 'Noch keine Daten hinterlegt.',
+            touchpoints: [],
+            contentFormats: [],
+            emotions: [],
+            painPoints: [],
+            metrics: { label: 'KPI', value: '0', trend: '0%' },
+            contentIds: [],
+            sortOrder: index,
+        })),
+    };
+    const audience = audiences.find(a => a.id === selectedJourney?.audienceId);
 
     const resolveTouchpoint = (tpId: string) => {
         return touchpoints.find(t => t.id === tpId);
@@ -92,7 +122,11 @@ export default function AsidasFunnelPage() {
                         value={selectedJourneyId}
                         onChange={e => setSelectedJourneyId(e.target.value)}
                         style={{ width: 'auto', backgroundColor: 'var(--bg-elevated)', maxWidth: '300px' }}
+                        disabled={asidasJourneys.length === 0}
                     >
+                        {asidasJourneys.length === 0 && (
+                            <option value="">Keine Journey vorhanden</option>
+                        )}
                         {asidasJourneys.map(j => (
                             <option key={j.id} value={j.id}>{j.name}</option>
                         ))}
@@ -105,6 +139,16 @@ export default function AsidasFunnelPage() {
                     )}
                 </div>
             </div>
+
+            {asidasJourneys.length === 0 && (
+                <div className="card" style={{ marginBottom: '16px', padding: '12px 16px' }}>
+                    <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                        {loading
+                            ? 'ASIDAS-Daten werden geladen. Die Funnel-Huelle ist bereits sichtbar.'
+                            : 'Es sind noch keine ASIDAS-Journeys vorhanden. Du kannst jetzt eine neue Journey anlegen.'}
+                    </p>
+                </div>
+            )}
 
             {/* New Journey Inline Form */}
             {showNewJourney && (

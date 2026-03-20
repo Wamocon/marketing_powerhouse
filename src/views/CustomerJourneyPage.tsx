@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ContentItem, Touchpoint } from '../types';
-import { Share2, Plus, Edit, MoreVertical, TrendingUp, Users, Map, Target, Heart, Frown, Megaphone, Search, Zap, DollarSign, Store, ExternalLink, FileText } from 'lucide-react';
+import { Share2, Plus, TrendingUp, Map, Heart, Frown, Megaphone, Search, DollarSign, Store, ExternalLink, FileText } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useContents } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
 import PageHelp from '../components/PageHelp';
 import ContentDetailModal from '../components/ContentDetailModal';
 import TouchpointDetailModal from '../components/TouchpointDetailModal';
+import { createCustomerJourneyPlaceholder } from '../lib/projectSetup';
 
 const PHASE_COLORS = {
     Awareness: { bg: '#e0e7ff', border: '#818cf8', icon: <Megaphone size={16} /> },
@@ -17,12 +19,13 @@ const PHASE_COLORS = {
 };
 
 export default function CustomerJourneyPage() {
+    const router = useRouter();
     const { can } = useAuth();
     const canEdit = can('canEditPositioning');
     const { customerJourneys, audiences, touchpoints, addJourney } = useData();
     const { contents: allContent } = useContents();
 
-    const [selectedJourneyId, setSelectedJourneyId] = useState(customerJourneys[0]?.id || '');
+    const [selectedJourneyId, setSelectedJourneyId] = useState('');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [selectedTouchpoint, setSelectedTouchpoint] = useState<Touchpoint | null>(null);
     const [showNewJourney, setShowNewJourney] = useState(false);
@@ -30,17 +33,30 @@ export default function CustomerJourneyPage() {
     const [newJourneyAudience, setNewJourneyAudience] = useState('');
     const [newJourneyDesc, setNewJourneyDesc] = useState('');
 
-    const selectedJourney = customerJourneys.find(j => j.id === selectedJourneyId);
-    const audience = audiences.find(a => a.id === selectedJourney?.audienceId);
+    useEffect(() => {
+        if (customerJourneys.length === 0) {
+            setSelectedJourneyId('');
+            return;
+        }
 
-    if (!selectedJourney) return <div>Keine Journey gefunden.</div>;
+        const hasSelectedJourney = customerJourneys.some(journey => journey.id === selectedJourneyId);
+        if (!hasSelectedJourney) {
+            setSelectedJourneyId(customerJourneys[0].id);
+        }
+    }, [customerJourneys, selectedJourneyId]);
 
-    const resolveTouchpoint = (tpId) => {
-        return touchpoints.find(t => t.id === tpId);
+    const selectedJourney = customerJourneys.find(journey => journey.id === selectedJourneyId);
+    const hasRealJourney = Boolean(selectedJourney);
+    const placeholderAudience = audiences[0] ?? null;
+    const displayedJourney = selectedJourney ?? createCustomerJourneyPlaceholder(placeholderAudience);
+    const audience = audiences.find(item => item.id === displayedJourney.audienceId) ?? placeholderAudience;
+
+    const resolveTouchpoint = (tpId: string) => {
+        return touchpoints.find(touchpoint => touchpoint.id === tpId);
     };
 
-    const resolveContent = (cntId) => {
-        return allContent.find(c => c.id === cntId);
+    const resolveContent = (cntId: string) => {
+        return allContent.find(content => content.id === cntId);
     };
 
     const handleCreateJourney = async () => {
@@ -86,16 +102,29 @@ export default function CustomerJourneyPage() {
                         </ul>
                     </PageHelp>
 
-                    <select
-                        className="form-input"
-                        value={selectedJourneyId}
-                        onChange={e => setSelectedJourneyId(e.target.value)}
-                        style={{ width: 'auto', backgroundColor: 'var(--bg-elevated)', maxWidth: '300px' }}
-                    >
-                        {customerJourneys.map(j => (
-                            <option key={j.id} value={j.id}>{j.name}</option>
-                        ))}
-                    </select>
+                    {customerJourneys.length > 0 ? (
+                        <select
+                            className="form-input"
+                            value={selectedJourneyId}
+                            onChange={event => setSelectedJourneyId(event.target.value)}
+                            style={{ width: 'auto', backgroundColor: 'var(--bg-elevated)', maxWidth: '300px' }}
+                        >
+                            {customerJourneys.map(journey => (
+                                <option key={journey.id} value={journey.id}>{journey.name}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <div style={{
+                            padding: '10px 14px',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--bg-elevated)',
+                            border: '1px solid var(--border-color)',
+                            fontSize: 'var(--font-size-sm)',
+                            color: 'var(--text-secondary)',
+                        }}>
+                            Noch keine Journey gespeichert
+                        </div>
+                    )}
 
                     {canEdit && (
                         <button className="btn btn-primary" onClick={() => setShowNewJourney(true)}>
@@ -105,24 +134,44 @@ export default function CustomerJourneyPage() {
                 </div>
             </div>
 
-            {/* New Journey Inline Form */}
+            {!hasRealJourney && (
+                <div className="card" style={{ marginBottom: '24px', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                    <div>
+                        <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                            Die Journey-Huelle ist sichtbar, obwohl noch nichts verknuepft ist.
+                        </div>
+                        <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '760px' }}>
+                            Das System zeigt die Struktur bereits vor Kampagnen, Content und Aufgaben an. So kann die erste Logik sauber gebaut werden, bevor operative Arbeit startet.
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <button className="btn btn-secondary" onClick={() => router.push('/setup?step=journey')}>Im Setup ausfuellen</button>
+                        {canEdit && (
+                            <button className="btn btn-primary" onClick={() => setShowNewJourney(true)}>
+                                <Plus size={16} /> Journey anlegen
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {showNewJourney && (
                 <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
                     <div className="card-header"><div className="card-title">Neue Customer Journey erstellen</div></div>
                     <div className="form-group">
                         <label className="form-label">Name</label>
-                        <input className="form-input" value={newJourneyName} onChange={e => setNewJourneyName(e.target.value)} placeholder="z.B. Onboarding-Journey" />
+                        <input className="form-input" value={newJourneyName} onChange={event => setNewJourneyName(event.target.value)} placeholder="z.B. Onboarding-Journey" />
                     </div>
                     <div className="form-group">
                         <label className="form-label">Zielgruppe</label>
-                        <select className="form-select" value={newJourneyAudience} onChange={e => setNewJourneyAudience(e.target.value)}>
+                        <select className="form-select" value={newJourneyAudience} onChange={event => setNewJourneyAudience(event.target.value)}>
                             <option value="">Bitte wählen</option>
-                            {audiences.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                            {audiences.map(audienceItem => <option key={audienceItem.id} value={audienceItem.id}>{audienceItem.name}</option>)}
                         </select>
                     </div>
                     <div className="form-group">
                         <label className="form-label">Beschreibung</label>
-                        <textarea className="form-input form-textarea" value={newJourneyDesc} onChange={e => setNewJourneyDesc(e.target.value)} placeholder="Kurze Beschreibung der Journey..." />
+                        <textarea className="form-input form-textarea" value={newJourneyDesc} onChange={event => setNewJourneyDesc(event.target.value)} placeholder="Kurze Beschreibung der Journey..." />
                     </div>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
                         <button className="btn btn-secondary" onClick={() => setShowNewJourney(false)}>Abbrechen</button>
@@ -131,16 +180,15 @@ export default function CustomerJourneyPage() {
                 </div>
             )}
 
-            {/* Meta-Info Card */}
             <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', flexWrap: 'wrap' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                             <Map size={20} style={{ color: 'var(--color-primary)' }} />
-                            <h2 style={{ fontSize: 'var(--font-size-md)', fontWeight: 600, margin: 0 }}>{selectedJourney.name}</h2>
+                            <h2 style={{ fontSize: 'var(--font-size-md)', fontWeight: 600, margin: 0 }}>{displayedJourney.name}</h2>
                         </div>
                         <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0, maxWidth: '800px' }}>
-                            {selectedJourney.description}
+                            {displayedJourney.description}
                         </p>
                     </div>
 
@@ -158,7 +206,6 @@ export default function CustomerJourneyPage() {
                 </div>
             </div>
 
-            {/* Journey Board */}
             <div style={{
                 display: 'flex',
                 gap: '20px',
@@ -166,8 +213,9 @@ export default function CustomerJourneyPage() {
                 paddingBottom: '24px',
                 minHeight: '650px'
             }}>
-                {selectedJourney.stages.map((stage, index) => {
-                    const styleConfig = PHASE_COLORS[stage.phase] || { bg: '#f1f5f9', border: '#cbd5e1', icon: null };
+                {displayedJourney.stages.map((stage, index) => {
+                    const styleConfig = PHASE_COLORS[stage.phase as keyof typeof PHASE_COLORS] || { bg: '#f1f5f9', border: '#cbd5e1', icon: null };
+                    const contentItems = (stage.contentIds || []).map(cntId => resolveContent(cntId)).filter(Boolean) as ContentItem[];
 
                     return (
                         <div key={stage.id} style={{
@@ -183,7 +231,6 @@ export default function CustomerJourneyPage() {
                             position: 'relative',
                             boxShadow: 'none'
                         }}>
-
                             <div style={{
                                 background: styleConfig.bg,
                                 borderLeft: `5px solid ${styleConfig.border}`,
@@ -204,29 +251,27 @@ export default function CustomerJourneyPage() {
                                 {stage.description}
                             </p>
 
-                            {/* Metrics */}
                             <div style={{ padding: '14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                                 <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
-                                    Erfolgsmessung: {stage.metrics.label}
+                                    Erfolgsmessung: {stage.metrics.label || 'Noch offen'}
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                                    <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{stage.metrics.value}</span>
+                                    <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{stage.metrics.value || 'n/a'}</span>
                                     <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 700, display: 'flex', alignItems: 'center' }}>
-                                        <TrendingUp size={14} style={{ marginRight: '4px' }} /> {stage.metrics.trend}
+                                        <TrendingUp size={14} style={{ marginRight: '4px' }} /> {stage.metrics.trend || 'Setup'}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Touchpoints */}
                             <div className="detail-section" style={{ border: 'none', padding: 0, margin: 0 }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>📱 Touchpoints</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {stage.touchpoints.map((tpId, i) => {
-                                        const tp = resolveTouchpoint(tpId);
+                                    {stage.touchpoints.length > 0 ? stage.touchpoints.map((tpId, itemIndex) => {
+                                        const touchpoint = resolveTouchpoint(tpId);
                                         return (
                                             <div
-                                                key={i}
-                                                onClick={() => setSelectedTouchpoint(tp ?? null)}
+                                                key={`${stage.id}-${itemIndex}`}
+                                                onClick={() => setSelectedTouchpoint(touchpoint ?? null)}
                                                 style={{
                                                     padding: '10px 12px',
                                                     background: 'var(--bg-elevated)',
@@ -239,47 +284,44 @@ export default function CustomerJourneyPage() {
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center'
                                                 }}>
-                                                <span>{tp ? tp.name : tpId}</span>
+                                                <span>{touchpoint ? touchpoint.name : tpId}</span>
                                                 <ExternalLink size={12} style={{ opacity: 0.5 }} />
                                             </div>
                                         );
-                                    })}
+                                    }) : (
+                                        <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', lineHeight: 1.5 }}>
+                                            Noch keine Touchpoints hinterlegt. Die Huelle bleibt trotzdem sichtbar und kann spaeter erweitert werden.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Content */}
                             <div className="detail-section" style={{ border: 'none', padding: 0, margin: 0 }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>📝 Content & Assets</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {/* Real Content Links */}
-                                    {(stage.contentIds || []).map(cntId => {
-                                        const cnt = resolveContent(cntId);
-                                        if (!cnt) return null;
-                                        return (
-                                            <div
-                                                key={cntId}
-                                                onClick={() => setSelectedContent(cnt)}
-                                                style={{
-                                                    padding: '10px 12px',
-                                                    background: 'rgba(99, 102, 241, 0.05)',
-                                                    border: '1px solid rgba(99, 102, 241, 0.15)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--color-primary)',
-                                                    fontWeight: 600,
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px'
-                                                }}>
-                                                <FileText size={14} />
-                                                <span>{cnt.title}</span>
-                                            </div>
-                                        );
-                                    })}
-                                    {/* Fallback Text Formats */}
-                                    {stage.contentFormats.map((content, i) => (
-                                        <div key={i} style={{
+                                    {contentItems.map(content => (
+                                        <div
+                                            key={content.id}
+                                            onClick={() => setSelectedContent(content)}
+                                            style={{
+                                                padding: '10px 12px',
+                                                background: 'rgba(99, 102, 241, 0.05)',
+                                                border: '1px solid rgba(99, 102, 241, 0.15)',
+                                                borderRadius: 'var(--radius-sm)',
+                                                fontSize: 'var(--font-size-xs)',
+                                                color: 'var(--color-primary)',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}>
+                                            <FileText size={14} />
+                                            <span>{content.title}</span>
+                                        </div>
+                                    ))}
+                                    {stage.contentFormats.map((contentFormat, itemIndex) => (
+                                        <div key={`${stage.id}-format-${itemIndex}`} style={{
                                             padding: '10px 12px',
                                             background: '#f8fafc',
                                             border: '1px solid #e2e8f0',
@@ -287,31 +329,40 @@ export default function CustomerJourneyPage() {
                                             fontSize: 'var(--font-size-xs)',
                                             color: '#64748b'
                                         }}>
-                                            {content}
+                                            {contentFormat}
                                         </div>
                                     ))}
+                                    {contentItems.length === 0 && stage.contentFormats.length === 0 && (
+                                        <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', lineHeight: 1.5 }}>
+                                            Noch kein Content verknuepft. Die Phase kann zuerst strategisch beschrieben und spaeter operativ befuellt werden.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Pain Points */}
                             <div className="detail-section" style={{ border: 'none', padding: 0, margin: 0, marginTop: 'auto' }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', marginBottom: '8px' }}>
                                     <Frown size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-top' }} />
                                     Pain Points
                                 </div>
                                 <div style={{ background: '#fef2f2', borderRadius: 'var(--radius-sm)', padding: '12px', border: '1px solid #fee2e2' }}>
-                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        {stage.painPoints.map((pp, i) => (
-                                            <li key={i} style={{ fontSize: '0.7rem', color: '#991b1b', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                                                <span style={{ color: '#ef4444', fontWeight: 900 }}>!</span>
-                                                {pp}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    {stage.painPoints.length > 0 ? (
+                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            {stage.painPoints.map((painPoint, itemIndex) => (
+                                                <li key={`${stage.id}-pain-${itemIndex}`} style={{ fontSize: '0.7rem', color: '#991b1b', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                                    <span style={{ color: '#ef4444', fontWeight: 900 }}>!</span>
+                                                    {painPoint}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <div style={{ fontSize: '0.7rem', color: '#991b1b', lineHeight: 1.5 }}>
+                                            Fuer diese Phase wurden noch keine zentralen Huerden dokumentiert.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Sales Handoff */}
                             {stage.phase === 'Purchase' && (
                                 <div style={{
                                     marginTop: '20px',
@@ -319,19 +370,17 @@ export default function CustomerJourneyPage() {
                                     borderRadius: 'var(--radius-md)',
                                     padding: '18px',
                                     background: '#ecfdf5',
-                                    textAlign: 'center',
-                                    animation: 'pulse 3s infinite'
+                                    textAlign: 'center'
                                 }}>
                                     <Store size={26} style={{ color: '#10b981', margin: '0 auto 10px' }} />
                                     <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#064e3b', textTransform: 'uppercase' }}>
                                         Vertrieb (B2B/B2C)
                                     </div>
                                     <div style={{ fontSize: '0.65rem', color: '#047857', marginTop: '6px', marginBottom: '12px', lineHeight: 1.4 }}>
-                                        Automatisierter Handoff an Sales Hub. <br />Pipeline-Trigger bei Purchase.
+                                        Der Handoff an Sales oder Checkout kann spaeter hier operationalisiert werden.
                                     </div>
                                 </div>
                             )}
-
                         </div>
                     );
                 })}

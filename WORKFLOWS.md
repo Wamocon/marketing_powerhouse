@@ -74,6 +74,9 @@ WAMOCON Academy möchte im Q2 2026 die neue **ISTQB Certified Tester Foundation 
 **Was:** Daniel Moretz stellt sicher, dass alle Mitarbeiter richtig eingestellt sind.
 
 1. Gehe zu: **Einstellungen > Team-Übersicht** oder **Benutzerverwaltung**
+2. Weise bestehende Benutzer per E-Mail dem aktiven Unternehmen zu.
+   - Falls E-Mail noch nicht als Benutzer existiert: Erst Benutzer anlegen, dann erneut zuweisen.
+   - Erfolgreiche E-Mail-Zuweisungen erhalten standardmäßig die Rolle **Member**.
 2. Prüfe & Speichere:
    ```
    - Waleri Moretz     → Unternehmens-Admin (Trainer & Kampagnen-Verantwortung)
@@ -82,7 +85,8 @@ WAMOCON Academy möchte im Q2 2026 die neue **ISTQB Certified Tester Foundation 
    - Tom Weber         → Member (Performance Ads)
    - Jana Klein        → Member (Community & Support)
    ```
-3. Besprechung kurz mit Anna: "Die CTFL v4.0 Kampagne starten wir morgen früh. Waleri und du seid die Kampagnen-Owner."
+3. Optional als Super-Admin: Im **Super-Admin Panel > Unternehmen** projektbezogene Rollen direkt nachziehen (Admin/Manager/Member).
+4. Besprechung kurz mit Anna: "Die CTFL v4.0 Kampagne starten wir morgen früh. Waleri und du seid die Kampagnen-Owner."
 
 **Output:** Alle Mitarbeiter sind gewappnet. Navigation & UI passen sich an ihre Rollen an.
 

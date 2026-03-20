@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
     Target, FileText, HelpCircle, Map, Radio, Zap,
-    Building2, Shield, ArrowLeftRight,
+    Building2, Shield, ArrowLeftRight, Compass,
     type LucideIcon,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
@@ -20,7 +20,7 @@ interface NavItem {
     path: string;
     icon: LucideIcon;
     label: string;
-    badge?: string;
+    badge?: string | number;
     badgeKey?: BadgeKey;
     requiredPermission?: PermissionKey | null;
     comingSoon?: boolean;
@@ -46,7 +46,7 @@ const NAV: NavSection[] = [
             { path: '/journeys', icon: Map, label: 'Customer Journey', badgeKey: 'journeys' as const },
             { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badgeKey: 'asidas' as const },
             { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badgeKey: 'touchpoints' as const },
-            { path: '/content-overview', icon: FileText, label: 'Content-Übersicht' },
+            { path: '/content-overview', icon: FileText, label: 'Content-Übersicht', badgeKey: 'contents' as const },
             { path: '/content', icon: Calendar, label: 'Content-Kalender' },
             { path: '/budget', icon: Wallet, label: 'Budget & Controlling', requiredPermission: 'canSeeBudget' },
         ],
@@ -54,7 +54,7 @@ const NAV: NavSection[] = [
     {
         section: 'Team',
         items: [
-            { path: '/tasks', icon: CheckSquare, label: 'Aufgaben' },
+            { path: '/tasks', icon: CheckSquare, label: 'Aufgaben', badgeKey: 'tasks' as const },
             { path: '/analytics', icon: BarChart3, label: 'Berichte', comingSoon: true },
         ],
     },
@@ -67,6 +67,7 @@ const NAV: NavSection[] = [
     {
         section: 'System',
         items: [
+            { path: '/setup', icon: Compass, label: 'Projekt-Setup' },
             { path: '/manual', icon: HelpCircle, label: 'Anleitung' },
             { path: '/settings', icon: Settings, label: 'Einstellungen' },
         ],
@@ -209,14 +210,14 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>
-                                        {(item.badge || item.badgeKey) && (
+                                        {(item.badge !== undefined || item.badgeKey !== undefined) && (
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: 'var(--font-size-xs)',
                                                 background: 'var(--bg-hover)', padding: '1px 7px',
                                                 borderRadius: 'var(--radius-full)', color: 'var(--text-tertiary)',
                                                 fontWeight: 600,
                                             }}>
-                                                {item.badgeKey ? (badgeCounts[item.badgeKey] || '') : item.badge}
+                                                {item.badgeKey ? badgeCounts[item.badgeKey] : item.badge}
                                             </span>
                                         )}
                                     </Link>

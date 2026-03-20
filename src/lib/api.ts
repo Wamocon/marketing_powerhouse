@@ -329,7 +329,7 @@ function toCamelAiLog(r: Record<string, unknown>): AiGenerationLog {
 // ─── Users ─────────────────────────────────────────────────
 
 export async function fetchUserById(id: string): Promise<User | null> {
-  const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).maybeSingle();
   if (error || !data) return null;
   return toCamelUser(data);
 }
@@ -340,13 +340,28 @@ export async function fetchUsers(): Promise<User[]> {
   return (data ?? []).map(toCamelUser);
 }
 
-export async function loginUser(email: string, password: string): Promise<User | null> {
+export async function fetchUserByEmail(email: string): Promise<User | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
   const { data, error } = await supabase
     .from('users')
     .select('*')
-    .eq('email', email)
+    .ilike('email', normalizedEmail)
+    .maybeSingle();
+  if (error || !data) return null;
+  return toCamelUser(data);
+}
+
+export async function loginUser(email: string, password: string): Promise<User | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail || !password.trim()) return null;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .ilike('email', normalizedEmail)
     .eq('password', password)
-    .single();
+    .maybeSingle();
   if (error || !data) return null;
   return toCamelUser(data);
 }
@@ -655,13 +670,23 @@ export async function deleteTouchpoint(id: string): Promise<void> {
 // ─── Company Positioning ───────────────────────────────────
 
 export async function fetchPositioning(companyId: string): Promise<CompanyPositioning> {
-  const { data, error } = await supabase.from('company_positioning').select('*').eq('company_id', companyId).single();
+  const { data, error } = await supabase.from('company_positioning').select('*').eq('company_id', companyId).maybeSingle();
   if (error) throw error;
+  if (!data) {
+    return {
+      name: '', tagline: '', founded: '', industry: '', headquarters: '',
+      legalForm: '', employees: '', website: '', vision: '', mission: '',
+      values: [], toneOfVoice: { adjectives: [], description: '', personality: '' },
+      dos: [], donts: [], primaryMarket: '', secondaryMarkets: [],
+      targetCompanySize: '', targetIndustries: [], lastUpdated: '', updatedBy: '',
+    };
+  }
   return toCamelPositioning(data);
 }
 
 export async function savePositioning(pos: CompanyPositioning, companyId: string): Promise<void> {
   const row = {
+    company_id: companyId,
     name: pos.name,
     tagline: pos.tagline,
     founded: pos.founded,
@@ -683,8 +708,15 @@ export async function savePositioning(pos: CompanyPositioning, companyId: string
     last_updated: new Date().toISOString().split('T')[0],
     updated_by: pos.updatedBy,
   };
-  const { error } = await supabase.from('company_positioning').update(row).eq('company_id', companyId);
-  if (error) throw error;
+  // Check if positioning row exists for this company
+  const { data: existing } = await supabase.from('company_positioning').select('id').eq('company_id', companyId).maybeSingle();
+  if (existing) {
+    const { error } = await supabase.from('company_positioning').update(row).eq('company_id', companyId);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from('company_positioning').insert({ id: generateId(), ...row });
+    if (error) throw error;
+  }
 }
 
 // ─── Company Keywords ──────────────────────────────────────
@@ -716,7 +748,7 @@ export async function deleteKeyword(id: string): Promise<void> {
 
 export async function fetchBudgetData(companyId: string): Promise<BudgetData> {
   const [overview, categories, trends] = await Promise.all([
-    supabase.from('budget_overview').select('*').eq('company_id', companyId).single(),
+    supabase.from('budget_overview').select('*').eq('company_id', companyId).maybeSingle(),
     supabase.from('budget_categories').select('*').eq('company_id', companyId).order('sort_order'),
     supabase.from('monthly_trends').select('*').eq('company_id', companyId).order('sort_order'),
   ]);
@@ -724,9 +756,9 @@ export async function fetchBudgetData(companyId: string): Promise<BudgetData> {
   if (categories.error) throw categories.error;
   if (trends.error) throw trends.error;
   return {
-    total: Number(overview.data.total),
-    spent: Number(overview.data.spent),
-    remaining: Number(overview.data.remaining),
+    total: overview.data ? Number(overview.data.total) : 0,
+    spent: overview.data ? Number(overview.data.spent) : 0,
+    remaining: overview.data ? Number(overview.data.remaining) : 0,
     categories: (categories.data ?? []).map(r => ({
       id: r.id as string,
       name: r.name as string,
@@ -756,9 +788,9 @@ export async function updateBudgetCategory(id: string, updates: Partial<BudgetCa
   if (error) throw error;
 }
 
-export async function createBudgetCategory(cat: Omit<BudgetCategory, 'id'> & { id?: string }): Promise<void> {
+export async function createBudgetCategory(cat: Omit<BudgetCategory, 'id'> & { id?: string }, companyId: string): Promise<void> {
   const id = cat.id || generateId();
-  const { error } = await supabase.from('budget_categories').insert({ id, ...cat }).select().single();
+  const { error } = await supabase.from('budget_categories').insert({ id, company_id: companyId, ...cat }).select().single();
   if (error) throw error;
 }
 
@@ -832,6 +864,7 @@ export async function fetchJourneys(type: 'asidas' | 'customer', companyId: stri
     .select('*')
     .eq('company_id', companyId)
     .eq('journey_type', type)
+    .eq('company_id', companyId)
     .order('created_at');
   if (jErr) throw jErr;
   if (!journeys?.length) return [];
