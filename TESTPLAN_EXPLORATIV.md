@@ -170,15 +170,14 @@
 
 ---
 
-## BLOCK T5 — Customer Journey & ASIDAS-Methode
+## BLOCK T5 — Customer Journey
 
 ### T5.1 Journey-Ansicht (alle Rollen)
 
 | ID | Schritt | Erwartet | Ergebnis | Status |
 |---|---|---|---|---|
 | T5.1.1 | Sidebar → „Customer Journey" | Journey-Karten laden | | 🔲 |
-| T5.1.2 | Sidebar → „ASIDAS-Funnel" | ASIDAS-Journeys laden | | 🔲 |
-| T5.1.3 | Journey-Detail aufklappen | Phasen mit Touchpoints, Emotionen, Metriken sichtbar | | 🔲 |
+| T5.1.2 | Journey-Detail aufklappen | Phasen mit Touchpoints, Emotionen, Metriken sichtbar | | 🔲 |
 
 ### T5.2 Journey erstellen (Admin/Manager)
 

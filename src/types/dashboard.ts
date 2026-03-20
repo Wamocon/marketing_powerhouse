@@ -89,7 +89,7 @@ export interface JourneyStage {
   contentIds?: string[];
 }
 
-export interface AsidasJourney {
+export interface CustomerJourney {
   id: string;
   name: string;
   audienceId: string;

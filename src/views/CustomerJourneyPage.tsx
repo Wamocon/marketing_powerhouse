@@ -59,6 +59,13 @@ export default function CustomerJourneyPage() {
         return allContent.find(content => content.id === cntId);
     };
 
+    const touchpointHasPhase = (touchpoint: Touchpoint, phase: string) => {
+        const phases = touchpoint.journeyPhases?.length
+            ? touchpoint.journeyPhases
+            : (touchpoint.journeyPhase ? [touchpoint.journeyPhase] : []);
+        return phases.includes(phase);
+    };
+
     const handleCreateJourney = async () => {
         if (!newJourneyName.trim()) return;
         const created = await addJourney({
@@ -77,7 +84,7 @@ export default function CustomerJourneyPage() {
                 metrics: { label: '', value: '', trend: '' },
                 contentIds: [],
             })),
-        }, 'customer');
+        });
         setSelectedJourneyId(created.id);
         setShowNewJourney(false);
         setNewJourneyName('');
@@ -138,14 +145,14 @@ export default function CustomerJourneyPage() {
                 <div className="card" style={{ marginBottom: '24px', padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                     <div>
                         <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                            Die Journey-Huelle ist sichtbar, obwohl noch nichts verknuepft ist.
+                            Die Journey-Hülle ist sichtbar, obwohl noch nichts verknüpft ist.
                         </div>
                         <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '760px' }}>
                             Das System zeigt die Struktur bereits vor Kampagnen, Content und Aufgaben an. So kann die erste Logik sauber gebaut werden, bevor operative Arbeit startet.
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button className="btn btn-secondary" onClick={() => router.push('/setup?step=journey')}>Im Setup ausfuellen</button>
+                        <button className="btn btn-secondary" onClick={() => router.push('/setup?step=journey')}>Im Setup ausfüllen</button>
                         {canEdit && (
                             <button className="btn btn-primary" onClick={() => setShowNewJourney(true)}>
                                 <Plus size={16} /> Journey anlegen
@@ -216,6 +223,10 @@ export default function CustomerJourneyPage() {
                 {displayedJourney.stages.map((stage, index) => {
                     const styleConfig = PHASE_COLORS[stage.phase as keyof typeof PHASE_COLORS] || { bg: '#f1f5f9', border: '#cbd5e1', icon: null };
                     const contentItems = (stage.contentIds || []).map(cntId => resolveContent(cntId)).filter(Boolean) as ContentItem[];
+                    const dynamicTouchpointIds = touchpoints
+                        .filter(touchpoint => touchpointHasPhase(touchpoint, stage.phase))
+                        .map(touchpoint => touchpoint.id);
+                    const stageTouchpointIds = Array.from(new Set([...(stage.touchpoints || []), ...dynamicTouchpointIds]));
 
                     return (
                         <div key={stage.id} style={{
@@ -266,7 +277,7 @@ export default function CustomerJourneyPage() {
                             <div className="detail-section" style={{ border: 'none', padding: 0, margin: 0 }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>📱 Touchpoints</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {stage.touchpoints.length > 0 ? stage.touchpoints.map((tpId, itemIndex) => {
+                                    {stageTouchpointIds.length > 0 ? stageTouchpointIds.map((tpId, itemIndex) => {
                                         const touchpoint = resolveTouchpoint(tpId);
                                         return (
                                             <div
@@ -290,7 +301,7 @@ export default function CustomerJourneyPage() {
                                         );
                                     }) : (
                                         <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', lineHeight: 1.5 }}>
-                                            Noch keine Touchpoints hinterlegt. Die Huelle bleibt trotzdem sichtbar und kann spaeter erweitert werden.
+                                            Noch keine Touchpoints hinterlegt. Die Hülle bleibt trotzdem sichtbar und kann später erweitert werden.
                                         </div>
                                     )}
                                 </div>
@@ -334,7 +345,7 @@ export default function CustomerJourneyPage() {
                                     ))}
                                     {contentItems.length === 0 && stage.contentFormats.length === 0 && (
                                         <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-color)', color: 'var(--text-secondary)', fontSize: 'var(--font-size-xs)', lineHeight: 1.5 }}>
-                                            Noch kein Content verknuepft. Die Phase kann zuerst strategisch beschrieben und spaeter operativ befuellt werden.
+                                            Noch kein Content verknüpft. Die Phase kann zuerst strategisch beschrieben und später operativ befüllt werden.
                                         </div>
                                     )}
                                 </div>
@@ -357,7 +368,7 @@ export default function CustomerJourneyPage() {
                                         </ul>
                                     ) : (
                                         <div style={{ fontSize: '0.7rem', color: '#991b1b', lineHeight: 1.5 }}>
-                                            Fuer diese Phase wurden noch keine zentralen Huerden dokumentiert.
+                                            Für diese Phase wurden noch keine zentralen Hürden dokumentiert.
                                         </div>
                                     )}
                                 </div>
@@ -377,7 +388,7 @@ export default function CustomerJourneyPage() {
                                         Vertrieb (B2B/B2C)
                                     </div>
                                     <div style={{ fontSize: '0.65rem', color: '#047857', marginTop: '6px', marginBottom: '12px', lineHeight: 1.4 }}>
-                                        Der Handoff an Sales oder Checkout kann spaeter hier operationalisiert werden.
+                                        Der Handoff an Sales oder Checkout kann später hier operationalisiert werden.
                                     </div>
                                 </div>
                             )}

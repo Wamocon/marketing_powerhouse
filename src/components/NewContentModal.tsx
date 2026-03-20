@@ -22,6 +22,25 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
         touchpointId: '', journeyPhase: 'Awareness'
     });
 
+    const hasUnsavedChanges = Boolean(
+        newContent.title.trim() ||
+        newContent.description.trim() ||
+        newContent.publishDate ||
+        newContent.platform ||
+        newContent.touchpointId ||
+        newContent.createTasks ||
+        newContent.contentType !== 'social' ||
+        newContent.journeyPhase !== 'Awareness' ||
+        newContent.campaignId !== (defaultCampaignId || '')
+    );
+
+    const requestClose = () => {
+        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
+
     const handleCreate = async () => {
         if (!newContent.title.trim()) return;
 
@@ -61,7 +80,7 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', width: '100%', maxWidth: '600px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -69,7 +88,7 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
             }}>
                 <div className="modal-header">
                     <div className="modal-title"><Plus size={18} style={{ color: 'var(--color-primary)' }} /> Neuen Content planen</div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                    <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={20} /></button>
                 </div>
                 <div className="modal-body">
                     <div className="form-group">
@@ -171,7 +190,7 @@ export default function NewContentModal({ onClose, defaultCampaignId }: NewConte
                     </div>
                 </div>
                 <div className="modal-footer">
-                    <button className="btn btn-ghost" onClick={onClose}>Abbrechen</button>
+                    <button className="btn btn-ghost" onClick={requestClose}>Abbrechen</button>
                     <button className="btn btn-primary" onClick={handleCreate} disabled={!newContent.title.trim()}>
                         <Plus size={16} /> Content erstellen
                     </button>

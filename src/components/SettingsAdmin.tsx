@@ -30,7 +30,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
             setSuccess('Rolle aktualisiert.');
             setTimeout(() => setSuccess(''), 2500);
         } catch {
-            setError('Rolle konnte nicht geaendert werden.');
+            setError('Rolle konnte nicht geändert werden.');
         }
     };
 
@@ -49,7 +49,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
     const handleInviteByEmail = async () => {
         const normalizedEmail = inviteEmail.trim().toLowerCase();
         if (!normalizedEmail || !normalizedEmail.includes('@')) {
-            setError('Bitte eine gueltige E-Mail-Adresse eingeben.');
+            setError('Bitte eine gültige E-Mail-Adresse eingeben.');
             return;
         }
         try {
@@ -91,13 +91,13 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                         <input
                             type="email"
                             className="form-input"
-                            placeholder="E-Mail fuer Zuweisung"
+                            placeholder="E-Mail für Zuweisung"
                             value={inviteEmail}
                             onChange={e => setInviteEmail(e.target.value)}
                             style={{ minWidth: '230px' }}
                         />
                         <button className="btn btn-primary btn-sm" onClick={handleInviteByEmail} disabled={inviteLoading}>
-                            <Plus size={14} /> {inviteLoading ? 'Pruefung...' : 'Per E-Mail zuweisen'}
+                            <Plus size={14} /> {inviteLoading ? 'Prüfung...' : 'Per E-Mail zuweisen'}
                         </button>
                     </div>
                 </div>
@@ -151,7 +151,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                         value={member.role}
                                         onChange={e => handleRoleUpdate(member.id, e.target.value as 'company_admin' | 'manager' | 'member')}
                                         disabled={isMe || isProtectedSuperAdmin}
-                                        title={isProtectedSuperAdmin ? 'Super-Admin Rollen duerfen nur von Super-Admins angepasst werden.' : ''}
+                                        title={isProtectedSuperAdmin ? 'Super-Admin-Rollen dürfen nur von Super-Admins angepasst werden.' : ''}
                                         style={{
                                             background: 'var(--bg-elevated)', border: '1px solid var(--border-color)',
                                             borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
@@ -186,7 +186,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                 color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px',
             }}>
                 <Shield size={11} style={{ color: '#ef4444', flexShrink: 0 }} />
-                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Unternehmens-Admins duerfen Super-Admin-Rechte nicht aendern.
+                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Unternehmens-Admins dürfen Super-Admin-Rechte nicht ändern.
             </div>
             {(error || success) && (
                 <div style={{ marginTop: '10px', fontSize: 'var(--font-size-xs)', color: error ? 'var(--color-danger)' : 'var(--color-success)' }}>

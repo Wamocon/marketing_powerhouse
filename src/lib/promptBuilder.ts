@@ -3,7 +3,7 @@
  * Builds context-aware prompts from positioning, campaign, audience, journey, and task data.
  */
 
-import type { Campaign, Task, Audience, Touchpoint, AsidasJourney, JourneyStage } from '../types';
+import type { Campaign, Task, Audience, Touchpoint, CustomerJourney, JourneyStage } from '../types';
 import type { CompanyPositioning, CompanyKeyword } from '../types/dashboard';
 
 // ─── Types ─────────────────────────────────────────────────
@@ -13,7 +13,7 @@ export interface PromptContext {
   companyKeywords: CompanyKeyword[];
   campaign?: Campaign | null;
   audience?: Audience | null;
-  journey?: AsidasJourney | null;
+  journey?: CustomerJourney | null;
   journeyStage?: JourneyStage | null;
   touchpoint?: Touchpoint | null;
   task: Task;

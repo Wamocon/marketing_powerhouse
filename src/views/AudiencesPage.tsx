@@ -35,6 +35,29 @@ export default function AudiencesPage() {
         decisionProcess: '', description: '', painPoints: [], goals: [],
     });
 
+    const hasUnsavedNewAudienceChanges = Boolean(
+        newAud.name.trim() ||
+        newAud.age.trim() ||
+        newAud.location.trim() ||
+        newAud.jobTitle.trim() ||
+        newAud.gender.trim() ||
+        newAud.income.trim() ||
+        newAud.education.trim() ||
+        newAud.decisionProcess.trim() ||
+        newAud.description.trim() ||
+        newAud.preferredChannels.length ||
+        newAud.painPoints.length ||
+        newAud.goals.length
+    );
+
+    const requestCloseNewAudienceModal = () => {
+        if (hasUnsavedNewAudienceChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        setShowNewAudienceModal(false);
+        resetNewAud();
+    };
+
     const handleCreateAudience = () => {
         const initials = newAud.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
         const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899'];
@@ -222,11 +245,11 @@ export default function AudiencesPage() {
 
             {/* New Audience Modal */}
             {showNewAudienceModal && (
-                <div className="modal-overlay" onClick={() => setShowNewAudienceModal(false)}>
+                <div className="modal-overlay" onClick={requestCloseNewAudienceModal}>
                     <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                         <div className="modal-header">
                             <h2 className="modal-title">Neue Persona erstellen</h2>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowNewAudienceModal(false)}>✕</button>
+                            <button className="btn btn-ghost btn-icon" onClick={requestCloseNewAudienceModal}>✕</button>
                         </div>
                         <div className="modal-body" style={{ overflowY: 'auto' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -305,7 +328,7 @@ export default function AudiencesPage() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowNewAudienceModal(false)}>Abbrechen</button>
+                            <button className="btn btn-secondary" onClick={requestCloseNewAudienceModal}>Abbrechen</button>
                             <button className="btn btn-primary" onClick={handleCreateAudience}>Persona erstellen</button>
                         </div>
                     </div>

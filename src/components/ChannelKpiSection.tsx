@@ -37,6 +37,7 @@ export default function ChannelKpiSection({ channelKpis, touchpoints, title = 'P
                     const tp = touchpoints.find(t => t.id === tpId);
                     if (!tp) return null;
                     const sharePercent = totalImpressions > 0 ? Math.round(kpi.impressions / totalImpressions * 100) : 0;
+                    const phases = tp.journeyPhases?.length ? tp.journeyPhases : (tp.journeyPhase ? [tp.journeyPhase] : []);
 
                     return (
                         <div
@@ -50,7 +51,9 @@ export default function ChannelKpiSection({ channelKpis, touchpoints, title = 'P
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{tp.name}</div>
-                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>{tp.type} · {tp.journeyPhase}</div>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
+                                        {tp.type} · {phases.join(', ') || 'Nicht verknüpft'}
+                                    </div>
                                 </div>
                                 <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>{sharePercent}% Anteil</span>
                             </div>

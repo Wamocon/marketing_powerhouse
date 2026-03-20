@@ -8,4 +8,4 @@ export {
     budgetData, activityFeed, teamMembers, dashboardChartData,
     channelPerformance, touchpoints,
 } from './dashboard';
-export { asidasJourneys, customerJourneys } from './journeys';
+export { customerJourneys } from './journeys';

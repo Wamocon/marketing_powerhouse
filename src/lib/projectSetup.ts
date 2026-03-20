@@ -1,4 +1,4 @@
-import type { Audience, AsidasJourney } from '../types';
+import type { Audience, CustomerJourney } from '../types';
 import type { CompanyPositioning, CompanyValue, JourneyStage } from '../types/dashboard';
 
 export const CUSTOMER_JOURNEY_PHASES = [
@@ -146,16 +146,16 @@ export function buildCustomerJourneyStages(overrides?: Partial<Record<string, Pa
   });
 }
 
-export function createCustomerJourneyDraft(audienceId: string, audienceName: string): Omit<AsidasJourney, 'id'> {
+export function createCustomerJourneyDraft(audienceId: string, audienceName: string): Omit<CustomerJourney, 'id'> {
   return {
     name: audienceName ? `${audienceName} - Erste Customer Journey` : 'Erste Customer Journey',
     audienceId,
-    description: 'Die erste Journey bildet die Grundlogik vom ersten Kontakt bis zur Empfehlung ab. Kampagnen, Content und Aufgaben koennen spaeter pro Phase angedockt werden.',
+    description: 'Die erste Journey bildet die Grundlogik vom ersten Kontakt bis zur Empfehlung ab. Kampagnen, Content und Aufgaben können später pro Phase angedockt werden.',
     stages: buildCustomerJourneyStages(),
   };
 }
 
-export function createCustomerJourneyPlaceholder(audience?: Pick<Audience, 'id' | 'name'> | null): AsidasJourney {
+export function createCustomerJourneyPlaceholder(audience?: Pick<Audience, 'id' | 'name'> | null): CustomerJourney {
   return {
     id: 'setup-placeholder-journey',
     ...createCustomerJourneyDraft(audience?.id ?? '', audience?.name ?? 'Erste Zielgruppe'),

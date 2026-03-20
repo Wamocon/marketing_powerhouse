@@ -58,7 +58,6 @@ Marketing_powerhouse/
 │   │   └── [id]/page.tsx             ← Kampagnen-Detail (/campaigns/:id)
 │   ├── audiences/page.tsx            ← Zielgruppen (/audiences)
 │   ├── journeys/page.tsx             ← Customer Journey (/journeys)
-│   ├── asidas/page.tsx               ← ASIDAS Funnel (/asidas)
 │   ├── touchpoints/page.tsx          ← Kanäle & Touchpoints (/touchpoints)
 │   ├── content/page.tsx              ← Content-Kalender (/content)
 │   ├── content-overview/page.tsx     ← Content-Übersicht (/content-overview)
@@ -127,7 +126,6 @@ Marketing_powerhouse/
         ├── BudgetPage.tsx
         ├── TasksPage.tsx
         ├── CustomerJourneyPage.tsx
-        ├── AsidasFunnelPage.tsx
         ├── TouchpointsPage.tsx
         ├── PositioningPage.tsx
         ├── ManualPage.tsx
@@ -306,13 +304,11 @@ const { activeCompany, selectCompany, deselectCompany, createCompany } = useComp
 
 ### 🆕 ✅ Customer Journey (`/journeys`) — 5-Phasen-Modell
 - [x] **Customer Journey (5-Phasen)**: (Awareness, Consideration, Purchase, Retention, Advocacy) als primäres Modell
-- [x] **ASIDAS-Funnel Ansicht** (Attention, Search, Interest, Desire, Action, Share) als alternatives Analyse-Modell / Sekundär
-- [x] **Omnipräsenz-Matrix (ASIDAS)**: Search und Share werden als kontinuierliche, omnipräsente Verhaltensweisen visualisiert, die den Nutzer durchgehend begleiten.
 - [x] **Deep-Linking Content**: Realer Content aus der Redaktionsplanung (`initialContents`) ist direkt in den Stages verlinkt und kann per Modal geöffnet werden.
 - [x] **Touchpoint-Integration**: Klick auf einen Journey-Touchpoint öffnet nun direkt das Detail-Modal ohne Seitenwechsel.
 - [x] **Vertriebs-Handoff**: Visueller Trigger für den Übergang von Marketing zu Sales in der Action-Phase.
 - [x] **KPIs & Metriken**: Trends und Kennzahlen pro Stage zur Erfolgsmessung der Journey.
-- [x] **Neue Journey erstellen**: Inline-Formular in beiden Ansichten (ASIDAS + 5-Phasen) mit Zielgruppen-Auswahl und automatischer Stage-Erzeugung
+- [x] **Neue Journey erstellen**: Inline-Formular in der Customer-Journey-Ansicht (5 Phasen) mit Zielgruppen-Auswahl und automatischer Stage-Erzeugung
 
 ### ✅ Kanäle & Touchpoints (`/touchpoints`)
 - [x] **In Navigation sichtbar**: Eigener Menüpunkt im Bereich "Marketing" mit Badge
@@ -413,7 +409,7 @@ const { activeCompany, selectCompany, deselectCompany, createCompany } = useComp
 | `team_members` | Team-Mitglieder | `fetchTeamMembers` |
 | `dashboard_chart_data` | Dashboard-Diagramm-Daten | `fetchChartData` |
 | `channel_performance` | Kanal-Performance-Daten | `fetchChannelPerformance` |
-| `journeys` | Customer Journeys (5-Phasen + ASIDAS) | `fetchJourneys`, `createJourney`, `deleteJourney` |
+| `journeys` | Customer Journeys (5-Phasen) | `fetchJourneys`, `createJourney`, `deleteJourney` |
 | `journey_stages` | Journey-Phasen/Stages | (via `fetchJourneys`, `createJourney`) |
 
 ### Supabase-Konfiguration

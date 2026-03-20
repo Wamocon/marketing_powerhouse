@@ -12,9 +12,7 @@
  *   update → api.updateX called → matching item updated in state
  *   delete → api.deleteX called → matching item removed from state
  *
- * addJourney / deleteJourney additionally branch on type:
- *   'asidas' → asidasJourneys state
- *   'customer' → customerJourneys state
+ * addJourney / deleteJourney update customerJourneys state.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -244,82 +242,41 @@ describe('DataContext — Touchpoint CRUD', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Journey CRUD — branches on type ('asidas' | 'customer')
+// Journey CRUD
 // ═══════════════════════════════════════════════════════════════════════════════
 const journeyBase = {
   name: 'Test Journey', audienceId: 'aud1', description: '', stages: [],
 };
 const createdJourney = { ...journeyBase, id: 'j-new' };
-const existingAsidas = { ...journeyBase, id: 'j-asidas' };
 const existingCustomer = { ...journeyBase, id: 'j-customer' };
 
 describe('DataContext — Journey CRUD', () => {
   beforeEach(() => {
     vi.mocked(api.fetchJourneys)
-      .mockResolvedValueOnce([existingAsidas])   // asidas call
-      .mockResolvedValueOnce([existingCustomer]); // customer call
+      .mockResolvedValue([existingCustomer]);
   });
 
-  // BRANCH: type='asidas' → asidasJourneys updated
-  it('addJourney(asidas) appends to asidasJourneys only', async () => {
+  it('addJourney appends to customerJourneys', async () => {
     vi.mocked(api.createJourney).mockResolvedValue(createdJourney);
     const result = await mountAndWait();
 
     await act(async () => {
-      await result.current.addJourney(journeyBase, 'asidas');
-    });
-
-    expect(result.current.asidasJourneys).toHaveLength(2);
-    expect(result.current.customerJourneys).toHaveLength(1); // unchanged
-  });
-
-  // BRANCH: type='customer' → customerJourneys updated
-  it('addJourney(customer) appends to customerJourneys only', async () => {
-    vi.mocked(api.createJourney).mockResolvedValue(createdJourney);
-
-    // Need fresh mount so fetchJourneys mocks are set again
-    vi.mocked(api.fetchJourneys)
-      .mockResolvedValueOnce([existingAsidas])
-      .mockResolvedValueOnce([existingCustomer]);
-
-    const result = await mountAndWait();
-
-    await act(async () => {
-      await result.current.addJourney(journeyBase, 'customer');
+      await result.current.addJourney(journeyBase);
     });
 
     expect(result.current.customerJourneys).toHaveLength(2);
-    expect(result.current.asidasJourneys).toHaveLength(1); // unchanged
   });
 
-  // BRANCH: deleteJourney('asidas') → filters asidasJourneys
-  it('deleteJourney(asidas) removes from asidasJourneys', async () => {
-    vi.mocked(api.fetchJourneys)
-      .mockResolvedValueOnce([existingAsidas])
-      .mockResolvedValueOnce([existingCustomer]);
+  it('deleteJourney removes from customerJourneys', async () => {
+    vi.mocked(api.createJourney).mockResolvedValue(createdJourney);
+
     const result = await mountAndWait();
 
     await act(async () => {
-      await result.current.deleteJourney('j-asidas', 'asidas');
-    });
-
-    expect(result.current.asidasJourneys).toHaveLength(0);
-    expect(result.current.customerJourneys).toHaveLength(1);
-  });
-
-  // BRANCH: deleteJourney('customer') → filters customerJourneys
-  it('deleteJourney(customer) removes from customerJourneys', async () => {
-    vi.mocked(api.fetchJourneys)
-      .mockResolvedValueOnce([existingAsidas])
-      .mockResolvedValueOnce([existingCustomer]);
-    const result = await mountAndWait();
-
-    await act(async () => {
-      await result.current.deleteJourney('j-customer', 'customer');
+      await result.current.deleteJourney('j-customer');
     });
 
     expect(result.current.customerJourneys).toHaveLength(0);
-    expect(result.current.asidasJourneys).toHaveLength(1);
   });
 });
 

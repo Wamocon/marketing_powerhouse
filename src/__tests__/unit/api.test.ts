@@ -373,12 +373,12 @@ describe('fetchJourneys()', () => {
   // BRANCH A: empty / null journeys → return []
   it('returns empty array when Supabase returns no journeys', async () => {
     mockFrom({ data: [], error: null });
-    expect(await api.fetchJourneys('asidas', TC)).toEqual([]);
+    expect(await api.fetchJourneys(TC)).toEqual([]);
   });
 
   it('returns empty array when journey data is null', async () => {
     mockFrom({ data: null, error: null });
-    expect(await api.fetchJourneys('customer', TC)).toEqual([]);
+    expect(await api.fetchJourneys(TC)).toEqual([]);
   });
 
   // BRANCH B: journeys exist but no stages
@@ -387,7 +387,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },    // journeys query
       { data: [], error: null },             // stages query
     ]);
-    const journeys = await api.fetchJourneys('asidas', TC);
+    const journeys = await api.fetchJourneys(TC);
     expect(journeys).toHaveLength(1);
     expect(journeys[0].id).toBe('j1');
     expect(journeys[0].stages).toEqual([]);
@@ -399,7 +399,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },
       { data: [dbStage], error: null },
     ]);
-    const journeys = await api.fetchJourneys('asidas', TC);
+    const journeys = await api.fetchJourneys(TC);
     expect(journeys[0].stages).toHaveLength(1);
     expect(journeys[0].stages[0].phase).toBe('Awareness');
     expect(journeys[0].stages[0].contentFormats).toEqual([]); // snake→camel
@@ -408,7 +408,7 @@ describe('fetchJourneys()', () => {
 
   it('throws when first Supabase call returns error', async () => {
     mockFrom({ data: null, error: new Error('journey fetch error') });
-    await expect(api.fetchJourneys('asidas', TC)).rejects.toThrow('journey fetch error');
+    await expect(api.fetchJourneys(TC)).rejects.toThrow('journey fetch error');
   });
 
   it('throws when stage fetch returns error', async () => {
@@ -416,7 +416,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },
       { data: null, error: new Error('stage fetch error') },
     ]);
-    await expect(api.fetchJourneys('asidas', TC)).rejects.toThrow('stage fetch error');
+    await expect(api.fetchJourneys(TC)).rejects.toThrow('stage fetch error');
   });
 });
 
@@ -429,7 +429,7 @@ describe('createJourney()', () => {
   it('creates journey without stages', async () => {
     // Two from() calls: insert journey, then no stage insert
     mockFrom({ data: null, error: null });
-    const result = await api.createJourney(baseJourney, 'asidas', TC);
+    const result = await api.createJourney(baseJourney, TC);
     expect(result.name).toBe('Test Journey');
     expect(result.stages).toEqual([]);
   });
@@ -445,14 +445,14 @@ describe('createJourney()', () => {
       touchpoints: [], contentFormats: [], emotions: [], painPoints: [],
       metrics: { label: '', value: '', trend: '' }, contentIds: [],
     };
-    const result = await api.createJourney({ ...baseJourney, stages: [stage] }, 'customer', TC);
+    const result = await api.createJourney({ ...baseJourney, stages: [stage] }, TC);
     expect(result.stages).toHaveLength(1);
     expect(result.stages[0].phase).toBe('Awareness');
   });
 
   it('throws on journey insert error', async () => {
     mockFrom({ data: null, error: new Error('insert failed') });
-    await expect(api.createJourney(baseJourney, 'asidas', TC)).rejects.toThrow('insert failed');
+    await expect(api.createJourney(baseJourney, TC)).rejects.toThrow('insert failed');
   });
 
   it('throws on stage insert error', async () => {
@@ -465,7 +465,7 @@ describe('createJourney()', () => {
       { data: null, error: null },
       { data: null, error: new Error('stage insert failed') },
     ]);
-    await expect(api.createJourney({ ...baseJourney, stages: [stage] }, 'asidas', TC))
+    await expect(api.createJourney({ ...baseJourney, stages: [stage] }, TC))
       .rejects.toThrow('stage insert failed');
   });
 });

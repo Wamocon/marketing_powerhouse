@@ -22,10 +22,26 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const { currentUser, can } = useAuth();
     const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
-    const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, asidasJourneys } = useData();
+    const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
     const [aiFeedbackText, setAiFeedbackText] = useState('');
+    const hasUnsavedEdits = isEditing && JSON.stringify(editedTask) !== JSON.stringify(task);
+
+    const requestClose = () => {
+        if (hasUnsavedEdits && !window.confirm('Es gibt ungespeicherte Änderungen. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
+
+    const handleCancelEditing = () => {
+        if (hasUnsavedEdits && !window.confirm('Ungespeicherte Änderungen verwerfen?')) {
+            return;
+        }
+        setEditedTask({ ...task });
+        setIsEditing(false);
+    };
 
     // Build and set prompt context for AI generation
     useEffect(() => {
@@ -36,16 +52,16 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
         const touchpoint = task.touchpointId ? touchpoints.find(tp => tp.id === task.touchpointId) : null;
         // Find the journey + stage that matches the task's touchpoint phase
         const touchpointPhase = touchpoint?.journeyPhase;
-        let journey = null as typeof asidasJourneys[0] | null;
-        let journeyStage = null as (typeof asidasJourneys[0])['stages'][0] | null;
+        let journey = null as typeof customerJourneys[0] | null;
+        let journeyStage = null as (typeof customerJourneys[0])['stages'][0] | null;
         if (touchpointPhase) {
-            for (const j of asidasJourneys) {
+            for (const j of customerJourneys) {
                 const match = j.stages?.find(s => s.phase === touchpointPhase);
                 if (match) { journey = j; journeyStage = match; break; }
             }
         }
-        if (!journey && asidasJourneys.length > 0) {
-            journey = asidasJourneys[0];
+        if (!journey && customerJourneys.length > 0) {
+            journey = customerJourneys[0];
             journeyStage = journey.stages?.[0] || null;
         }
 
@@ -58,7 +74,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
             journeyStage: journeyStage ?? null,
             touchpoint: touchpoint ?? null,
         });
-    }, [task, campaigns, audiences, touchpoints, positioning, companyKeywords, asidasJourneys, setPromptContext]);
+    }, [task, campaigns, audiences, touchpoints, positioning, companyKeywords, customerJourneys, setPromptContext]);
 
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
@@ -86,7 +102,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     if (!task) return null;
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', height: '100%', width: '100%', maxWidth: '800px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -99,7 +115,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         {canEdit && !isEditing && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => { setEditedTask({ ...task }); setIsEditing(true); }}>
                                 <Edit2 size={16} /> Bearbeiten
                             </button>
                         )}
@@ -113,7 +129,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                                 <Trash2 size={16} />
                             </button>
                         )}
-                        <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                        <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={20} /></button>
                     </div>
                 </div>
 
@@ -311,7 +327,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                 <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
                     {isEditing ? (
                         <>
-                            <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Abbrechen</button>
+                            <button className="btn btn-ghost" onClick={handleCancelEditing}>Abbrechen</button>
                             <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Speichern</button>
                         </>
                     ) : (

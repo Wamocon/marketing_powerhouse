@@ -313,7 +313,7 @@ CREATE TABLE journeys (
   name TEXT NOT NULL,
   audience_id TEXT,
   description TEXT NOT NULL DEFAULT '',
-  journey_type TEXT NOT NULL CHECK (journey_type IN ('asidas','customer')) DEFAULT 'asidas',
+  journey_type TEXT NOT NULL CHECK (journey_type IN ('customer')) DEFAULT 'customer',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -479,37 +479,13 @@ INSERT INTO channel_performance (id, name, value, color, sort_order) VALUES
 
 const SEED_JOURNEYS = `
 INSERT INTO journeys (id, name, audience_id, description, journey_type) VALUES
-('j1','Quirin (Quereinsteiger) - B2C Full Flow','a1','Von der Frustration im alten Job bis zur Anmeldung zum ISTQB-Kurs mit Bildungsgutschein.','asidas'),
-('j2','Hannah (HR) - B2B Inhouse Flow','a2','Recherche eines Weiterbildungspartners für das Inhouse QA Team.','asidas'),
-('j3','Bea (Junior QA) - Upskill Flow','a3','Bereits in der Ausbildung/Job, aber benötigt den ISTQB Titel für die Gehaltsverhandlung.','asidas'),
 ('cj1','Quirin (Quereinsteiger) - 5-Phasen Journey','a1','Standard 5-Phasen Customer Journey von ersten Problembewusstsein bis zur Weiterempfehlung nach der Schulung.','customer'),
 ('cj2','Hannah (HR) - B2B 5-Phasen Journey','a2','Von der Problemerkennung im eigenen Team bis zur langfristigen Partnerschaft für Inhouse-Schulungen.','customer');
 `;
 
 const SEED_JOURNEY_STAGES = `
--- ASIDAS j1 stages
-INSERT INTO journey_stages (id, journey_id, phase, title, description, touchpoints, content_formats, emotions, pain_points, metrics, content_ids, sort_order) VALUES
-('j1s1','j1','Attention','Problembewusstsein','Quirin erfährt, dass IT-Jobs Quereinsteiger aufnehmen.',ARRAY['tp6','tp2'],ARRAY['Reel: 3 Mythen über IT-Jobs','LinkedIn Post: Zukunftssicher'],ARRAY['Orientierungslos','Neugierig'],ARRAY['Angst vor dem Ungewissen','Kein Programmier-Wissen'],'{"label":"Reichweite","value":"45.000","trend":"+12%"}',ARRAY['cnt1'],0),
-('j1s2','j1','Search','Recherche & Info-Suche','Er sucht bei Google nach Software Tester ohne Studium.',ARRAY['tp1'],ARRAY['Blog: Was macht ein Tester?','SEO Ratgeber'],ARRAY['Wissbegierig','Leicht überfordert'],ARRAY['Wer zahlt das?','Welches Zertifikat brauche ich?'],'{"label":"SEO Clicks","value":"2.100","trend":"+5%"}',ARRAY['cnt4'],1),
-('j1s3','j1','Interest','Tieferes Kaufinteresse','Meldung zum kostenlosen Webinar an.',ARRAY['tp3','tp2'],ARRAY['Webinar Anmeldung','Retargeting Case Study'],ARRAY['Hoffnungsvoll'],ARRAY['Terminfindung','Ist das seriös?'],'{"label":"Webinar Signups","value":"350","trend":"+20%"}',ARRAY['cnt2'],2),
-('j1s4','j1','Desire','Persönliches Verlangen aufbauen','Erklärung der Bildungsgutschein-Förderung per Mail.',ARRAY['tp4'],ARRAY['E-Mail Nurturing','Fördermittel-Guide (PDF)'],ARRAY['Motiviert','Überzeugt'],ARRAY['Antragstellung beim Amt'],'{"label":"Open Rate","value":"48%","trend":"+3%"}',ARRAY[]::TEXT[],3),
-('j1s5','j1','Action','Beratung & Buchung','Telefonische Beratung und endgültige Anmeldung.',ARRAY['tp5'],ARRAY['Consulting-Leitfaden','Anmeldeformular'],ARRAY['Erleichtert','Gutmütig nervös'],ARRAY['Amt muss final zustimmen'],'{"label":"Vertragsabschlüsse","value":"45","trend":"+8%"}',ARRAY[]::TEXT[],4),
-('j1s6','j1','Share','Erfolg teilen','Prüfung bestanden! Zertifikat wird geteilt.',ARRAY['tp7','tp8'],ARRAY['LinkedIn Zertifikat Template','Alumni Interview'],ARRAY['Stolz'],ARRAY['Jobeinstieg'],'{"label":"Trustpilot Ratings","value":"12","trend":"+2%"}',ARRAY[]::TEXT[],5),
--- ASIDAS j2 stages
-('j2s1','j2','Attention','Schulungsbedarf erkannt','Team wächst, Qualität der Releases sinkt.',ARRAY['tp2'],ARRAY['Whitepaper: Kosten von Bugs in Prod'],ARRAY['Gestresst'],ARRAY['Teamfehler','Budgetdruck'],'{"label":"LinkedIn Impr.","value":"15.000","trend":"+10%"}',ARRAY[]::TEXT[],0),
-('j2s2','j2','Search','Anbietervergleich','Google Suche nach ISTQB Inhouse Training Frankfurt.',ARRAY['tp1','tp3'],ARRAY['B2B Landingpage','Trainer-Profilseite'],ARRAY['Analytisch'],ARRAY['ISTQB Akkreditierung wichtig'],'{"label":"B2B Traffic","value":"800","trend":"+1%"}',ARRAY[]::TEXT[],1),
-('j2s3','j2','Interest','Kontaktaufnahme','Hannah kontaktiert uns für ein Angebot.',ARRAY['tp3'],ARRAY['Pitch Deck','Preisliste'],ARRAY['Erwartungsvoll'],ARRAY['Antwortzeit','Flexibilität bei Terminen'],'{"label":"Inbound Leads","value":"15","trend":"+5%"}',ARRAY[]::TEXT[],2),
-('j2s4','j2','Desire','Fachlicher Austausch','Videocall zur Besprechung der Lernziele des Teams.',ARRAY['tp5'],ARRAY['Demo der Lernplattform','Custom Agenda'],ARRAY['Überzeugt'],ARRAY['Überzeugt das die GF?'],'{"label":"Sales Calls","value":"8","trend":"0%"}',ARRAY[]::TEXT[],3),
-('j2s5','j2','Action','Vertragsabschluss','Rahmenvertrag für Inhouse-Schulung wird signiert.',ARRAY['tp5'],ARRAY['Vertragsdokument'],ARRAY['Erleichtert'],ARRAY['Rechtliche Prüfung im Haus'],'{"label":"Won Deals","value":"3","trend":"+1%"}',ARRAY[]::TEXT[],4),
-('j2s6','j2','Share','Langfristige Partnerschaft','Team besteht Prüfung, Hannah lobt uns intern.',ARRAY['tp2'],ARRAY['B2B Case Study'],ARRAY['Zufrieden','Gut positioniert intern'],ARRAY['Nächstes Fortbildungsjahr'],'{"label":"Upsell %","value":"30%","trend":"+5%"}',ARRAY[]::TEXT[],5),
--- ASIDAS j3 stages
-('j3s1','j3','Attention','Karriere-Bremse','Merkt, dass Zertifikate für Beförderung nötig sind.',ARRAY['tp6'],ARRAY['TikTok Junior vs Senior Tester'],ARRAY['Frustriert','Ambitioniert'],ARRAY['Geringes Gehalt'],'{"label":"Views","value":"110.000","trend":"+45%"}',ARRAY[]::TEXT[],0),
-('j3s2','j3','Search','Vorbereitungsmöglichkeiten','Sucht nach schnellen E-Learning Kursen.',ARRAY['tp1'],ARRAY['SEO Artikel ISTQB im Selbststudium'],ARRAY['Zielorientiert'],ARRAY['Zeitaufwand neben Job'],'{"label":"Klicks","value":"1.200","trend":"-2%"}',ARRAY[]::TEXT[],1),
-('j3s3','j3','Interest','Probe-Material','Lädt Mock-Exam runter.',ARRAY['tp3'],ARRAY['Mock Exam (PDF)','Syllabus Checker'],ARRAY['Fokussiert'],ARRAY['Zu viele Fachbegriffe'],'{"label":"Downloads","value":"450","trend":"+12%"}',ARRAY[]::TEXT[],2),
-('j3s4','j3','Desire','Entscheidung für Premium-Kurs','Erkennt, dass Selbststudium zu schwer ist.',ARRAY['tp4'],ARRAY['E-Mail Warum 60% im 1. Versuch durchfallen'],ARRAY['Respekt vor Prüfung','Kaufbereit'],ARRAY['Prüfungsgebühr'],'{"label":"Open Rate","value":"55%","trend":"+5%"}',ARRAY[]::TEXT[],3),
-('j3s5','j3','Action','Online-Buchung','Bucht per Kreditkarte das E-Learning Paket.',ARRAY['tp3'],ARRAY['Checkout-Page'],ARRAY['Erwartungsvoll'],ARRAY['Geld-zurück-Garantie?'],'{"label":"Checkouts","value":"120","trend":"+15%"}',ARRAY[]::TEXT[],4),
-('j3s6','j3','Share','Prüfungszeugnis auf Social Media','Postet stolz das Zertifikat.',ARRAY['tp2','tp7'],ARRAY['Zertifikats-Post Vorlage'],ARRAY['Stolz','Gehaltserhöhung in Sicht'],ARRAY['-'],'{"label":"Mentions","value":"60","trend":"+8%"}',ARRAY[]::TEXT[],5),
 -- Customer Journey cj1 stages
+INSERT INTO journey_stages (id, journey_id, phase, title, description, touchpoints, content_formats, emotions, pain_points, metrics, content_ids, sort_order) VALUES
 ('cj1s1','cj1','Awareness','Bewusstsein für Relevanz','Erfährt über Social Media, dass IT-Quereinstieg auch ohne Programmieren möglich ist.',ARRAY['tp6','tp2'],ARRAY['Social Media Video','Anzeigen'],ARRAY['Neugierig'],ARRAY['IT scheint zu komplex'],'{"label":"Reichweite","value":"50.000","trend":"+10%"}',ARRAY['cnt1'],0),
 ('cj1s2','cj1','Consideration','Erwägung & Abwägung','Sucht nach Informationen zu Bildungsgutschein und Voraussetzungen.',ARRAY['tp1','tp3'],ARRAY['Blogbeiträge','Webinar'],ARRAY['Wissbegierig'],ARRAY['Finanzierung unklar'],'{"label":"Webinar Anmeldungen","value":"400","trend":"+15%"}',ARRAY['cnt4','cnt2'],1),
 ('cj1s3','cj1','Purchase','Kauf & Entscheidung','Entscheidet sich für den ISTQB-Kurs und meldet sich an.',ARRAY['tp4','tp5'],ARRAY['E-Mail','Beratungsgespräch'],ARRAY['Erwartungsvoll'],ARRAY['Antrag beim Amt dauert'],'{"label":"Abschlüsse","value":"50","trend":"+5%"}',ARRAY[]::TEXT[],2),

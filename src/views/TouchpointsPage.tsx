@@ -116,6 +116,10 @@ export default function TouchpointsPage() {
                                 {tp.type}
                             </span>
 
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
+                                Journey: {(tp.journeyPhases?.length ? tp.journeyPhases : (tp.journeyPhase ? [tp.journeyPhase] : [])).join(', ') || 'Nicht verknüpft'}
+                            </div>
+
                             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
                                 {tp.description}
                             </p>
