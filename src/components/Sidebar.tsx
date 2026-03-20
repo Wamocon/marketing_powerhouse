@@ -9,13 +9,19 @@ import {
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useData } from '../context/DataContext';
+import { useTasks } from '../context/TaskContext';
+import { useContents } from '../context/ContentContext';
 import type { PermissionKey, CompanyRole } from '../types';
+
+type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'asidas' | 'touchpoints' | 'tasks' | 'contents';
 
 interface NavItem {
     path: string;
     icon: LucideIcon;
     label: string;
     badge?: string;
+    badgeKey?: BadgeKey;
     requiredPermission?: PermissionKey | null;
     comingSoon?: boolean;
 }
@@ -35,11 +41,11 @@ const NAV: NavSection[] = [
     {
         section: 'Marketing',
         items: [
-            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badge: '4', requiredPermission: null },
-            { path: '/audiences', icon: Users2, label: 'Zielgruppen', badge: '3' },
-            { path: '/journeys', icon: Map, label: 'Customer Journey', badge: '2' },
-            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badge: '3' },
-            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badge: '6' },
+            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badgeKey: 'campaigns' as const, requiredPermission: null },
+            { path: '/audiences', icon: Users2, label: 'Zielgruppen', badgeKey: 'audiences' as const },
+            { path: '/journeys', icon: Map, label: 'Customer Journey', badgeKey: 'journeys' as const },
+            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badgeKey: 'asidas' as const },
+            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badgeKey: 'touchpoints' as const },
             { path: '/content-overview', icon: FileText, label: 'Content-Übersicht' },
             { path: '/content', icon: Calendar, label: 'Content-Kalender' },
             { path: '/budget', icon: Wallet, label: 'Budget & Controlling', requiredPermission: 'canSeeBudget' },
@@ -74,7 +80,20 @@ interface SidebarProps {
 export default function Sidebar({ onLogout }: SidebarProps) {
     const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { activeCompany, deselectCompany } = useCompany();
+    const { campaigns, audiences, touchpoints, asidasJourneys, customerJourneys } = useData();
+    const { tasks } = useTasks();
+    const { contents } = useContents();
     const pathname = usePathname();
+
+    const badgeCounts: Record<BadgeKey, number> = {
+        campaigns: campaigns.length,
+        audiences: audiences.length,
+        journeys: customerJourneys.length,
+        asidas: asidasJourneys.length,
+        touchpoints: touchpoints.length,
+        tasks: tasks.length,
+        contents: contents.length,
+    };
     const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
 
     const isActivePath = (itemPath: string) => {
@@ -190,14 +209,14 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>
-                                        {item.badge && (
+                                        {(item.badge || item.badgeKey) && (
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: 'var(--font-size-xs)',
                                                 background: 'var(--bg-hover)', padding: '1px 7px',
                                                 borderRadius: 'var(--radius-full)', color: 'var(--text-tertiary)',
                                                 fontWeight: 600,
                                             }}>
-                                                {item.badge}
+                                                {item.badgeKey ? (badgeCounts[item.badgeKey] || '') : item.badge}
                                             </span>
                                         )}
                                     </Link>

@@ -723,6 +723,7 @@ export async function fetchBudgetData(): Promise<BudgetData> {
     spent: Number(overview.data.spent),
     remaining: Number(overview.data.remaining),
     categories: (categories.data ?? []).map(r => ({
+      id: r.id as string,
       name: r.name as string,
       planned: Number(r.planned),
       spent: Number(r.spent),

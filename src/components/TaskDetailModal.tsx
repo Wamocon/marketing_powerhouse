@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -20,12 +20,33 @@ interface TaskDetailModalProps {
 
 export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
     const { currentUser, can } = useAuth();
-    const { updateTask, deleteTask, executeAiAgent, sendAiFeedback } = useTasks();
+    const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
-    const { campaigns, users: testUsers, touchpoints } = useData();
+    const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, asidasJourneys } = useData();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
     const [aiFeedbackText, setAiFeedbackText] = useState('');
+
+    // Build and set prompt context for AI generation
+    useEffect(() => {
+        const campaign = task.campaignId ? campaigns.find(c => c.id === task.campaignId) : null;
+        const audience = campaign?.targetAudiences?.[0]
+            ? audiences.find(a => a.id === campaign.targetAudiences[0])
+            : audiences[0] || null;
+        const touchpoint = task.touchpointId ? touchpoints.find(tp => tp.id === task.touchpointId) : null;
+        const journey = asidasJourneys[0] || null;
+        const journeyStage = journey?.stages?.[0] || null;
+
+        setPromptContext({
+            positioning,
+            companyKeywords,
+            campaign: campaign ?? null,
+            audience: audience ?? null,
+            journey: journey ?? null,
+            journeyStage: journeyStage ?? null,
+            touchpoint: touchpoint ?? null,
+        });
+    }, [task, campaigns, audiences, touchpoints, positioning, companyKeywords, asidasJourneys, setPromptContext]);
 
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;

@@ -47,6 +47,7 @@ export interface CompanyKeyword {
 // ─── Budget Types ──────────────────────────────────────────
 
 export interface BudgetCategory {
+  id?: string;
   name: string;
   planned: number;
   spent: number;
