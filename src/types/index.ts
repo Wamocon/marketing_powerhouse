@@ -53,6 +53,7 @@ export interface CompanyMember {
   userEmail?: string;
   userAvatar?: string;
   userStatus?: User['status'];
+  userIsSuperAdmin?: boolean;
 }
 
 export type PermissionKey =

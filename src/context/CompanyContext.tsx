@@ -174,21 +174,35 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }, [activeCompany, currentUser, deselectCompany]);
 
     const addMember = useCallback(async (userId: string, role: CompanyRole) => {
-        if (!activeCompany) return;
+        if (!activeCompany || !currentUser) return;
+        const targetUser = await api.fetchUserById(userId);
+        if (targetUser?.isSuperAdmin && !isSuperAdmin) {
+            throw new Error('Unternehmens-Admins duerfen Super-Admin-Rechte nicht veraendern.');
+        }
         await api.addCompanyMember(activeCompany.id, userId, role);
         const members = await api.fetchCompanyMembers(activeCompany.id);
         setCompanyMembers(members);
-    }, [activeCompany]);
+    }, [activeCompany, currentUser, isSuperAdmin]);
 
     const updateMemberRole = useCallback(async (memberId: string, role: CompanyRole) => {
+        const targetMember = companyMembers.find(m => m.id === memberId);
+        if (!targetMember) throw new Error('Mitglied nicht gefunden.');
+        if (targetMember.userIsSuperAdmin && !isSuperAdmin) {
+            throw new Error('Unternehmens-Admins duerfen Super-Admin-Rechte nicht veraendern.');
+        }
         await api.updateCompanyMemberRole(memberId, role);
         setCompanyMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
-    }, []);
+    }, [companyMembers, isSuperAdmin]);
 
     const removeMember = useCallback(async (memberId: string) => {
+        const targetMember = companyMembers.find(m => m.id === memberId);
+        if (!targetMember) throw new Error('Mitglied nicht gefunden.');
+        if (targetMember.userIsSuperAdmin && !isSuperAdmin) {
+            throw new Error('Unternehmens-Admins duerfen Super-Admin-Rechte nicht veraendern.');
+        }
         await api.removeCompanyMember(memberId);
         setCompanyMembers(prev => prev.filter(m => m.id !== memberId));
-    }, []);
+    }, [companyMembers, isSuperAdmin]);
 
     const refreshCompanies = useCallback(async () => {
         if (!currentUser) return;
