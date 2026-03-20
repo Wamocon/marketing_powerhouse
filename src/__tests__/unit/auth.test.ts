@@ -37,7 +37,8 @@ const adminUser: User = {
   name: 'Daniel Admin',
   email: 'daniel@test-it-academy.de',
   password: 'admin123',
-  role: 'admin',
+  role: 'company_admin',
+  isSuperAdmin: false,
   jobTitle: 'Administrator',
   avatar: 'DA',
   status: 'online',
@@ -51,7 +52,7 @@ const memberUser: User = { ...adminUser, id: 'mem-1', role: 'member', name: 'Lis
 
 const ALL_PERMISSIONS: PermissionKey[] = [
   'canEditPositioning', 'canEditCompanyKeywords', 'canManageUsers',
-  'canManageSettings', 'canCreateCampaigns', 'canEditCampaigns',
+  'canManageSettings', 'canManageCompany', 'canCreateCampaigns', 'canEditCampaigns',
   'canViewAllCampaigns', 'canDeleteItems', 'canManageTouchpoints',
   'canEditAudiences', 'canViewAudiences', 'canSeeBudget',
   'canEditBudget', 'canAssignTasks', 'canCreateCampaignTasks',
@@ -59,7 +60,7 @@ const ALL_PERMISSIONS: PermissionKey[] = [
 ];
 
 const MANAGER_FALSE: PermissionKey[] = [
-  'canEditPositioning', 'canEditCompanyKeywords', 'canManageUsers', 'canManageSettings',
+  'canEditPositioning', 'canEditCompanyKeywords', 'canManageUsers', 'canManageSettings', 'canManageCompany',
 ];
 const MANAGER_TRUE = ALL_PERMISSIONS.filter(p => !MANAGER_FALSE.includes(p));
 
@@ -84,11 +85,10 @@ describe('computePermission()', () => {
     expect(computePermission(undefined, 'canViewAudiences')).toBe(false);
   });
 
-  // ── Admin: all 18 permissions → true ──────────────────────────────────────
-  describe('Admin — all permissions must be true', () => {
+  describe('company_admin — all permissions must be true', () => {
     ALL_PERMISSIONS.forEach(perm => {
-      it(`admin | ${perm} → true`, () => {
-        expect(computePermission('admin', perm)).toBe(true);
+      it(`company_admin | ${perm} → true`, () => {
+        expect(computePermission('company_admin', perm)).toBe(true);
       });
     });
   });
@@ -132,20 +132,20 @@ describe('computePermission()', () => {
 // 2. PERMISSIONS matrix structure
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('PERMISSIONS matrix completeness', () => {
-  it('defines all 18 permissions for admin', () => {
-    expect(Object.keys(PERMISSIONS.admin)).toHaveLength(18);
+  it('defines all 19 permissions for company_admin', () => {
+    expect(Object.keys(PERMISSIONS.company_admin)).toHaveLength(19);
   });
 
-  it('defines all 18 permissions for manager', () => {
-    expect(Object.keys(PERMISSIONS.manager)).toHaveLength(18);
+  it('defines all 19 permissions for manager', () => {
+    expect(Object.keys(PERMISSIONS.manager)).toHaveLength(19);
   });
 
-  it('defines all 18 permissions for member', () => {
-    expect(Object.keys(PERMISSIONS.member)).toHaveLength(18);
+  it('defines all 19 permissions for member', () => {
+    expect(Object.keys(PERMISSIONS.member)).toHaveLength(19);
   });
 
-  it('admin has MORE permissions than manager', () => {
-    const adminTrue = ALL_PERMISSIONS.filter(p => PERMISSIONS.admin[p]);
+  it('company_admin has MORE permissions than manager', () => {
+    const adminTrue = ALL_PERMISSIONS.filter(p => PERMISSIONS.company_admin[p]);
     const managerTrue = ALL_PERMISSIONS.filter(p => PERMISSIONS.manager[p]);
     expect(adminTrue.length).toBeGreaterThan(managerTrue.length);
   });
@@ -316,24 +316,29 @@ describe('can() in AuthProvider context', () => {
     });
   });
 
-  it('returns true for all permissions when admin logs in', async () => {
+  it('returns true for all permissions when company_admin role is active', async () => {
     localStorage.setItem('momentum_session_user_id', 'admin-1');
     vi.mocked(api.fetchUserById).mockResolvedValue(adminUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.currentUser).toEqual(adminUser));
 
+    // can() now depends on activeCompanyRole, set it explicitly
+    act(() => result.current.setActiveCompanyRole('company_admin'));
+
     ALL_PERMISSIONS.forEach(perm => {
       expect(result.current.can(perm)).toBe(true);
     });
   });
 
-  it('returns false for restricted permissions when manager logs in', async () => {
+  it('returns false for restricted permissions when manager role is active', async () => {
     localStorage.setItem('momentum_session_user_id', 'mgr-1');
     vi.mocked(api.fetchUserById).mockResolvedValue(managerUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.currentUser).toEqual(managerUser));
+
+    act(() => result.current.setActiveCompanyRole('manager'));
 
     MANAGER_FALSE.forEach(perm => {
       expect(result.current.can(perm)).toBe(false);
@@ -343,12 +348,14 @@ describe('can() in AuthProvider context', () => {
     });
   });
 
-  it('only allows canViewAudiences and canEditOwnTasks for member', async () => {
+  it('only allows canViewAudiences and canEditOwnTasks for member role', async () => {
     localStorage.setItem('momentum_session_user_id', 'mem-1');
     vi.mocked(api.fetchUserById).mockResolvedValue(memberUser);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.currentUser).toEqual(memberUser));
+
+    act(() => result.current.setActiveCompanyRole('member'));
 
     MEMBER_FALSE.forEach(perm => expect(result.current.can(perm)).toBe(false));
     MEMBER_TRUE.forEach(perm => expect(result.current.can(perm)).toBe(true));
@@ -369,7 +376,7 @@ describe('isRole() in AuthProvider context', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.sessionLoading).toBe(false));
 
-    expect(result.current.isRole('admin')).toBe(false);
+    expect(result.current.isRole('company_admin')).toBe(false);
     expect(result.current.isRole('manager')).toBe(false);
     expect(result.current.isRole('member')).toBe(false);
   });
@@ -382,7 +389,9 @@ describe('isRole() in AuthProvider context', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.currentUser).toEqual(adminUser));
 
-    expect(result.current.isRole('admin')).toBe(true);
+    // After login, set active company role
+    act(() => result.current.setActiveCompanyRole('company_admin'));
+    expect(result.current.isRole('company_admin')).toBe(true);
   });
 
   // BRANCH: non-matching role → false
@@ -393,6 +402,7 @@ describe('isRole() in AuthProvider context', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.currentUser).toEqual(adminUser));
 
+    act(() => result.current.setActiveCompanyRole('company_admin'));
     expect(result.current.isRole('manager')).toBe(false);
     expect(result.current.isRole('member')).toBe(false);
   });

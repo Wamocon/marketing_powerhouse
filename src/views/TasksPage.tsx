@@ -22,6 +22,79 @@ const UI_STATE_LABELS = {
     approved: 'Freigegeben', scheduled: 'Eingeplant', live: 'Live', monitoring: 'Beobachtung', analyzed: 'Analysiert'
 };
 
+const TASK_STATUS_MODEL = [
+    {
+        id: 'draft',
+        title: 'Entwurf',
+        description: 'Aufgabe ist angelegt, Briefing und Zielsetzung werden initial definiert.',
+        entry: ['Neue Aufgabe wurde erstellt.'],
+        exit: ['KI-Generierung wurde gestartet oder Aufgabe wurde manuell weiterqualifiziert.'],
+    },
+    {
+        id: 'ai_generating',
+        title: 'KI generiert',
+        description: 'Die App erstellt automatisch einen ersten Vorschlag für den Creative-Output.',
+        entry: ['KI-Agent wurde ausgelöst.'],
+        exit: ['Vorschlag liegt vor und Status wechselt auf KI-Vorschlag.'],
+    },
+    {
+        id: 'ai_ready',
+        title: 'KI-Vorschlag',
+        description: 'Ein KI-Entwurf ist verfügbar und kann geprüft oder überarbeitet werden.',
+        entry: ['Generierung ist abgeschlossen oder Revision wurde eingearbeitet.'],
+        exit: ['Feedback führt zu Überarbeitung oder Aufgabe geht ins Review.'],
+    },
+    {
+        id: 'revision',
+        title: 'Überarbeitung',
+        description: 'Korrekturen werden umgesetzt, meist auf Basis von Feedback.',
+        entry: ['KI-Feedback wurde gesendet oder Review fordert Anpassungen.'],
+        exit: ['Überarbeiteter Vorschlag ist erneut als KI-Vorschlag verfügbar.'],
+    },
+    {
+        id: 'review',
+        title: 'Im Review',
+        description: 'Fachliche/qualitative Prüfung durch verantwortliche Personen.',
+        entry: ['Umsetzbarer Vorschlag liegt zur Abnahme vor.'],
+        exit: ['Freigabe erteilt oder Rückgabe in Überarbeitung.'],
+    },
+    {
+        id: 'approved',
+        title: 'Freigegeben',
+        description: 'Task ist inhaltlich akzeptiert und bereit zur Einplanung.',
+        entry: ['Review wurde positiv abgeschlossen.'],
+        exit: ['Veröffentlichungstermin und Kanalplanung sind gesetzt.'],
+    },
+    {
+        id: 'scheduled',
+        title: 'Eingeplant',
+        description: 'Ausspielung ist terminiert und vorbereitet.',
+        entry: ['Freigegebene Aufgabe wurde zeitlich eingeplant.'],
+        exit: ['Content geht live.'],
+    },
+    {
+        id: 'live',
+        title: 'Live',
+        description: 'Die Maßnahme läuft produktiv auf dem Zielkanal.',
+        entry: ['Geplanter Task wurde veröffentlicht.'],
+        exit: ['Aktive Performance-Beobachtung startet.'],
+    },
+    {
+        id: 'monitoring',
+        title: 'Beobachtung',
+        description: 'Performance wird überwacht; in der App werden KPI-Daten hinterlegt.',
+        entry: ['Task wird in Monitoring überführt (setzt Performance-Daten).'],
+        exit: ['Analyse wird ausgelöst und Ergebnis dokumentiert.'],
+    },
+    {
+        id: 'analyzed',
+        title: 'Analysiert',
+        description: 'Leistung wurde bewertet und als Erkenntnis für Folgeaktionen festgehalten.',
+        entry: ['Task-Analyse wurde ausgeführt.'],
+        exit: ['Optional: neue Iteration oder Folgeaufgabe wird angelegt.'],
+    },
+] as const;
+
 const DONE_STATUSES = STATUS_GROUPS.find(g => g.id === 'done')!.statuses;
 
 function getDateUrgency(task: Task): 'overdue' | 'due-soon' | 'live' | 'normal' {
@@ -201,7 +274,7 @@ export default function TasksPage() {
                         <p style={{ marginBottom: '12px' }}>Willkommen im Ticket-Board! Hier werden alle offenen Aufträge für Creatives und Content-Elemente verwaltet.</p>
                         <ul className="help-list">
                             <li><strong>To Do / Offen:</strong> Hier landen alle frischen Aufgaben, die an das kreative Team delegiert wurden.</li>
-                            <li><strong>Detailansicht:</strong> Klicke auf eine Kartekrte, um das Briefing des Managers zu lesen und den zugehörigen Content einzusehen.</li>
+                            <li><strong>Detailansicht:</strong> Klicke auf eine Karte, um das Briefing des Managers zu lesen und den zugehörigen Content einzusehen.</li>
                             <li><strong>Ressourcen-Link (WICHTIG):</strong> Sobald du als Bearbeiter fertig bist, lade deine Dateien im Unternehmens-OneDrive hoch und speichere den Link in dieser Aufgabe.</li>
                             <li><strong>Status Updaten:</strong> Pflege den Status deiner Aufgaben gewissenhaft (auf In Progress oder Review), damit der Manager weiß, dass die Datei zur Freigabe liegt.</li>
                             <li><strong>Ansichten:</strong> Oben rechts kannst du zwischen Kanban-Board und Listen-Ansicht wechseln.</li>
@@ -216,6 +289,52 @@ export default function TasksPage() {
                             <Plus size={16} /> Neue Aufgabe
                         </button>
                     )}
+                </div>
+            </div>
+
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    <div>
+                        <h3 style={{ marginBottom: '4px' }}>Statusmodell Aufgaben</h3>
+                        <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            End-to-end Ablauf vom Entwurf bis zur Analyse mit Ein- und Ausgangskriterien.
+                        </p>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                    {TASK_STATUS_MODEL.map((status, idx) => {
+                        const isLast = idx === TASK_STATUS_MODEL.length - 1;
+                        const label = UI_STATE_LABELS[status.id] || status.id;
+                        return (
+                            <React.Fragment key={status.id}>
+                                <span className="badge" style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 600 }}>
+                                    {label}
+                                </span>
+                                {!isLast && <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>→</span>}
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '10px' }}>
+                    {TASK_STATUS_MODEL.map(status => {
+                        const label = UI_STATE_LABELS[status.id] || status.id;
+                        return (
+                            <div key={status.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px', borderLeft: '3px solid var(--color-primary)' }}>
+                                <div style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', marginBottom: '6px' }}>{label}</div>
+                                <p style={{ marginTop: 0, marginBottom: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{status.description}</p>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Eingangskriterien</div>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    {status.entry.map(item => <li key={item}>{item}</li>)}
+                                </ul>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginTop: '8px', marginBottom: '4px' }}>Ausgangskriterien</div>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    {status.exit.map(item => <li key={item}>{item}</li>)}
+                                </ul>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 

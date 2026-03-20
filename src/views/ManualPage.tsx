@@ -12,7 +12,9 @@ import { ManagerTab, WorkflowsTab } from '../components/ManualTabs';
 
 export default function ManualPage() {
     const { currentUser } = useAuth();
-    const [activeTab, setActiveTab] = useState<string>(currentUser?.role || 'admin');
+    const [activeTab, setActiveTab] = useState<string>(
+        currentUser?.role === 'company_admin' ? 'admin' : (currentUser?.role || 'admin')
+    );
 
     const tabs = [
         { id: 'admin', label: 'Admin (Strategie & Setup)' },

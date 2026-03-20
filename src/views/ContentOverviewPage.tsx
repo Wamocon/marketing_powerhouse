@@ -14,6 +14,51 @@ const CONTENT_TYPE_LABELS = {
     social: 'Social Media', email: 'E-Mail', ads: 'Ads / Anzeige', content: 'Blog / Content', event: 'Event'
 };
 
+const CONTENT_STATUS_MODEL = [
+    {
+        id: 'idea',
+        title: 'Idee',
+        description: 'Thema, Ziel und Format sind als erster Entwurf angelegt.',
+        entry: ['Neuer Content wurde erstellt oder aus dem Backlog aufgenommen.'],
+        exit: ['Kanal und Zielgruppe sind definiert.', 'Ein umsetzbares Briefing liegt vor.'],
+    },
+    {
+        id: 'planning',
+        title: 'In Planung',
+        description: 'Inhaltliche Planung, Ressourcen und Timing werden konkretisiert.',
+        entry: ['Briefing ist vollständig genug für die Umsetzung.'],
+        exit: ['Aufgaben sind zugeordnet.', 'Umsetzung kann ohne offene Kernfragen starten.'],
+    },
+    {
+        id: 'production',
+        title: 'In Produktion',
+        description: 'Text, Visuals oder Assets werden erstellt und intern abgestimmt.',
+        entry: ['Alle notwendigen Inputs aus Planung sind vorhanden.'],
+        exit: ['Finale Asset-Version liegt vor.', 'Qualitätscheck ist erledigt.'],
+    },
+    {
+        id: 'ready',
+        title: 'Bereit',
+        description: 'Der Inhalt ist fertig produziert und freigegeben zur Terminierung.',
+        entry: ['Produktion ist abgeschlossen.', 'Keine kritischen Korrekturen mehr offen.'],
+        exit: ['Konkreter Veröffentlichungstermin ist festgelegt.'],
+    },
+    {
+        id: 'scheduled',
+        title: 'Eingeplant',
+        description: 'Der Content ist im Kalender eingeplant und wartet auf Go-Live.',
+        entry: ['Publish-Date ist gesetzt.', 'Plattform-Zuweisung ist final.'],
+        exit: ['Inhalt wurde veröffentlicht.'],
+    },
+    {
+        id: 'published',
+        title: 'Veröffentlicht',
+        description: 'Inhalt ist live auf dem vorgesehenen Touchpoint/Kanal.',
+        entry: ['Content wurde ausgespielt oder manuell live gestellt.'],
+        exit: ['Optional: Performance-Auswertung oder Folgeaufgaben werden gestartet.'],
+    },
+];
+
 export default function ContentOverviewPage() {
     const { contents } = useContents();
     const { tasks } = useTasks();
@@ -105,6 +150,63 @@ export default function ContentOverviewPage() {
                 ))}
             </div>
 
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    <div>
+                        <h3 style={{ marginBottom: '4px' }}>Statusmodell Content</h3>
+                        <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            Visuelle Reihenfolge mit fachlichen Ein- und Ausgangskriterien je Status.
+                        </p>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                    {CONTENT_STATUS_MODEL.map((status, idx) => {
+                        const st = CONTENT_STATUSES[status.id];
+                        const isLast = idx === CONTENT_STATUS_MODEL.length - 1;
+                        return (
+                            <div key={status.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span
+                                    className="badge"
+                                    style={{
+                                        background: `${st.color}18`,
+                                        color: st.color,
+                                        border: `1px solid ${st.color}33`,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {st.icon} {status.title}
+                                </span>
+                                {!isLast && <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>→</span>}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '10px' }}>
+                    {CONTENT_STATUS_MODEL.map(status => {
+                        const st = CONTENT_STATUSES[status.id];
+                        return (
+                            <div key={status.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px', borderLeft: `3px solid ${st.color}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>
+                                    <span>{st.icon}</span>
+                                    <span>{status.title}</span>
+                                </div>
+                                <p style={{ marginTop: 0, marginBottom: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{status.description}</p>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Eingangskriterien</div>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    {status.entry.map(item => <li key={item}>{item}</li>)}
+                                </ul>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginTop: '8px', marginBottom: '4px' }}>Ausgangskriterien</div>
+                                <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                    {status.exit.map(item => <li key={item}>{item}</li>)}
+                                </ul>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
             {/* Filters */}
             <div className="card" style={{ marginBottom: '20px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>
@@ -139,37 +241,39 @@ export default function ContentOverviewPage() {
                     const st = CONTENT_STATUSES[cnt.status];
                     const hasTasks = cnt.taskIds && cnt.taskIds.length > 0;
                     const linkedTasks = getLinkedTasks(cnt);
+                    const isCritical = !hasTasks;
                     return (
                         <div key={cnt.id} className="card" onClick={() => setSelectedContent(cnt)} style={{
                             cursor: 'pointer', transition: 'all 0.2s', padding: '18px',
-                            borderLeft: hasTasks ? `3px solid ${st?.color}` : '3px solid #ef4444',
+                            borderLeft: hasTasks ? `3px solid ${st?.color}` : '3px solid #991b1b',
+                            ...(isCritical && { background: '#b91c1c', color: '#ffffff' }),
                         }}
                             onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
                             onMouseLeave={e => e.currentTarget.style.boxShadow = 'var(--shadow-sm)'}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', marginBottom: '4px' }}>{cnt.title}</div>
-                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', marginBottom: '4px', ...(isCritical && { color: '#ffffff' }) }}>{cnt.title}</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                         {getCampaignName(cnt.campaignId)}
                                     </div>
                                 </div>
-                                <span className="badge" style={{ background: `${st?.color}18`, color: st?.color, border: `1px solid ${st?.color}33`, flexShrink: 0 }}>
+                                <span className="badge" style={{ background: isCritical ? 'rgba(255,255,255,0.2)' : `${st?.color}18`, color: isCritical ? '#ffffff' : st?.color, border: isCritical ? '1px solid rgba(255,255,255,0.3)' : `1px solid ${st?.color}33`, flexShrink: 0 }}>
                                     {st?.icon} {st?.label}
                                 </span>
                             </div>
                             {cnt.description && (
-                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.5 }}>
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.5 }}>
                                     {cnt.description.length > 100 ? cnt.description.slice(0, 100) + '…' : cnt.description}
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                                <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.65rem' }}>{cnt.platform}</span>
-                                <span className="badge" style={{ background: 'var(--bg-hover)', fontSize: '0.65rem' }}>{CONTENT_TYPE_LABELS[cnt.contentType] || cnt.contentType}</span>
+                                <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.65rem', ...(isCritical && { background: 'rgba(255,255,255,0.2)', color: '#ffffff' }) }}>{cnt.platform}</span>
+                                <span className="badge" style={{ background: isCritical ? 'rgba(255,255,255,0.2)' : 'var(--bg-hover)', color: isCritical ? '#ffffff' : undefined, fontSize: '0.65rem' }}>{CONTENT_TYPE_LABELS[cnt.contentType] || cnt.contentType}</span>
                                 {getTouchpointBadge(cnt.touchpointId)}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${isCritical ? 'rgba(255,255,255,0.25)' : 'var(--border-color)'}`, paddingTop: '10px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                     <Calendar size={12} />
                                     {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE') : 'Kein Datum'}
                                 </div>
@@ -178,7 +282,7 @@ export default function ContentOverviewPage() {
                                         <CheckCircle size={12} /> {linkedTasks.length} Aufgabe(n)
                                     </span>
                                 ) : (
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)', color: '#ef4444', fontWeight: 600 }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)', color: '#ffffff', fontWeight: 600 }}>
                                         <AlertTriangle size={12} /> Keine Aufgaben
                                     </span>
                                 )}
@@ -240,22 +344,24 @@ export default function ContentOverviewPage() {
                                 <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '68vh', overflowY: 'auto' }}>
                                     {colContents.map(cnt => {
                                         const hasTasks = cnt.taskIds && cnt.taskIds.length > 0;
+                                        const isCritical = !hasTasks;
                                         return (
                                             <div key={cnt.id} onClick={() => setSelectedContent(cnt)} style={{
-                                                background: 'var(--bg-base)', borderRadius: 'var(--radius-md)',
+                                                background: isCritical ? '#b91c1c' : 'var(--bg-base)',
+                                                borderRadius: 'var(--radius-md)',
                                                 padding: '12px', cursor: 'pointer', transition: 'all 0.15s',
-                                                border: '1px solid var(--border-color)',
-                                                borderLeft: hasTasks ? `3px solid ${st.color}` : '3px solid #ef4444',
+                                                border: `1px solid ${isCritical ? '#991b1b' : 'var(--border-color)'}`,
+                                                borderLeft: hasTasks ? `3px solid ${st.color}` : '3px solid #991b1b',
                                             }}
                                                 onMouseEnter={e => (e.currentTarget.style.boxShadow = 'var(--shadow-md)')}
                                                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '')}
                                             >
-                                                <div style={{ fontWeight: 600, fontSize: 'var(--font-size-xs)', marginBottom: '6px', lineHeight: 1.4 }}>{cnt.title}</div>
+                                                <div style={{ fontWeight: 600, fontSize: 'var(--font-size-xs)', marginBottom: '6px', lineHeight: 1.4, color: isCritical ? '#ffffff' : undefined }}>{cnt.title}</div>
                                                 <div style={{ marginBottom: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                                    <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.6rem' }}>{cnt.platform}</span>
-                                                    <span className="badge" style={{ background: 'var(--bg-hover)', fontSize: '0.6rem' }}>{getCampaignName(cnt.campaignId)}</span>
+                                                    <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.6rem', ...(isCritical && { background: 'rgba(255,255,255,0.2)', color: '#ffffff' }) }}>{cnt.platform}</span>
+                                                    <span className="badge" style={{ background: isCritical ? 'rgba(255,255,255,0.2)' : 'var(--bg-hover)', color: isCritical ? '#ffffff' : undefined, fontSize: '0.6rem' }}>{getCampaignName(cnt.campaignId)}</span>
                                                 </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                                         <Calendar size={10} />
                                                         {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : '—'}
@@ -265,8 +371,8 @@ export default function ContentOverviewPage() {
                                                             <CheckCircle size={10} /> {cnt.taskIds!.length}
                                                         </span>
                                                     ) : (
-                                                        <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                            <AlertTriangle size={10} />
+                                                        <span style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                            <AlertTriangle size={10} /> Keine Aufgaben
                                                         </span>
                                                     )}
                                                 </div>

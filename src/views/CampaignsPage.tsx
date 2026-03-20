@@ -31,7 +31,7 @@ export default function CampaignsPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">Kampagnen</h1>
-                    <p className="page-subtitle">{campaigns.length} Kampagnen insgesamt Â· {campaigns.filter(c => c.status === 'active').length} aktiv</p>
+                    <p className="page-subtitle">{campaigns.length} Kampagnen insgesamt · {campaigns.filter(c => c.status === 'active').length} aktiv</p>
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title="Kampagnen-Management">
@@ -61,7 +61,7 @@ export default function CampaignsPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder="Kampagnen durchsuchenâ€¦"
+                        placeholder="Kampagnen durchsuchen…"
                         style={{ paddingLeft: '36px', width: '100%' }}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -216,7 +216,7 @@ export default function CampaignsPage() {
                             }}>
                                 <span style={{ color: 'var(--text-secondary)' }}>Budget</span>
                                 <span style={{ fontWeight: 600 }}>
-                                    â‚¬{campaign.spent.toLocaleString('de-DE')} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ â‚¬{campaign.budget.toLocaleString('de-DE')}</span>
+                                    €{campaign.spent.toLocaleString('de-DE')} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{campaign.budget.toLocaleString('de-DE')}</span>
                                 </span>
                             </div>
                         </div>

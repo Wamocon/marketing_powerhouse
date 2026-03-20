@@ -8,7 +8,7 @@
 
 ## Übersicht: Workflows nach Rolle & Szenario
 
-Dieses Dokument beschreibt **realistische Arbeitsabläufe** für die drei Rollen (Admin, Manager, Member) und zeigt, wie diese in einem konkreten Projekt zusammenarbeiten.
+Dieses Dokument beschreibt **realistische Arbeitsabläufe** für das 4-Rollen-Modell (Super-Admin, Unternehmens-Admin, Manager, Member) und zeigt, wie diese in einem konkreten Projekt zusammenarbeiten.
 
 ### Fiktives Szenario: 🎬 "CTFL v4.0 Schulung — Kampagne Q2 2026"
 
@@ -21,8 +21,9 @@ WAMOCON Academy möchte im Q2 2026 die neue **ISTQB Certified Tester Foundation 
 - Kanäle: LinkedIn Ads, Google Ads, E-Mail CRM, Website, Instagram
 
 **Team:**
-- 🔴 **Admin:** Daniel Moretz (Geschäftsführung)
-- 🟣 **Manager:** Anna Schmidt (Marketing) + Waleri Moretz (Trainer & Community)
+- 🟡 **Super-Admin:** Daniel Moretz (Geschäftsführung)
+- 🔴 **Unternehmens-Admin:** Waleri Moretz (Trainer & Community)
+- 🟣 **Manager:** Anna Schmidt (Marketing)
 - 🟢 **Member:** Lisa Bauer (Content & Social), Tom Weber (Performance Marketing), Jana Klein (Community Support)
 
 ---
@@ -75,7 +76,7 @@ WAMOCON Academy möchte im Q2 2026 die neue **ISTQB Certified Tester Foundation 
 1. Gehe zu: **Einstellungen > Team-Übersicht** oder **Benutzerverwaltung**
 2. Prüfe & Speichere:
    ```
-   - Waleri Moretz     → Manager (Trainer & Kampagnen-Verantwortung)
+   - Waleri Moretz     → Unternehmens-Admin (Trainer & Kampagnen-Verantwortung)
    - Anna Schmidt      → Manager (Marketing Execution)
    - Lisa Bauer        → Member (Content & Social)
    - Tom Weber         → Member (Performance Ads)
