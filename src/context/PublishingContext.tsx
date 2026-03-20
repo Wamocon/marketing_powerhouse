@@ -99,12 +99,12 @@ export function PublishingProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const [sub, accounts, posts, groups, docs, logs] = await Promise.all([
-        api.fetchSubscription(companyId),
-        api.fetchConnectedAccounts(companyId),
-        api.fetchScheduledPosts(companyId),
-        api.fetchEngagementGroups(companyId),
-        api.fetchKnowledgeDocuments(companyId),
-        api.fetchAiGenerationLogs(companyId),
+        api.fetchSubscription(companyId).catch(() => null),
+        api.fetchConnectedAccounts(companyId).catch(() => []),
+        api.fetchScheduledPosts(companyId).catch(() => []),
+        api.fetchEngagementGroups(companyId).catch(() => []),
+        api.fetchKnowledgeDocuments(companyId).catch(() => []),
+        api.fetchAiGenerationLogs(companyId).catch(() => []),
       ]);
       setSubscription(sub);
       setConnectedAccounts(accounts);

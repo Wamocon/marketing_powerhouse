@@ -3,6 +3,7 @@ import type { Task, TaskStatus } from '../types';
 import * as api from '../lib/api';
 import { buildTaskPrompt, type PromptContext } from '../lib/promptBuilder';
 import { generateContent } from '../lib/gemini';
+import { useCompany } from './CompanyContext';
 
 interface TaskContextValue {
     tasks: Task[];
@@ -19,17 +20,21 @@ interface TaskContextValue {
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id;
     const [tasks, setTasks] = useState<Task[]>([]);
     const [promptCtx, setPromptCtx] = useState<Omit<PromptContext, 'task'> | null>(null);
 
     useEffect(() => {
-        api.fetchTasks().then(setTasks).catch(console.error);
-    }, []);
+        if (!companyId) return;
+        api.fetchTasks(companyId).then(setTasks).catch(console.error);
+    }, [companyId]);
 
     const addTask = useCallback(async (task: Omit<Task, 'id'> & { id?: string }) => {
-        const created = await api.createTask(task);
+        if (!companyId) return;
+        const created = await api.createTask(task, companyId);
         setTasks(prev => [...prev, created]);
-    }, []);
+    }, [companyId]);
 
     const updateTaskFn = useCallback(async (id: string, updates: Partial<Task>) => {
         await api.updateTask(id, updates);

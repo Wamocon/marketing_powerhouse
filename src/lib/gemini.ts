@@ -1,9 +1,10 @@
 /**
  * Gemini AI Service — calls Google Gemini API for content generation.
- * Uses the Gemini 2.0 Flash model via REST API (no SDK dependency).
+ * Uses Gemini 3.1 Pro Preview for quality, with 2.5 Flash as speed fallback.
  */
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL_PRO = 'gemini-3.1-pro-preview';
+const GEMINI_MODEL_FLASH = 'gemini-2.5-flash';
 
 function getApiKey(): string {
   const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '';
@@ -15,13 +16,14 @@ export interface GeminiResponse {
   error?: string;
 }
 
-export async function generateContent(prompt: string): Promise<GeminiResponse> {
+export async function generateContent(prompt: string, useFlash = false): Promise<GeminiResponse> {
   const apiKey = getApiKey();
   if (!apiKey) {
     return { text: '', error: 'Gemini API Key ist nicht konfiguriert. Bitte NEXT_PUBLIC_GEMINI_API_KEY in .env.local setzen.' };
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  const model = useFlash ? GEMINI_MODEL_FLASH : GEMINI_MODEL_PRO;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   try {
     const res = await fetch(url, {

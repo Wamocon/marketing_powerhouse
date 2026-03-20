@@ -34,8 +34,20 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
             ? audiences.find(a => a.id === campaign.targetAudiences[0])
             : audiences[0] || null;
         const touchpoint = task.touchpointId ? touchpoints.find(tp => tp.id === task.touchpointId) : null;
-        const journey = asidasJourneys[0] || null;
-        const journeyStage = journey?.stages?.[0] || null;
+        // Find the journey + stage that matches the task's touchpoint phase
+        const touchpointPhase = touchpoint?.journeyPhase;
+        let journey = null as typeof asidasJourneys[0] | null;
+        let journeyStage = null as (typeof asidasJourneys[0])['stages'][0] | null;
+        if (touchpointPhase) {
+            for (const j of asidasJourneys) {
+                const match = j.stages?.find(s => s.phase === touchpointPhase);
+                if (match) { journey = j; journeyStage = match; break; }
+            }
+        }
+        if (!journey && asidasJourneys.length > 0) {
+            journey = asidasJourneys[0];
+            journeyStage = journey.stages?.[0] || null;
+        }
 
         setPromptContext({
             positioning,

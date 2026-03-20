@@ -358,16 +358,17 @@ export async function updateUserStatus(id: string, status: User['status']): Prom
 
 // ─── Campaigns ─────────────────────────────────────────────
 
-export async function fetchCampaigns(): Promise<Campaign[]> {
-  const { data, error } = await supabase.from('campaigns').select('*').order('created_at');
+export async function fetchCampaigns(companyId: string): Promise<Campaign[]> {
+  const { data, error } = await supabase.from('campaigns').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw new Error(error.message ?? JSON.stringify(error));
   return (data ?? []).map(toCamelCampaign);
 }
 
-export async function createCampaign(campaign: Omit<Campaign, 'id'>): Promise<Campaign> {
+export async function createCampaign(campaign: Omit<Campaign, 'id'>, companyId: string): Promise<Campaign> {
   const id = generateId();
   const row = {
     id,
+    company_id: companyId,
     name: campaign.name,
     status: campaign.status,
     start_date: campaign.startDate,
@@ -423,16 +424,17 @@ export async function deleteCampaign(id: string): Promise<void> {
 
 // ─── Tasks ─────────────────────────────────────────────────
 
-export async function fetchTasks(): Promise<Task[]> {
-  const { data, error } = await supabase.from('tasks').select('*').order('created_at');
+export async function fetchTasks(companyId: string): Promise<Task[]> {
+  const { data, error } = await supabase.from('tasks').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw error;
   return (data ?? []).map(toCamelTask);
 }
 
-export async function createTask(task: Omit<Task, 'id'> & { id?: string }): Promise<Task> {
+export async function createTask(task: Omit<Task, 'id'> & { id?: string }, companyId: string): Promise<Task> {
   const id = task.id || generateId();
   const row = {
     id,
+    company_id: companyId,
     title: task.title,
     status: task.status,
     assignee: task.assignee,
@@ -486,16 +488,17 @@ export async function deleteTask(id: string): Promise<void> {
 
 // ─── Contents ──────────────────────────────────────────────
 
-export async function fetchContents(): Promise<ContentItem[]> {
-  const { data, error } = await supabase.from('contents').select('*').order('created_at');
+export async function fetchContents(companyId: string): Promise<ContentItem[]> {
+  const { data, error } = await supabase.from('contents').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw error;
   return (data ?? []).map(toCamelContent);
 }
 
-export async function createContent(content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<ContentItem> {
+export async function createContent(content: Omit<ContentItem, 'id' | 'createdAt'>, companyId: string): Promise<ContentItem> {
   const id = generateId();
   const row = {
     id,
+    company_id: companyId,
     title: content.title,
     description: content.description,
     status: content.status,
@@ -537,16 +540,17 @@ export async function deleteContent(id: string): Promise<void> {
 
 // ─── Audiences ─────────────────────────────────────────────
 
-export async function fetchAudiences(): Promise<Audience[]> {
-  const { data, error } = await supabase.from('audiences').select('*').order('created_at');
+export async function fetchAudiences(companyId: string): Promise<Audience[]> {
+  const { data, error } = await supabase.from('audiences').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw error;
   return (data ?? []).map(toCamelAudience);
 }
 
-export async function createAudience(audience: Omit<Audience, 'id'>): Promise<Audience> {
+export async function createAudience(audience: Omit<Audience, 'id'>, companyId: string): Promise<Audience> {
   const id = generateId();
   const row = {
     id,
+    company_id: companyId,
     name: audience.name,
     type: audience.type,
     segment: audience.segment,
@@ -606,16 +610,17 @@ export async function deleteAudience(id: string): Promise<void> {
 
 // ─── Touchpoints ───────────────────────────────────────────
 
-export async function fetchTouchpoints(): Promise<Touchpoint[]> {
-  const { data, error } = await supabase.from('touchpoints').select('*').order('created_at');
+export async function fetchTouchpoints(companyId: string): Promise<Touchpoint[]> {
+  const { data, error } = await supabase.from('touchpoints').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw error;
   return (data ?? []).map(toCamelTouchpoint);
 }
 
-export async function createTouchpoint(tp: Omit<Touchpoint, 'id'>): Promise<Touchpoint> {
+export async function createTouchpoint(tp: Omit<Touchpoint, 'id'>, companyId: string): Promise<Touchpoint> {
   const id = generateId();
   const row = {
     id,
+    company_id: companyId,
     name: tp.name,
     type: tp.type,
     journey_phase: tp.journeyPhase,
@@ -649,13 +654,13 @@ export async function deleteTouchpoint(id: string): Promise<void> {
 
 // ─── Company Positioning ───────────────────────────────────
 
-export async function fetchPositioning(): Promise<CompanyPositioning> {
-  const { data, error } = await supabase.from('company_positioning').select('*').eq('id', 'main').single();
+export async function fetchPositioning(companyId: string): Promise<CompanyPositioning> {
+  const { data, error } = await supabase.from('company_positioning').select('*').eq('company_id', companyId).single();
   if (error) throw error;
   return toCamelPositioning(data);
 }
 
-export async function savePositioning(pos: CompanyPositioning): Promise<void> {
+export async function savePositioning(pos: CompanyPositioning, companyId: string): Promise<void> {
   const row = {
     name: pos.name,
     tagline: pos.tagline,
@@ -678,14 +683,14 @@ export async function savePositioning(pos: CompanyPositioning): Promise<void> {
     last_updated: new Date().toISOString().split('T')[0],
     updated_by: pos.updatedBy,
   };
-  const { error } = await supabase.from('company_positioning').update(row).eq('id', 'main');
+  const { error } = await supabase.from('company_positioning').update(row).eq('company_id', companyId);
   if (error) throw error;
 }
 
 // ─── Company Keywords ──────────────────────────────────────
 
-export async function fetchKeywords(): Promise<CompanyKeyword[]> {
-  const { data, error } = await supabase.from('company_keywords').select('*').order('created_at');
+export async function fetchKeywords(companyId: string): Promise<CompanyKeyword[]> {
+  const { data, error } = await supabase.from('company_keywords').select('*').eq('company_id', companyId).order('created_at');
   if (error) throw error;
   return (data ?? []).map(r => ({
     id: r.id as string,
@@ -695,9 +700,9 @@ export async function fetchKeywords(): Promise<CompanyKeyword[]> {
   }));
 }
 
-export async function createKeyword(kw: Omit<CompanyKeyword, 'id'>): Promise<CompanyKeyword> {
+export async function createKeyword(kw: Omit<CompanyKeyword, 'id'>, companyId: string): Promise<CompanyKeyword> {
   const id = generateId();
-  const { data, error } = await supabase.from('company_keywords').insert({ id, ...kw }).select().single();
+  const { data, error } = await supabase.from('company_keywords').insert({ id, company_id: companyId, ...kw }).select().single();
   if (error) throw error;
   return { id: data.id, term: data.term, category: data.category, description: data.description };
 }
@@ -709,11 +714,11 @@ export async function deleteKeyword(id: string): Promise<void> {
 
 // ─── Budget ────────────────────────────────────────────────
 
-export async function fetchBudgetData(): Promise<BudgetData> {
+export async function fetchBudgetData(companyId: string): Promise<BudgetData> {
   const [overview, categories, trends] = await Promise.all([
-    supabase.from('budget_overview').select('*').eq('id', 'main').single(),
-    supabase.from('budget_categories').select('*').order('sort_order'),
-    supabase.from('monthly_trends').select('*').order('sort_order'),
+    supabase.from('budget_overview').select('*').eq('company_id', companyId).single(),
+    supabase.from('budget_categories').select('*').eq('company_id', companyId).order('sort_order'),
+    supabase.from('monthly_trends').select('*').eq('company_id', companyId).order('sort_order'),
   ]);
   if (overview.error) throw overview.error;
   if (categories.error) throw categories.error;
@@ -737,12 +742,12 @@ export async function fetchBudgetData(): Promise<BudgetData> {
   };
 }
 
-export async function updateBudgetOverview(updates: Partial<BudgetData>): Promise<void> {
+export async function updateBudgetOverview(updates: Partial<BudgetData>, companyId: string): Promise<void> {
   const row: Record<string, unknown> = {};
   if (updates.total !== undefined) row.total = updates.total;
   if (updates.spent !== undefined) row.spent = updates.spent;
   if (updates.remaining !== undefined) row.remaining = updates.remaining;
-  const { error } = await supabase.from('budget_overview').update(row).eq('id', 'main');
+  const { error } = await supabase.from('budget_overview').update(row).eq('company_id', companyId);
   if (error) throw error;
 }
 
@@ -759,8 +764,8 @@ export async function createBudgetCategory(cat: Omit<BudgetCategory, 'id'> & { i
 
 // ─── Dashboard ─────────────────────────────────────────────
 
-export async function fetchActivityFeed(): Promise<ActivityItem[]> {
-  const { data, error } = await supabase.from('activity_feed').select('*').order('created_at', { ascending: false });
+export async function fetchActivityFeed(companyId: string): Promise<ActivityItem[]> {
+  const { data, error } = await supabase.from('activity_feed').select('*').eq('company_id', companyId).order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(r => ({
     id: r.id as string,
@@ -772,10 +777,11 @@ export async function fetchActivityFeed(): Promise<ActivityItem[]> {
   }));
 }
 
-export async function createActivity(activity: Omit<ActivityItem, 'id'>): Promise<void> {
+export async function createActivity(activity: Omit<ActivityItem, 'id'>, companyId: string): Promise<void> {
   const id = generateId();
   const { error } = await supabase.from('activity_feed').insert({
     id,
+    company_id: companyId,
     user_name: activity.user,
     action: activity.action,
     target: activity.target,
@@ -785,8 +791,8 @@ export async function createActivity(activity: Omit<ActivityItem, 'id'>): Promis
   if (error) throw error;
 }
 
-export async function fetchTeamMembers(): Promise<TeamMember[]> {
-  const { data, error } = await supabase.from('team_members').select('*');
+export async function fetchTeamMembers(companyId: string): Promise<TeamMember[]> {
+  const { data, error } = await supabase.from('team_members').select('*').eq('company_id', companyId);
   if (error) throw error;
   return (data ?? []).map(r => ({
     id: r.id as string,
@@ -797,8 +803,8 @@ export async function fetchTeamMembers(): Promise<TeamMember[]> {
   }));
 }
 
-export async function fetchChartData(): Promise<ChartDataPoint[]> {
-  const { data, error } = await supabase.from('dashboard_chart_data').select('*').order('sort_order');
+export async function fetchChartData(companyId: string): Promise<ChartDataPoint[]> {
+  const { data, error } = await supabase.from('dashboard_chart_data').select('*').eq('company_id', companyId).order('sort_order');
   if (error) throw error;
   return (data ?? []).map(r => ({
     name: r.name as string,
@@ -808,8 +814,8 @@ export async function fetchChartData(): Promise<ChartDataPoint[]> {
   }));
 }
 
-export async function fetchChannelPerformance(): Promise<ChannelPerformanceItem[]> {
-  const { data, error } = await supabase.from('channel_performance').select('*').order('sort_order');
+export async function fetchChannelPerformance(companyId: string): Promise<ChannelPerformanceItem[]> {
+  const { data, error } = await supabase.from('channel_performance').select('*').eq('company_id', companyId).order('sort_order');
   if (error) throw error;
   return (data ?? []).map(r => ({
     name: r.name as string,
@@ -820,10 +826,11 @@ export async function fetchChannelPerformance(): Promise<ChannelPerformanceItem[
 
 // ─── Journeys ──────────────────────────────────────────────
 
-export async function fetchJourneys(type: 'asidas' | 'customer'): Promise<AsidasJourney[]> {
+export async function fetchJourneys(type: 'asidas' | 'customer', companyId: string): Promise<AsidasJourney[]> {
   const { data: journeys, error: jErr } = await supabase
     .from('journeys')
     .select('*')
+    .eq('company_id', companyId)
     .eq('journey_type', type)
     .order('created_at');
   if (jErr) throw jErr;
@@ -867,10 +874,12 @@ export async function fetchJourneys(type: 'asidas' | 'customer'): Promise<Asidas
 export async function createJourney(
   journey: Omit<AsidasJourney, 'id'>,
   type: 'asidas' | 'customer',
+  companyId: string,
 ): Promise<AsidasJourney> {
   const id = generateId();
   const { error: jErr } = await supabase.from('journeys').insert({
     id,
+    company_id: companyId,
     name: journey.name,
     audience_id: journey.audienceId,
     description: journey.description,

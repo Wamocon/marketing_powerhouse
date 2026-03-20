@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import PageHelp from '../components/PageHelp';
 import * as api from '../lib/api';
 
@@ -35,6 +36,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function BudgetPage() {
     const { can } = useAuth();
+    const { activeCompany } = useCompany();
     const { budgetData, refreshData } = useData();
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [expenseCategory, setExpenseCategory] = useState('');
@@ -161,7 +163,7 @@ export default function BudgetPage() {
                                     const newSpent = cat.spent + amount;
                                     await api.updateBudgetCategory(cat.id!, { spent: newSpent });
                                     const newTotalSpent = budgetData.spent + amount;
-                                    await api.updateBudgetOverview({ spent: newTotalSpent, remaining: budgetData.total - newTotalSpent });
+                                    await api.updateBudgetOverview({ spent: newTotalSpent, remaining: budgetData.total - newTotalSpent }, activeCompany!.id);
                                     await refreshData();
                                     setExpenseAmount('');
                                     setExpenseCategory('');

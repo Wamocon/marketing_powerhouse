@@ -30,6 +30,8 @@ function renderUniversalMasterPrompt(ctx: PromptContext): string {
   const dosStr = (p.dos ?? []).join(', ') || 'Keine';
   const dontsStr = (p.donts ?? []).join(', ') || 'Keine';
   const kwStr = (ctx.companyKeywords ?? []).map(k => `${k.term} (${k.category})`).join(', ') || 'Keine';
+  const marketsStr = [p.primaryMarket, ...(p.secondaryMarkets ?? [])].filter(Boolean).join(', ') || 'Nicht definiert';
+  const industriesStr = (p.targetIndustries ?? []).join(', ') || 'Nicht definiert';
 
   const c = ctx.campaign;
   const campaignBlock = c ? `
@@ -87,6 +89,11 @@ UNTERNEHMEN:
 - Do: ${dosStr}
 - Do not: ${dontsStr}
 - Keywords: ${kwStr}
+- Märkte: ${marketsStr}
+- Zielindustrien: ${industriesStr}
+- Zielunternehmensgröße: ${p.targetCompanySize || 'Nicht definiert'}
+- Branche: ${p.industry || 'Nicht angegeben'}
+- Standort: ${p.headquarters || 'Nicht angegeben'}
 ${campaignBlock}
 ${audienceBlock}
 ${journeyBlock}
