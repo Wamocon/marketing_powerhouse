@@ -5,6 +5,7 @@ import { CompanyProvider } from '@/context/CompanyContext';
 import { ContentProvider } from '@/context/ContentContext';
 import { TaskProvider } from '@/context/TaskContext';
 import { DataProvider } from '@/context/DataContext';
+import { PublishingProvider } from '@/context/PublishingContext';
 import type { ReactNode } from 'react';
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -14,7 +15,9 @@ export default function Providers({ children }: { children: ReactNode }) {
                 <DataProvider>
                     <ContentProvider>
                         <TaskProvider>
-                            {children}
+                            <PublishingProvider>
+                                {children}
+                            </PublishingProvider>
                         </TaskProvider>
                     </ContentProvider>
                 </DataProvider>
