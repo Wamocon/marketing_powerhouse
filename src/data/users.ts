@@ -20,7 +20,7 @@ export const testUsers: User[] = [
         name: 'Waleri Moretz',
         email: 'waleri@test-it-academy.de',
         password: 'manager123',
-        role: 'manager',
+        role: 'company_admin',
         isSuperAdmin: false,
         jobTitle: 'Gründer & Akkreditierter ISTQB®-Trainer',
         avatar: 'WM',

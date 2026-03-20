@@ -8,6 +8,7 @@ import {
 import { useData } from '../context/DataContext';
 import type { BudgetData } from '../types/dashboard';
 import type { ChartDataPoint } from '../types/dashboard';
+import type { Campaign } from '../types';
 
 function formatCompactNumber(value: number): string {
     return new Intl.NumberFormat('de-DE', {
@@ -50,6 +51,25 @@ export function buildDashboardStats(chartData: ChartDataPoint[], budgetData: Bud
     ];
 }
 
+export function computeDashboardStats(campaigns: Campaign[], totalBudgetSpent: number) {
+    const chartData: ChartDataPoint[] = campaigns.map(c => ({
+        name: c.name,
+        impressions: c.kpis?.impressions ?? 0,
+        clicks: c.kpis?.clicks ?? 0,
+        conversions: c.kpis?.conversions ?? 0,
+    }));
+
+    const budgetData: BudgetData = {
+        total: totalBudgetSpent,
+        spent: totalBudgetSpent,
+        remaining: 0,
+        categories: [],
+        monthlyTrend: [],
+    };
+
+    return buildDashboardStats(chartData, budgetData);
+}
+
 export const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
@@ -77,7 +97,7 @@ export const CustomTooltip = ({ active, payload, label }: any) => {
 export const getTaskColorLogic = (dueDateStr: string) => {
     if (!dueDateStr) return { color: 'var(--border-color)', bgColor: 'transparent', label: 'Kein Datum' };
     const due = new Date(dueDateStr);
-    const today = new Date('2026-03-10');
+    const today = new Date();
 
     due.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
@@ -97,7 +117,7 @@ export function BudgetOverview({ navigate }: { navigate: (path: string) => void 
         <div className="card">
             <div className="card-header">
                 <div>
-                    <div className="card-title">Budget-Übersicht Q1 2026</div>
+                    <div className="card-title">Budget-Übersicht {new Date().getFullYear()}</div>
                     <div className="card-subtitle">
                         €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0}%)
                     </div>

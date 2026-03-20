@@ -10,13 +10,18 @@ import {
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useData } from '../context/DataContext';
+import { useTasks } from '../context/TaskContext';
+import { useContents } from '../context/ContentContext';
 import type { PermissionKey, CompanyRole } from '../types';
+
+type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'asidas' | 'touchpoints' | 'tasks' | 'contents';
 
 interface NavItem {
     path: string;
     icon: LucideIcon;
     label: string;
     badge?: string | number;
+    badgeKey?: BadgeKey;
     requiredPermission?: PermissionKey | null;
     comingSoon?: boolean;
 }
@@ -36,12 +41,12 @@ const NAV: NavSection[] = [
     {
         section: 'Marketing',
         items: [
-            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', requiredPermission: null },
-            { path: '/audiences', icon: Users2, label: 'Zielgruppen' },
-            { path: '/journeys', icon: Map, label: 'Customer Journey' },
-            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel' },
-            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints' },
-            { path: '/content-overview', icon: FileText, label: 'Content-Übersicht' },
+            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badgeKey: 'campaigns' as const, requiredPermission: null },
+            { path: '/audiences', icon: Users2, label: 'Zielgruppen', badgeKey: 'audiences' as const },
+            { path: '/journeys', icon: Map, label: 'Customer Journey', badgeKey: 'journeys' as const },
+            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badgeKey: 'asidas' as const },
+            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badgeKey: 'touchpoints' as const },
+            { path: '/content-overview', icon: FileText, label: 'Content-Übersicht', badgeKey: 'contents' as const },
             { path: '/content', icon: Calendar, label: 'Content-Kalender' },
             { path: '/budget', icon: Wallet, label: 'Budget & Controlling', requiredPermission: 'canSeeBudget' },
         ],
@@ -49,7 +54,7 @@ const NAV: NavSection[] = [
     {
         section: 'Team',
         items: [
-            { path: '/tasks', icon: CheckSquare, label: 'Aufgaben' },
+            { path: '/tasks', icon: CheckSquare, label: 'Aufgaben', badgeKey: 'tasks' as const },
             { path: '/analytics', icon: BarChart3, label: 'Berichte', comingSoon: true },
         ],
     },
@@ -76,16 +81,21 @@ interface SidebarProps {
 export default function Sidebar({ onLogout }: SidebarProps) {
     const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { activeCompany, deselectCompany } = useCompany();
-    const { campaigns, audiences, customerJourneys, asidasJourneys, touchpoints } = useData();
+    const { campaigns, audiences, touchpoints, asidasJourneys, customerJourneys } = useData();
+    const { tasks } = useTasks();
+    const { contents } = useContents();
     const pathname = usePathname();
-    const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
-    const liveBadgesByPath: Record<string, number> = {
-        '/campaigns': campaigns.length,
-        '/audiences': audiences.length,
-        '/journeys': customerJourneys.length,
-        '/asidas': asidasJourneys.length,
-        '/touchpoints': touchpoints.length,
+
+    const badgeCounts: Record<BadgeKey, number> = {
+        campaigns: campaigns.length,
+        audiences: audiences.length,
+        journeys: customerJourneys.length,
+        asidas: asidasJourneys.length,
+        touchpoints: touchpoints.length,
+        tasks: tasks.length,
+        contents: contents.length,
     };
+    const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
 
     const isActivePath = (itemPath: string) => {
         if (itemPath === '/') return pathname === '/';
@@ -179,8 +189,6 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                             <div className="sidebar-section-label">{section}</div>
                             {visible.map(item => {
                                 const Icon = item.icon;
-                                const liveBadge = liveBadgesByPath[item.path];
-                                const badgeValue = liveBadge ?? item.badge;
                                 if (item.comingSoon) {
                                     return (
                                         <div key={item.path} className="sidebar-link" style={{ opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' }}>
@@ -202,14 +210,14 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>
-                                        {badgeValue !== undefined && (
+                                        {(item.badge !== undefined || item.badgeKey !== undefined) && (
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: 'var(--font-size-xs)',
                                                 background: 'var(--bg-hover)', padding: '1px 7px',
                                                 borderRadius: 'var(--radius-full)', color: 'var(--text-tertiary)',
                                                 fontWeight: 600,
                                             }}>
-                                                {badgeValue}
+                                                {item.badgeKey ? badgeCounts[item.badgeKey] : item.badge}
                                             </span>
                                         )}
                                     </Link>

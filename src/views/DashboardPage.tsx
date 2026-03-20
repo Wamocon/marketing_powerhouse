@@ -12,14 +12,14 @@ import { AdminDashboard, ManagerDashboard, MemberDashboard } from '../components
 
 export default function DashboardPage() {
     const router = useRouter();
-    const { currentUser } = useAuth();
+    const { currentUser, activeCompanyRole } = useAuth();
     const { tasks } = useTasks();
     const { contents } = useContents();
 
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
 
-    const role = currentUser?.role || 'member';
+    const role = activeCompanyRole || currentUser?.role || 'member';
 
     const viewProps = {
         navigate: router.push,
@@ -35,7 +35,7 @@ export default function DashboardPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">Dashboard</h1>
-                    <p className="page-subtitle">Dein Marketing auf einen Blick — Stand: 10. März 2026</p>
+                    <p className="page-subtitle">Dein Marketing auf einen Blick — Stand: {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title="Das Dashboard">

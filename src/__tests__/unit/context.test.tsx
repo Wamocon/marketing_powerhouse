@@ -21,6 +21,13 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { Campaign, Touchpoint } from '../../types';
 
+// ─── Mock CompanyContext so DataProvider can call useCompany ───────────────────
+vi.mock('@/context/CompanyContext', () => ({
+  useCompany: () => ({
+    activeCompany: { id: 'c1' },
+  }),
+}));
+
 // ─── Mock the api module ──────────────────────────────────────────────────────
 vi.mock('@/lib/api', async () => {
   const emptyPositioning = {
@@ -60,12 +67,6 @@ vi.mock('@/lib/api', async () => {
     deleteKeyword: vi.fn().mockResolvedValue(undefined),
   };
 });
-
-vi.mock('@/context/CompanyContext', () => ({
-  useCompany: () => ({
-    activeCompany: { id: 'c1' },
-  }),
-}));
 
 import * as api from '@/lib/api';
 import { DataProvider, useData } from '@/context/DataContext';
