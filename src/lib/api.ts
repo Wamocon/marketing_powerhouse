@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type {
   User, Campaign, Task, TaskStatus, ContentItem, ContentStatus,
-  Audience, Touchpoint, AsidasJourney, JourneyStage,
+  Audience, Touchpoint, CustomerJourney, JourneyStage,
   Company, CompanyMember, CompanyRole,
   Plan, Subscription, ConnectedAccount, SocialPlatform,
   ScheduledPost, EngagementMetric, EngagementGroup,
@@ -17,6 +17,29 @@ import type {
 
 function generateId(): string {
   return crypto.randomUUID();
+}
+
+function parseJourneyPhases(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map(item => String(item).trim()).filter(Boolean);
+  }
+  const value = String(raw ?? '').trim();
+  if (!value) return [];
+  if (value.includes('|')) {
+    return value.split('|').map(item => item.trim()).filter(Boolean);
+  }
+  return [value];
+}
+
+function serializeJourneyPhases(
+  journeyPhases?: string[],
+  journeyPhase?: string,
+): string {
+  const phases = (journeyPhases ?? [])
+    .map(item => item.trim())
+    .filter(Boolean);
+  if (phases.length > 0) return phases.join('|');
+  return (journeyPhase ?? '').trim();
 }
 
 // Converts snake_case DB rows to camelCase used in app types
@@ -38,11 +61,13 @@ function toCamelUser(r: Record<string, unknown>): User {
 }
 
 function toCamelTouchpoint(r: Record<string, unknown>): Touchpoint {
+  const phases = parseJourneyPhases(r.journey_phase);
   return {
     id: r.id as string,
     name: r.name as string,
     type: r.type as string,
-    journeyPhase: r.journey_phase as string,
+    journeyPhases: phases,
+    journeyPhase: phases[0] ?? '',
     url: r.url as string,
     status: r.status as Touchpoint['status'],
     description: r.description as string,
@@ -638,7 +663,7 @@ export async function createTouchpoint(tp: Omit<Touchpoint, 'id'>, companyId: st
     company_id: companyId,
     name: tp.name,
     type: tp.type,
-    journey_phase: tp.journeyPhase,
+    journey_phase: serializeJourneyPhases(tp.journeyPhases, tp.journeyPhase),
     url: tp.url,
     status: tp.status,
     description: tp.description,
@@ -653,7 +678,9 @@ export async function updateTouchpoint(id: string, updates: Partial<Touchpoint>)
   const row: Record<string, unknown> = {};
   if (updates.name !== undefined) row.name = updates.name;
   if (updates.type !== undefined) row.type = updates.type;
-  if (updates.journeyPhase !== undefined) row.journey_phase = updates.journeyPhase;
+  if (updates.journeyPhases !== undefined || updates.journeyPhase !== undefined) {
+    row.journey_phase = serializeJourneyPhases(updates.journeyPhases, updates.journeyPhase);
+  }
   if (updates.url !== undefined) row.url = updates.url;
   if (updates.status !== undefined) row.status = updates.status;
   if (updates.description !== undefined) row.description = updates.description;
@@ -858,12 +885,12 @@ export async function fetchChannelPerformance(companyId: string): Promise<Channe
 
 // ─── Journeys ──────────────────────────────────────────────
 
-export async function fetchJourneys(type: 'asidas' | 'customer', companyId: string): Promise<AsidasJourney[]> {
+export async function fetchJourneys(companyId: string): Promise<CustomerJourney[]> {
   const { data: journeys, error: jErr } = await supabase
     .from('journeys')
     .select('*')
     .eq('company_id', companyId)
-    .eq('journey_type', type)
+    .eq('journey_type', 'customer')
     .eq('company_id', companyId)
     .order('created_at');
   if (jErr) throw jErr;
@@ -905,10 +932,9 @@ export async function fetchJourneys(type: 'asidas' | 'customer', companyId: stri
 }
 
 export async function createJourney(
-  journey: Omit<AsidasJourney, 'id'>,
-  type: 'asidas' | 'customer',
+  journey: Omit<CustomerJourney, 'id'>,
   companyId: string,
-): Promise<AsidasJourney> {
+): Promise<CustomerJourney> {
   const id = generateId();
   const { error: jErr } = await supabase.from('journeys').insert({
     id,
@@ -916,7 +942,7 @@ export async function createJourney(
     name: journey.name,
     audience_id: journey.audienceId,
     description: journey.description,
-    journey_type: type,
+    journey_type: 'customer',
   });
   if (jErr) throw jErr;
 

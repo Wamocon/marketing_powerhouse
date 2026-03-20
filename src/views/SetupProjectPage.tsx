@@ -76,13 +76,13 @@ const STEP_META: Record<SetupStep, { label: string; title: string; description: 
   journey: {
     label: '03',
     title: 'Customer Journey',
-    description: 'Die 5-Phasen-Huelle fuer das Projekt erzeugen und inhaltlich erklaeren.',
+    description: 'Die 5-Phasen-Hülle für das Projekt erzeugen und inhaltlich erklären.',
     icon: Map,
   },
   review: {
     label: '04',
     title: 'Startklar',
-    description: 'Pflichtdaten pruefen und die naechsten sinnvollen Schritte verlinken.',
+    description: 'Pflichtdaten prüfen und die nächsten sinnvollen Schritte verlinken.',
     icon: Compass,
   },
 };
@@ -326,7 +326,7 @@ export default function SetupProjectPage() {
 
   const saveJourneyStep = async () => {
     if (primaryJourney) {
-      setMessage({ type: 'success', text: 'Es existiert bereits eine Customer Journey. Du kannst jetzt in die Uebersicht wechseln.' });
+      setMessage({ type: 'success', text: 'Es existiert bereits eine Customer Journey. Du kannst jetzt in die Übersicht wechseln.' });
       setCurrentStep('review');
       return;
     }
@@ -345,9 +345,9 @@ export default function SetupProjectPage() {
         audienceId: primaryAudience.id,
         description: journeyForm.description,
         stages: journeyForm.stages,
-      }, 'customer');
+      });
 
-      setMessage({ type: 'success', text: 'Die Customer Journey wurde als Huelle angelegt und ist jetzt im System sichtbar.' });
+      setMessage({ type: 'success', text: 'Die Customer Journey wurde als Hülle angelegt und ist jetzt im System sichtbar.' });
       setCurrentStep('review');
     } catch (error) {
       console.error(error);
@@ -364,12 +364,12 @@ export default function SetupProjectPage() {
           <div>
             <div className="card-title">Unternehmens-DNA</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Diese Angaben bilden die Grundlage fuer Texte, Kampagnen, Briefings und spaetere KI-Assistenz.
+              Diese Angaben bilden die Grundlage für Texte, Kampagnen, Briefings und spätere KI-Assistenz.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-          <FormField label="Unternehmensname" hint="Wird als Primarbezug in Positionierung, Journey und Reporting verwendet.">
+          <FormField label="Unternehmensname" hint="Wird als Primärbezug in Positionierung, Journey und Reporting verwendet.">
             <input className="form-input" value={positioningDraft.name} onChange={event => setPositioningDraft(prev => ({ ...prev, name: event.target.value }))} />
           </FormField>
           <FormField label="Tagline" hint="Kurzform des Leistungsversprechens in einem Satz.">
@@ -378,16 +378,16 @@ export default function SetupProjectPage() {
           <FormField label="Branche" hint="Hilft dem System, Sprache, Marktlogik und Benchmarks einzuordnen.">
             <input className="form-input" value={positioningDraft.industry} onChange={event => setPositioningDraft(prev => ({ ...prev, industry: event.target.value }))} />
           </FormField>
-          <FormField label="Website" hint="Dient als zentrale Referenz fuer Marke, Angebot und Corporate Wording.">
+          <FormField label="Website" hint="Dient als zentrale Referenz für Marke, Angebot und Corporate Wording.">
             <input className="form-input" value={positioningDraft.website} onChange={event => setPositioningDraft(prev => ({ ...prev, website: event.target.value }))} placeholder="https://..." />
           </FormField>
-          <FormField label="Gruendungsjahr" hint="Optional, aber hilfreich fuer Glaubwuerdigkeit und Unternehmenskontext.">
+          <FormField label="Gründungsjahr" hint="Optional, aber hilfreich für Glaubwürdigkeit und Unternehmenskontext.">
             <input className="form-input" value={positioningDraft.founded} onChange={event => setPositioningDraft(prev => ({ ...prev, founded: event.target.value }))} />
           </FormField>
-          <FormField label="Hauptsitz" hint="Wichtig fuer Marktbezug, Regionen und Lokalisierung.">
+          <FormField label="Hauptsitz" hint="Wichtig für Marktbezug, Regionen und Lokalisierung.">
             <input className="form-input" value={positioningDraft.headquarters} onChange={event => setPositioningDraft(prev => ({ ...prev, headquarters: event.target.value }))} />
           </FormField>
-          <FormField label="Rechtsform" hint="Optional, aber sinnvoll fuer B2B-Vertrauen und Dokumentation.">
+          <FormField label="Rechtsform" hint="Optional, aber sinnvoll für B2B-Vertrauen und Dokumentation.">
             <input className="form-input" value={positioningDraft.legalForm} onChange={event => setPositioningDraft(prev => ({ ...prev, legalForm: event.target.value }))} />
           </FormField>
           <FormField label="Mitarbeiterzahl" hint="Hilft bei der Einordnung von Reifegrad, Ressourcen und Vertriebsansprache.">
@@ -399,17 +399,17 @@ export default function SetupProjectPage() {
       <section className="card" style={{ padding: '24px' }}>
         <div className="card-header" style={{ marginBottom: '18px' }}>
           <div>
-            <div className="card-title">Identitaet und Nutzenversprechen</div>
+            <div className="card-title">Identität und Nutzenversprechen</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Vision, Mission und Werte machen deutlich, wofuer das Projekt stehen soll und woran spaetere Inhalte gemessen werden.
+              Vision, Mission und Werte machen deutlich, wofür das Projekt stehen soll und woran spätere Inhalte gemessen werden.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gap: '16px' }}>
-          <FormField label="Vision" hint="Welches Zukunftsbild wollt ihr fuer Kunden oder Markt erzeugen?">
+          <FormField label="Vision" hint="Welches Zukunftsbild wollt ihr für Kunden oder Markt erzeugen?">
             <textarea className="form-input form-textarea" value={positioningDraft.vision} onChange={event => setPositioningDraft(prev => ({ ...prev, vision: event.target.value }))} style={{ minHeight: '96px' }} />
           </FormField>
-          <FormField label="Mission" hint="Was tut ihr konkret, fuer wen, und welchen Nutzen stiftet ihr heute?">
+          <FormField label="Mission" hint="Was tut ihr konkret, für wen, und welchen Nutzen stiftet ihr heute?">
             <textarea className="form-input form-textarea" value={positioningDraft.mission} onChange={event => setPositioningDraft(prev => ({ ...prev, mission: event.target.value }))} style={{ minHeight: '96px' }} />
           </FormField>
           <div>
@@ -417,7 +417,7 @@ export default function SetupProjectPage() {
               Kernwerte
             </div>
             <p style={{ margin: '0 0 12px', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Drei Werte genuegen fuer den Start. Formuliere sie konkret statt abstrakt.
+              Drei Werte genügen für den Start. Formuliere sie konkret statt abstrakt.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
               {ensureValues(positioningDraft.values).map((value, index) => (
@@ -437,45 +437,45 @@ export default function SetupProjectPage() {
           <div>
             <div className="card-title">Sprache, Markt und Mindest-Keywords</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Das ist der Teil, der spaeter besonders stark auf Texte, Briefings und Kanalansprache einzahlt.
+              Das ist der Teil, der später besonders stark auf Texte, Briefings und Kanalansprache einzahlt.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gap: '16px' }}>
           <FormField label="Tone-of-Voice Adjektive" hint="Mindestens drei Adjektive, die den Sprachcharakter eindeutig machen.">
-            <input className="form-input" value={toneAdjectivesInput} onChange={event => setToneAdjectivesInput(event.target.value)} placeholder="z. B. praezise, verbindlich, menschlich" />
+            <input className="form-input" value={toneAdjectivesInput} onChange={event => setToneAdjectivesInput(event.target.value)} placeholder="z. B. präzise, verbindlich, menschlich" />
           </FormField>
-          <FormField label="Tone-of-Voice Beschreibung" hint="Erlauetert, wie sich die Marke in ganzen Saetzen anhoert.">
+          <FormField label="Tone-of-Voice Beschreibung" hint="Erläutert, wie sich die Marke in ganzen Sätzen anhört.">
             <textarea className="form-input form-textarea" value={positioningDraft.toneOfVoice.description} onChange={event => setPositioningDraft(prev => ({ ...prev, toneOfVoice: { ...prev.toneOfVoice, description: event.target.value } }))} style={{ minHeight: '96px' }} />
           </FormField>
-          <FormField label="Markenpersoenlichkeit" hint="Ein kurzer Satz, der die Marke als Person beschreibt.">
+          <FormField label="Markenpersönlichkeit" hint="Ein kurzer Satz, der die Marke als Person beschreibt.">
             <input className="form-input" value={positioningDraft.toneOfVoice.personality} onChange={event => setPositioningDraft(prev => ({ ...prev, toneOfVoice: { ...prev.toneOfVoice, personality: event.target.value } }))} />
           </FormField>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Dos" hint="Welche sprachlichen oder inhaltlichen Muster sind immer erwuenscht?">
+            <FormField label="Dos" hint="Welche sprachlichen oder inhaltlichen Muster sind immer erwünscht?">
               <input className="form-input" value={dosInput} onChange={event => setDosInput(event.target.value)} placeholder="z. B. klarer Nutzen, konkrete Beispiele" />
             </FormField>
-            <FormField label="Don'ts" hint="Welche Muster, Begriffe oder Tonalitaeten sollen vermieden werden?">
+            <FormField label="Don'ts" hint="Welche Muster, Begriffe oder Tonalitäten sollen vermieden werden?">
               <input className="form-input" value={dontsInput} onChange={event => setDontsInput(event.target.value)} placeholder="z. B. unklare Superlative, technische Floskeln" />
             </FormField>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Primaermarkt" hint="Euer zentraler Startmarkt. Daran richtet sich der erste Setup-Fokus aus.">
+            <FormField label="Primärmarkt" hint="Euer zentraler Startmarkt. Daran richtet sich der erste Setup-Fokus aus.">
               <input className="form-input" value={positioningDraft.primaryMarket} onChange={event => setPositioningDraft(prev => ({ ...prev, primaryMarket: event.target.value }))} />
             </FormField>
-            <FormField label="Zielunternehmensgroesse" hint="Vor allem fuer B2B wichtig. Bei B2C kannst du hier Segmentgroessen definieren.">
+            <FormField label="Zielunternehmensgröße" hint="Vor allem für B2B wichtig. Bei B2C kannst du hier Segmentgrößen definieren.">
               <input className="form-input" value={positioningDraft.targetCompanySize} onChange={event => setPositioningDraft(prev => ({ ...prev, targetCompanySize: event.target.value }))} />
             </FormField>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Sekundaermaerkte" hint="Kommagetrennt. Optional fuer spaetere Expansion und Priorisierung.">
+            <FormField label="Sekundärmärkte" hint="Kommagetrennt. Optional für spätere Expansion und Priorisierung.">
               <input className="form-input" value={secondaryMarketsInput} onChange={event => setSecondaryMarketsInput(event.target.value)} />
             </FormField>
-            <FormField label="Zielbranchen" hint="Kommagetrennt. Besonders relevant fuer B2B-Ansprache und Cases.">
+            <FormField label="Zielbranchen" hint="Kommagetrennt. Besonders relevant für B2B-Ansprache und Cases.">
               <input className="form-input" value={targetIndustriesInput} onChange={event => setTargetIndustriesInput(event.target.value)} />
             </FormField>
           </div>
-          <FormField label="Schluesselbegriffe" hint="Mindestens 3 Begriffe, die im Projekt sprachlich und inhaltlich besetzt werden sollen.">
+          <FormField label="Schlüsselbegriffe" hint="Mindestens 3 Begriffe, die im Projekt sprachlich und inhaltlich besetzt werden sollen.">
             <input className="form-input" value={keywordsInput} onChange={event => setKeywordsInput(event.target.value)} placeholder="z. B. Demand Gen, CRM, Automatisierung" />
           </FormField>
         </div>
@@ -490,22 +490,22 @@ export default function SetupProjectPage() {
           <div>
             <div className="card-title">Die erste Persona definieren</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Diese Persona ist bewusst die erste Arbeitsversion. Sie reicht, um die Journey sauber aufzubauen und spaetere Kampagnen zu fokussieren.
+              Diese Persona ist bewusst die erste Arbeitsversion. Sie reicht, um die Journey sauber aufzubauen und spätere Kampagnen zu fokussieren.
             </p>
           </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-          <FormField label="Persona-Name" hint="Ein konkreter, intern leicht merkbarer Name fuer die Persona.">
+          <FormField label="Persona-Name" hint="Ein konkreter, intern leicht merkbarer Name für die Persona.">
             <input className="form-input" value={audienceForm.name} onChange={event => setAudienceForm(prev => ({ ...prev, name: event.target.value }))} />
           </FormField>
-          <FormField label="Typ" hint="Buyer Persona fuer Kaufentscheider, User Persona fuer spaetere Nutzer.">
+          <FormField label="Typ" hint="Buyer Persona für Kaufentscheider, User Persona für spätere Nutzer.">
             <select className="form-input" value={audienceForm.type} onChange={event => setAudienceForm(prev => ({ ...prev, type: event.target.value }))}>
               <option value="buyer">Buyer Persona</option>
               <option value="user">User Persona</option>
             </select>
           </FormField>
-          <FormField label="Segment" hint="Grundlegende Einordnung fuer Sprache, Kanalwahl und Journey-Logik.">
+          <FormField label="Segment" hint="Grundlegende Einordnung für Sprache, Kanalwahl und Journey-Logik.">
             <select className="form-input" value={audienceForm.segment} onChange={event => setAudienceForm(prev => ({ ...prev, segment: event.target.value as 'B2B' | 'B2C' }))}>
               <option value="B2B">B2B</option>
               <option value="B2C">B2C</option>
@@ -518,16 +518,16 @@ export default function SetupProjectPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Alter / Segmentalter" hint="Ein grober Rahmen reicht fuer den Start.">
+          <FormField label="Alter / Segmentalter" hint="Ein grober Rahmen reicht für den Start.">
             <input className="form-input" value={audienceForm.age} onChange={event => setAudienceForm(prev => ({ ...prev, age: event.target.value }))} />
           </FormField>
           <FormField label="Standort / Markt" hint="Hilft bei der Priorisierung von Sprache, Regionen und Touchpoints.">
             <input className="form-input" value={audienceForm.location} onChange={event => setAudienceForm(prev => ({ ...prev, location: event.target.value }))} />
           </FormField>
-          <FormField label="Rolle / Jobtitel" hint="Vor allem fuer B2B wichtig, um Bedarf und Kaufhoerden richtig einzuordnen.">
+          <FormField label="Rolle / Jobtitel" hint="Vor allem für B2B wichtig, um Bedarf und Kaufhürden richtig einzuordnen.">
             <input className="form-input" value={audienceForm.jobTitle} onChange={event => setAudienceForm(prev => ({ ...prev, jobTitle: event.target.value }))} />
           </FormField>
-          <FormField label="Bildung / Erfahrungsniveau" hint="Optional, aber oft nuetzlich fuer Einwaende und Content-Tiefe.">
+          <FormField label="Bildung / Erfahrungsniveau" hint="Optional, aber oft nützlich für Einwände und Content-Tiefe.">
             <input className="form-input" value={audienceForm.education} onChange={event => setAudienceForm(prev => ({ ...prev, education: event.target.value }))} />
           </FormField>
         </div>
@@ -537,18 +537,18 @@ export default function SetupProjectPage() {
             <textarea className="form-input form-textarea" value={audienceForm.description} onChange={event => setAudienceForm(prev => ({ ...prev, description: event.target.value }))} style={{ minHeight: '96px' }} />
           </FormField>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Pain Points" hint="Kommagetrennt. Das sind die Probleme, an denen spaetere Botschaften andocken.">
+            <FormField label="Pain Points" hint="Kommagetrennt. Das sind die Probleme, an denen spätere Botschaften andocken.">
               <input className="form-input" value={audienceForm.painPoints} onChange={event => setAudienceForm(prev => ({ ...prev, painPoints: event.target.value }))} />
             </FormField>
-            <FormField label="Ziele" hint="Kommagetrennt. Welche Ergebnisse oder Veraenderungen will die Persona erreichen?">
+            <FormField label="Ziele" hint="Kommagetrennt. Welche Ergebnisse oder Veränderungen will die Persona erreichen?">
               <input className="form-input" value={audienceForm.goals} onChange={event => setAudienceForm(prev => ({ ...prev, goals: event.target.value }))} />
             </FormField>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <FormField label="Bevorzugte Kanaele" hint="Kommagetrennt. Noch keine finale Kanalstrategie, aber eine belastbare Startannahme.">
+            <FormField label="Bevorzugte Kanäle" hint="Kommagetrennt. Noch keine finale Kanalstrategie, aber eine belastbare Startannahme.">
               <input className="form-input" value={audienceForm.preferredChannels} onChange={event => setAudienceForm(prev => ({ ...prev, preferredChannels: event.target.value }))} />
             </FormField>
-            <FormField label="Entscheidungsprozess" hint="Wie prueft die Persona, ob sie weitergeht oder abbricht?">
+            <FormField label="Entscheidungsprozess" hint="Wie prüft die Persona, ob sie weitergeht oder abbricht?">
               <textarea className="form-input form-textarea" value={audienceForm.decisionProcess} onChange={event => setAudienceForm(prev => ({ ...prev, decisionProcess: event.target.value }))} style={{ minHeight: '96px' }} />
             </FormField>
           </div>
@@ -565,18 +565,18 @@ export default function SetupProjectPage() {
         <section className="card" style={{ padding: '24px' }}>
           <div className="card-header" style={{ marginBottom: '18px' }}>
             <div>
-              <div className="card-title">Customer Journey als Start-Huelle</div>
+              <div className="card-title">Customer Journey als Start-Hülle</div>
               <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-                Die Journey muss schon sichtbar sein, bevor Kampagnen, Content oder Aufgaben existieren. Genau dafuer wird hier zuerst die Struktur angelegt.
+                Die Journey muss schon sichtbar sein, bevor Kampagnen, Content oder Aufgaben existieren. Genau dafür wird hier zuerst die Struktur angelegt.
               </p>
             </div>
           </div>
 
           <div style={{ display: 'grid', gap: '16px', marginBottom: '18px' }}>
-            <FormField label="Journey-Name" hint="Beschreibe klar, fuer welche Zielgruppe oder welches Angebot diese Journey steht.">
+            <FormField label="Journey-Name" hint="Beschreibe klar, für welche Zielgruppe oder welches Angebot diese Journey steht.">
               <input className="form-input" value={journeyForm.name} onChange={event => setJourneyForm(prev => ({ ...prev, name: event.target.value }))} />
             </FormField>
-            <FormField label="Journey-Beschreibung" hint="Wozu dient diese Journey und wann ist sie fuer das Team hilfreich?">
+            <FormField label="Journey-Beschreibung" hint="Wozu dient diese Journey und wann ist sie für das Team hilfreich?">
               <textarea className="form-input form-textarea" value={journeyForm.description} onChange={event => setJourneyForm(prev => ({ ...prev, description: event.target.value }))} style={{ minHeight: '96px' }} />
             </FormField>
           </div>
@@ -598,7 +598,7 @@ export default function SetupProjectPage() {
                     </div>
                   </div>
                   <div style={{ display: 'grid', gap: '12px' }}>
-                    <FormField label="Titel" hint={phaseMeta?.explanation ?? 'Erklaert die Rolle dieser Phase.'} compact={true}>
+                    <FormField label="Titel" hint={phaseMeta?.explanation ?? 'Erklärt die Rolle dieser Phase.'} compact={true}>
                       <input
                         className="form-input"
                         value={stage.title}
@@ -608,7 +608,7 @@ export default function SetupProjectPage() {
                         }))}
                       />
                     </FormField>
-                    <FormField label="Was passiert in dieser Phase?" hint="Beschreibe die Situation des Kunden ohne bereits Kampagnen oder Aufgaben zu benoetigen." compact={true}>
+                    <FormField label="Was passiert in dieser Phase?" hint="Beschreibe die Situation des Kunden ohne bereits Kampagnen oder Aufgaben zu benötigen." compact={true}>
                       <textarea
                         className="form-input form-textarea"
                         value={stage.description}
@@ -619,7 +619,7 @@ export default function SetupProjectPage() {
                         style={{ minHeight: '82px' }}
                       />
                     </FormField>
-                    <FormField label="Zentrale Huerden oder Fragen" hint="Kommagetrennt. Diese Einwaende helfen spaeter bei Content und Touchpoints." compact={true}>
+                    <FormField label="Zentrale Hürden oder Fragen" hint="Kommagetrennt. Diese Einwände helfen später bei Content und Touchpoints." compact={true}>
                       <input
                         className="form-input"
                         value={stage.painPoints.join(', ')}
@@ -639,7 +639,7 @@ export default function SetupProjectPage() {
         <section className="card" style={{ padding: '24px' }}>
           <div className="card-header" style={{ marginBottom: '18px' }}>
             <div>
-              <div className="card-title">Live-Vorschau der Huelle</div>
+              <div className="card-title">Live-Vorschau der Hülle</div>
               <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
                 So erscheint die Journey im System, auch wenn Touchpoints, Inhalte und Aufgaben noch leer sind.
               </p>
@@ -660,7 +660,7 @@ export default function SetupProjectPage() {
                     Noch leer
                   </div>
                   <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                    Touchpoints, Content und Aufgaben werden spaeter hier angedockt.
+                    Touchpoints, Content und Aufgaben werden später hier angedockt.
                   </div>
                 </div>
                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
@@ -679,16 +679,16 @@ export default function SetupProjectPage() {
       <section className="card" style={{ padding: '24px' }}>
         <div className="card-header" style={{ marginBottom: '18px' }}>
           <div>
-            <div className="card-title">Mindestbefuellung fuer den Projektstart</div>
+            <div className="card-title">Mindestbefüllung für den Projektstart</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Hier siehst du, was bereits angelegt ist und was als naechstes sinnvoll waere.
+              Hier siehst du, was bereits angelegt ist und was als Nächstes sinnvoll wäre.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gap: '12px' }}>
           <StatusRow done={setupStatus.company} label="Digitale Positionierung ist als Arbeitsgrundlage angelegt." />
           <StatusRow done={setupStatus.audience} label="Die erste Zielgruppe ist definiert." />
-          <StatusRow done={setupStatus.journey} label="Die Customer Journey ist als Huelle im System sichtbar." />
+          <StatusRow done={setupStatus.journey} label="Die Customer Journey ist als Hülle im System sichtbar." />
           <StatusRow done={setupStatus.touchpoints} label="Mindestens ein Touchpoint ist angelegt." optional={true} />
         </div>
       </section>
@@ -696,17 +696,17 @@ export default function SetupProjectPage() {
       <section className="card" style={{ padding: '24px' }}>
         <div className="card-header" style={{ marginBottom: '18px' }}>
           <div>
-            <div className="card-title">Empfohlene naechste Schritte</div>
+            <div className="card-title">Empfohlene nächste Schritte</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
-              Diese Schritte sind fuer die echte Arbeitsfaehigkeit des Projekts besonders sinnvoll, auch wenn sie nicht zwingend Teil der Mindestdaten sind.
+              Diese Schritte sind für die echte Arbeitsfähigkeit des Projekts besonders sinnvoll, auch wenn sie nicht zwingend Teil der Mindestdaten sind.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-          <NextStepCard href="/touchpoints" icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen spaeter sauber befuellt werden koennen." />
+          <NextStepCard href="/touchpoints" icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen später sauber befüllt werden können." />
           <NextStepCard href="/positioning" icon={Target} title="Positionierung verfeinern" description="Werte, Sprachregeln und Keywords mit dem Team scharfziehen, bevor die ersten Inhalte entstehen." />
-          <NextStepCard href="/audiences" icon={Users2} title="Weitere Personas ergaenzen" description="Sobald das Kernprojekt steht, koennen weitere Segmente oder Buying Center aufgenommen werden." />
-          <NextStepCard href="/journeys" icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und spaeter Aufgaben stufenweise pro Phase an die Huelle andocken." />
+          <NextStepCard href="/audiences" icon={Users2} title="Weitere Personas ergänzen" description="Sobald das Kernprojekt steht, können weitere Segmente oder Buying Center aufgenommen werden." />
+          <NextStepCard href="/journeys" icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und später Aufgaben stufenweise pro Phase an die Hülle andocken." />
         </div>
       </section>
 
@@ -718,7 +718,7 @@ export default function SetupProjectPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button className="btn btn-secondary" onClick={() => router.push('/journeys')}>Journey oeffnen</button>
+          <button className="btn btn-secondary" onClick={() => router.push('/journeys')}>Journey öffnen</button>
           <button className="btn btn-primary" onClick={() => router.push('/')}>Zum Dashboard</button>
         </div>
       </section>
@@ -729,7 +729,7 @@ export default function SetupProjectPage() {
     <div className="animate-in" style={{ display: 'grid', gap: '24px' }}>
       <div className="page-header" style={{ alignItems: 'flex-start' }}>
         <div className="page-header-left">
-          <h1 className="page-title">Gefuehrtes Projekt-Setup</h1>
+          <h1 className="page-title">Geführtes Projekt-Setup</h1>
           <p className="page-subtitle">
             {activeCompany?.name || 'Projekt'} wird jetzt mit den Mindestdaten startklar gemacht: Positionierung, erste Persona und Customer Journey.
           </p>
@@ -740,7 +740,7 @@ export default function SetupProjectPage() {
           </div>
           {searchParams.get('new') === '1' && (
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-              Das neue Projekt wurde angelegt und direkt in das Setup uebernommen.
+              Das neue Projekt wurde angelegt und direkt in das Setup übernommen.
             </div>
           )}
         </div>
@@ -810,13 +810,13 @@ export default function SetupProjectPage() {
           <div className="card" style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
               {currentStep === 'company' && 'Speichere zuerst die Positionierung, damit alle weiteren Module dieselbe Grundlage nutzen.'}
-              {currentStep === 'audience' && 'Die erste Persona ist die Bruecke zwischen Positionierung und Customer Journey.'}
-              {currentStep === 'journey' && 'Die Journey-Huelle wird bewusst ohne Kampagnen, Content und Aufgaben angelegt.'}
+              {currentStep === 'audience' && 'Die erste Persona ist die Brücke zwischen Positionierung und Customer Journey.'}
+              {currentStep === 'journey' && 'Die Journey-Hülle wird bewusst ohne Kampagnen, Content und Aufgaben angelegt.'}
               {currentStep === 'review' && 'Von hier aus kannst du direkt in die Fachmodule wechseln.'}
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {currentStep !== 'company' && (
-                <button className="btn btn-secondary" onClick={previousStep}>Zurueck</button>
+                <button className="btn btn-secondary" onClick={previousStep}>Zurück</button>
               )}
               {currentStep === 'company' && (
                 <button className="btn btn-primary" onClick={saveCompanyStep} disabled={busyStep === 'company'}>
@@ -830,7 +830,7 @@ export default function SetupProjectPage() {
               )}
               {currentStep === 'journey' && (
                 <button className="btn btn-primary" onClick={saveJourneyStep} disabled={busyStep === 'journey'}>
-                  {busyStep === 'journey' ? 'Speichere...' : 'Journey-Huelle anlegen'}
+                  {busyStep === 'journey' ? 'Speichere...' : 'Journey-Hülle anlegen'}
                 </button>
               )}
               {currentStep === 'review' && (
@@ -839,7 +839,7 @@ export default function SetupProjectPage() {
                 </button>
               )}
               {currentStep !== 'review' && currentStep !== 'company' && (
-                <button className="btn btn-ghost" onClick={nextStep}>Schritt ueberspringen</button>
+                <button className="btn btn-ghost" onClick={nextStep}>Schritt überspringen</button>
               )}
             </div>
           </div>
@@ -852,7 +852,7 @@ export default function SetupProjectPage() {
           <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>Warum dieser Flow existiert</div>
         </div>
         <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Neue Projekte scheitern in der Regel nicht an fehlenden Ideen, sondern an fehlender Grundstruktur. Dieses Setup erzwingt die kleinste belastbare Ausgangslage, damit spaetere Kampagnen, Inhalte, Touchpoints und Aufgaben in ein sauberes System laufen.
+          Neue Projekte scheitern in der Regel nicht an fehlenden Ideen, sondern an fehlender Grundstruktur. Dieses Setup erzwingt die kleinste belastbare Ausgangslage, damit spätere Kampagnen, Inhalte, Touchpoints und Aufgaben in ein sauberes System laufen.
         </div>
       </div>
     </div>
@@ -899,7 +899,7 @@ function NextStepCard({ href, icon: Icon, title, description }: { href: string; 
         <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</div>
         <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', lineHeight: 1.5 }}>{description}</div>
         <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-primary)', fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
-          Modul oeffnen <ArrowRight size={14} />
+          Modul öffnen <ArrowRight size={14} />
         </div>
       </div>
     </Link>

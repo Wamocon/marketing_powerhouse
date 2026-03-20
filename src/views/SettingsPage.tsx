@@ -46,12 +46,12 @@ const normalizeNotificationSettings = (input: unknown): NotificationSettings => 
 };
 
 const NOTIFICATION_SETTING_META: { key: keyof NotificationSettings; title: string; desc: string }[] = [
-    { key: 'campaignUpdates', title: 'Kampagnen-Updates', desc: 'Hinweis bei Statusaenderungen in Kampagnen' },
-    { key: 'budgetAlerts', title: 'Budget-Alerts', desc: 'Warnung bei Budgetueberschreitung (80%)' },
+    { key: 'campaignUpdates', title: 'Kampagnen-Updates', desc: 'Hinweis bei Statusänderungen in Kampagnen' },
+    { key: 'budgetAlerts', title: 'Budget-Alerts', desc: 'Warnung bei Budgetüberschreitung (80%)' },
     { key: 'taskReminders', title: 'Aufgaben-Erinnerungen', desc: 'Erinnerung 24h vor Deadline' },
-    { key: 'teamActivities', title: 'Team-Aktivitaeten', desc: 'Neue Kommentare und Freigaben' },
-    { key: 'weeklyReport', title: 'Woechentlicher Report', desc: 'Zusammenfassung im Dashboard-Hinweisbereich' },
-    { key: 'kpiAnomalies', title: 'KPI-Anomalien', desc: 'Benachrichtigung bei ungewoehnlichen KPI-Werten' },
+    { key: 'teamActivities', title: 'Team-Aktivitäten', desc: 'Neue Kommentare und Freigaben' },
+    { key: 'weeklyReport', title: 'Wöchentlicher Report', desc: 'Zusammenfassung im Dashboard-Hinweisbereich' },
+    { key: 'kpiAnomalies', title: 'KPI-Anomalien', desc: 'Benachrichtigung bei ungewöhnlichen KPI-Werten' },
 ];
 
 const integrations = [
@@ -120,7 +120,7 @@ export default function SettingsPage() {
         if (!activeCompany || !can('canManageSettings')) return;
         const trimmedName = wsName.trim();
         if (!trimmedName) {
-            setErrorMsg('Bitte einen gueltigen Unternehmensnamen eingeben.');
+            setErrorMsg('Bitte einen gültigen Unternehmensnamen eingeben.');
             return;
         }
         try {
@@ -150,7 +150,7 @@ export default function SettingsPage() {
             setSavedMsg('Rolle aktualisiert.');
             setTimeout(() => setSavedMsg(''), 2500);
         } catch {
-            setErrorMsg('Rolle konnte nicht geaendert werden.');
+            setErrorMsg('Rolle konnte nicht geändert werden.');
         }
     };
 
@@ -170,7 +170,7 @@ export default function SettingsPage() {
         if (!activeCompany || !can('canManageUsers')) return;
         const normalizedEmail = inviteEmail.trim().toLowerCase();
         if (!normalizedEmail || !normalizedEmail.includes('@')) {
-            setErrorMsg('Bitte eine gueltige E-Mail-Adresse eingeben.');
+            setErrorMsg('Bitte eine gültige E-Mail-Adresse eingeben.');
             return;
         }
 
@@ -245,12 +245,12 @@ export default function SettingsPage() {
                     <p className="page-subtitle">Workspace- und Kontoeinstellungen verwalten</p>
                 </div>
                 <PageHelp title="Einstellungen & Benutzerverwaltung">
-                    <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Uebersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Unternehmen zuweisen.</p>
+                    <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Übersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Unternehmen zuweisen.</p>
                     <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
                         <li>Es werden nur bereits angelegte Benutzer akzeptiert.</li>
                         <li>Bei erfolgreicher Zuweisung wird automatisch die Rolle <strong>Member</strong> vergeben.</li>
                         <li>Existiert die E-Mail nicht, erscheint eine Fehlermeldung mit Hinweis zur Benutzeranlage.</li>
-                        <li>Rollen koennen danach in der Teamliste angepasst werden.</li>
+                        <li>Rollen können danach in der Teamliste angepasst werden.</li>
                         <li>Benachrichtigungs-Toggles im Tab "Benachrichtigungen" werden pro aktivem Unternehmen im Browser gespeichert.</li>
                     </ul>
                 </PageHelp>
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                                 <div className="card-title">Unternehmens-Einstellungen</div>
                                 {(!can('canManageSettings') || !activeCompany) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                        <Lock size={11} /> {!activeCompany ? 'Kein Unternehmen ausgewaehlt' : 'Nur-Lese-Modus'}
+                                        <Lock size={11} /> {!activeCompany ? 'Kein Unternehmen ausgewählt' : 'Nur-Lese-Modus'}
                                     </div>
                                 )}
                             </div>
@@ -363,13 +363,13 @@ export default function SettingsPage() {
                                         <input
                                             type="email"
                                             className="form-input"
-                                            placeholder="E-Mail fuer Zuweisung"
+                                            placeholder="E-Mail für Zuweisung"
                                             value={inviteEmail}
                                             onChange={e => setInviteEmail(e.target.value)}
                                             style={{ minWidth: '260px' }}
                                         />
                                         <button className="btn btn-primary btn-sm" onClick={handleInviteByEmail} disabled={inviteLoading}>
-                                            <Plus size={14} /> {inviteLoading ? 'Pruefung...' : 'Per E-Mail zuweisen'}
+                                            <Plus size={14} /> {inviteLoading ? 'Prüfung...' : 'Per E-Mail zuweisen'}
                                         </button>
                                     </div>
                                 )}
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                                     color: 'var(--text-tertiary)',
                                     fontSize: 'var(--font-size-xs)',
                                 }}>
-                                    Nur vorhandene Benutzer koennen per E-Mail zugewiesen werden. Neue Zuweisungen erfolgen standardmaessig mit der Rolle Member.
+                                    Nur vorhandene Benutzer können per E-Mail zugewiesen werden. Neue Zuweisungen erfolgen standardmäßig mit der Rolle Member.
                                 </div>
                             )}
                             <div className="table-container">
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                                                                 disabled={isMe || isProtectedSuperAdmin}
                                                                 className="form-select"
                                                                 style={{ minWidth: '125px' }}
-                                                                title={isProtectedSuperAdmin ? 'Super-Admin Rollen duerfen nur von Super-Admins angepasst werden.' : ''}
+                                                                title={isProtectedSuperAdmin ? 'Super-Admin-Rollen dürfen nur von Super-Admins angepasst werden.' : ''}
                                                             >
                                                                 <option value="company_admin">Admin</option>
                                                                 <option value="manager">Manager</option>
@@ -540,7 +540,7 @@ export default function SettingsPage() {
                             </div>
                             {!activeCompany && (
                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Kein aktives Unternehmen ausgewaehlt.
+                                    Kein aktives Unternehmen ausgewählt.
                                 </div>
                             )}
                             {NOTIFICATION_SETTING_META.map((setting, idx) => (

@@ -242,6 +242,7 @@ export interface Touchpoint {
   id: string;
   name: string;
   type: string;
+  journeyPhases?: string[];
   journeyPhase: string;
   url: string;
   status: 'active' | 'planned' | 'inactive';

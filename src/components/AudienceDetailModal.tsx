@@ -27,6 +27,14 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
 
     const [editMode, setEditMode] = useState(false);
     const [editedAudience, setEditedAudience] = useState<Audience>({ ...audience });
+    const hasUnsavedEdits = editMode && JSON.stringify(editedAudience) !== JSON.stringify(audience);
+
+    const requestClose = () => {
+        if (hasUnsavedEdits && !window.confirm('Es gibt ungespeicherte Änderungen. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
 
     const getLinkedCampaigns = (audienceId: string) =>
         campaigns.filter(c => c.targetAudiences?.includes(audienceId));
@@ -37,7 +45,7 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto',
                 display: 'flex', flexDirection: 'column',
@@ -67,7 +75,7 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
                             editMode ? (
                                 <button className="btn btn-primary btn-sm" onClick={handleSave}><Check size={14} /> Speichern</button>
                             ) : (
-                                <button className="btn btn-secondary btn-sm" onClick={() => setEditMode(true)}><Edit size={14} /> Bearbeiten</button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => { setEditedAudience({ ...audience }); setEditMode(true); }}><Edit size={14} /> Bearbeiten</button>
                             )
                         )}
                         {canDelete && (
@@ -80,7 +88,7 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
                                 <Trash2 size={16} />
                             </button>
                         )}
-                        <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                        <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={20} /></button>
                     </div>
                 </div>
 

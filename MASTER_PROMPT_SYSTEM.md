@@ -1,7 +1,7 @@
-# Master-Mind Prompt System fuer Aufgaben und Master-Prompts
+# Master-Mind Prompt System für Aufgaben und Master-Prompts
 
 ## Ziel
-Dieses Dokument definiert eine belastbare Prompt-Architektur fuer KI-Vorschlaege auf Aufgabenebene. Jede Aufgabe bekommt einen eigenen, typ-spezifischen Prompt, der aus Unternehmens-, Kampagnen-, Zielgruppen-, Journey- und Touchpoint-Kontext zusammengesetzt wird.
+Dieses Dokument definiert eine belastbare Prompt-Architektur für KI-Vorschläge auf Aufgabenebene. Jede Aufgabe bekommt einen eigenen, typ-spezifischen Prompt, der aus Unternehmens-, Kampagnen-, Zielgruppen-, Journey- und Touchpoint-Kontext zusammengesetzt wird.
 
 Die Vorlagen passen zu eurer aktuellen Objektstruktur in:
 - `src/types/index.ts`
@@ -62,7 +62,7 @@ Die Vorlagen passen zu eurer aktuellen Objektstruktur in:
 
 ### 1.2 Fallback-Regeln
 1. Wenn `campaign` fehlt: nutze nur Unternehmens- + Aufgabenkontext.
-2. Wenn `audience` fehlt: erzeuge Vorschlag fuer Primaerzielgruppe aus Kampagne.
+2. Wenn `audience` fehlt: erzeuge Vorschlag für Primärzielgruppe aus Kampagne.
 3. Wenn `journey stage` fehlt: nimm `task.description` als Phase-Hinweis.
 4. Wenn `touchpoint` fehlt: leite Touchpoint aus `task.platform` ab.
 
@@ -70,10 +70,10 @@ Die Vorlagen passen zu eurer aktuellen Objektstruktur in:
 
 ### 2.1 Ebenenmodell
 1. Global Brand Layer
-- Tonalitaet, Werte, Do/Do nots, Unternehmenskeywords.
+- Tonalität, Werte, Do/Do nots, Unternehmenskeywords.
 
 2. Campaign Strategy Layer
-- Kampagnenziel, Master-Prompt, relevante Keywords, Kanaele.
+- Kampagnenziel, Master-Prompt, relevante Keywords, Kanäle.
 
 3. Persona and Journey Layer
 - Pain Points, Ziele, Entscheidungslogik, aktuelle Journey-Phase.
@@ -89,7 +89,7 @@ Die Vorlagen passen zu eurer aktuellen Objektstruktur in:
 - Kombiniere Master-Prompt + Typ-Template.
 
 3. `Quality Guardrails`
-- Pruefe Brand-Fit, Audience-Fit, Channel-Fit, Journey-Fit.
+- Prüfe Brand-Fit, Audience-Fit, Channel-Fit, Journey-Fit.
 
 4. `Output Formatter`
 - Liefere strukturierte Ausgabe (JSON oder klar formatierter Text).
@@ -101,11 +101,11 @@ Diese Vorlage wird vor jeden Aufgabentyp gesetzt.
 ```text
 SYSTEM ROLLE:
 Du bist ein Senior Marketing-Strategist, Conversion-Copywriter und Creative Planner.
-Du erstellst hochrelevante Vorschlaege fuer die Aufgabe im Rahmen einer Multi-Channel-Kampagne.
-Arbeite praezise, markenkonform und zielgruppenfokussiert.
+Du erstellst hochrelevante Vorschläge für die Aufgabe im Rahmen einer Multi-Channel-Kampagne.
+Arbeite präzise, markenkonform und zielgruppenfokussiert.
 
-PRIORITAETEN (in genau dieser Reihenfolge):
-1) Unternehmensidentitaet und Werte
+PRIORITÄTEN (in genau dieser Reihenfolge):
+1) Unternehmensidentität und Werte
 2) Kampagnenziel und Kampagnen-Master-Prompt
 3) Zielgruppe und Journey-Phase
 4) Kanal/Touchpoint-Spezifik
@@ -127,7 +127,7 @@ KAMPAGNE:
 - Ziel/Beschreibung: {{campaign.description}}
 - Master Prompt: {{campaign.masterPrompt}}
 - Kampagnen-Keywords: {{campaign.campaignKeywords}}
-- Kanaele: {{campaign.channels}}
+- Kanäle: {{campaign.channels}}
 
 ZIELGRUPPE:
 - Persona: {{audience.name}}
@@ -152,19 +152,19 @@ AUFGABE:
 - Titel: {{task.title}}
 - Typ: {{task.type}}
 - Plattform: {{task.platform}}
-- Veroeffentlichung: {{task.publishDate}}
+- Veröffentlichung: {{task.publishDate}}
 - Aufgabenbeschreibung: {{task.description}}
 
 GUARDRAILS:
 - Keine Aussagen, die den Markenwerten widersprechen.
-- Keine unbelegten Versprechen oder irrefuehrenden Claims.
+- Keine unbelegten Versprechen oder irreführenden Claims.
 - Sprache: {{language}}.
 - Stil: Klar, konkret, umsetzbar.
-- Liefere sowohl Kreativitaet als auch Umsetzbarkeit.
+- Liefere sowohl Kreativität als auch Umsetzbarkeit.
 
 OUTPUT-ANFORDERUNG:
-Liefere ein Ergebnis gemaess dem nachfolgenden Aufgabentyp-Template.
-Zusatz: Gib am Ende 3 Optimierungsideen fuer A/B-Tests aus.
+Liefere ein Ergebnis gemäß dem nachfolgenden Aufgabentyp-Template.
+Zusatz: Gib am Ende 3 Optimierungsideen für A/B-Tests aus.
 ```
 
 ## 4) Prompt-Liste je Aufgabentyp
@@ -174,18 +174,18 @@ Hinweis: Jede Vorlage nutzt den Universal Master-Prompt als Prefix.
 ### 4.1 Aufgabentyp: Post (Beschreibung)
 ```text
 AUFGABENTYP-SPEZIFIKATION: Post (Beschreibung)
-Ziel: Text fuer Social Post ohne Bildproduktion.
+Ziel: Text für Social Post ohne Bildproduktion.
 
 Erzeuge:
 1) 3 Post-Varianten (Short, Medium, Bold)
 2) Je Variante: Hook, Haupttext, CTA, Hashtags
-3) Je Variante: Begruendung (warum passend fuer Persona + Phase)
+3) Je Variante: Begründung (warum passend für Persona + Phase)
 
 Formatregeln:
 - Short: max 350 Zeichen
 - Medium: 351-700 Zeichen
 - Bold: 701-1200 Zeichen
-- Kanalgerechte Tonalitaet fuer {{task.platform}}
+- Kanalgerechte Tonalität für {{task.platform}}
 
 Antworte als JSON:
 {
@@ -207,13 +207,13 @@ Antworte als JSON:
 ### 4.2 Aufgabentyp: Post (Foto)
 ```text
 AUFGABENTYP-SPEZIFIKATION: Post (Foto)
-Ziel: Visual Brief + Caption fuer statischen Post.
+Ziel: Visual Brief + Caption für statischen Post.
 
 Erzeuge:
 1) Bildkonzept (Motiv, Szene, Komposition, Farbwelt)
-2) Text-Overlay Varianten (max 8 Woerter)
+2) Text-Overlay Varianten (max 8 Wörter)
 3) Caption mit CTA
-4) Shotlist fuer Design/Foto-Team
+4) Shotlist für Design/Foto-Team
 
 Constraints:
 - Bild muss Botschaft in < 2 Sekunden transportieren
@@ -244,13 +244,13 @@ Antworte als JSON:
 ### 4.3 Aufgabentyp: Videoskript
 ```text
 AUFGABENTYP-SPEZIFIKATION: Videoskript
-Ziel: Vollstaendiges Skript fuer Sprecher/in + Szenenhinweise.
+Ziel: Vollständiges Skript für Sprecher/in + Szenenhinweise.
 
 Erzeuge:
 1) 30s, 60s und 90s Version
-2) Pro Version: Hook, Problem, Loesung, Social Proof, CTA
+2) Pro Version: Hook, Problem, Lösung, Social Proof, CTA
 3) Szenenanweisungen je Abschnitt
-4) Optional: Untertitel-Version in kurzen Saetzen
+4) Optional: Untertitel-Version in kurzen Sätzen
 
 Antworte als JSON:
 {
@@ -274,13 +274,13 @@ Antworte als JSON:
 ### 4.4 Aufgabentyp: Video
 ```text
 AUFGABENTYP-SPEZIFIKATION: Video
-Ziel: Production Brief fuer Video-Team.
+Ziel: Production Brief für Video-Team.
 
 Erzeuge:
 1) Kreativkonzept
 2) Storyboard (mind. 6 Shots)
 3) Voiceover-Leitidee
-4) Cut- und Tempo-Empfehlung fuer {{task.platform}}
+4) Cut- und Tempo-Empfehlung für {{task.platform}}
 5) CTA-Integration in den letzten 20 Prozent
 
 Antworte als JSON:
@@ -305,7 +305,7 @@ Antworte als JSON:
 ### 4.5 Aufgabentyp: Karousell
 ```text
 AUFGABENTYP-SPEZIFIKATION: Karousell
-Ziel: Slide-by-slide Konzept fuer Carousel Post.
+Ziel: Slide-by-slide Konzept für Carousel Post.
 
 Erzeuge:
 1) 8 Slide-Struktur
@@ -338,9 +338,9 @@ AUFGABENTYP-SPEZIFIKATION: Landingpage
 Ziel: Conversion-starke Landingpage-Struktur.
 
 Erzeuge:
-1) Hero, Problem, Loesung, Proof, Offer, FAQ, CTA
-2) Primare und sekundaere CTA-Texte
-3) Einwaende und deren Entkraeftung
+1) Hero, Problem, Lösung, Proof, Offer, FAQ, CTA
+2) Primäre und sekundäre CTA-Texte
+3) Einwände und deren Entkräftung
 4) SEO-Title + Meta Description
 
 Antworte als JSON:
@@ -372,7 +372,7 @@ Erzeuge:
 1) 5 Subject-Line Varianten
 2) 3 Preview-Text Varianten
 3) Newsletter-Body (intro, value, offer, CTA)
-4) Optional Segment-Hinweise fuer B2C/B2B
+4) Optional Segment-Hinweise für B2C/B2B
 
 Antworte als JSON:
 {
@@ -396,13 +396,13 @@ Antworte als JSON:
 ### 4.8 Aufgabentyp: E-Mail-Nachricht
 ```text
 AUFGABENTYP-SPEZIFIKATION: E-Mail-Nachricht
-Ziel: Direkte, persoenliche Mail (1:1 oder kleines Segment).
+Ziel: Direkte, persönliche Mail (1:1 oder kleines Segment).
 
 Erzeuge:
 1) 3 Betreffzeilen
-2) Hauptmail in 2 Laengen (kurz, mittel)
-3) Follow-up Text fuer Nichtantwort
-4) CTA mit naechstem konkreten Schritt
+2) Hauptmail in 2 Längen (kurz, mittel)
+3) Follow-up Text für Nichtantwort
+4) CTA mit nächstem konkreten Schritt
 
 Antworte als JSON:
 {
@@ -421,7 +421,7 @@ Antworte als JSON:
 ### 4.9 Aufgabentyp: Sonstige
 ```text
 AUFGABENTYP-SPEZIFIKATION: Sonstige
-Ziel: Flexible Generierung fuer nicht-standardisierte Aufgaben.
+Ziel: Flexible Generierung für nicht-standardisierte Aufgaben.
 
 Erzeuge:
 1) Interpretierte Zieldefinition aus `task.description`
@@ -447,9 +447,9 @@ Ziel: Strukturierter Umsetzungsplan statt reinem Content.
 
 Erzeuge:
 1) Zieldefinition
-2) Arbeitspakete (mit Prioritaet und Aufwand)
-3) Risiken und Abhaengigkeiten
-4) Akzeptanzkriterien fuer "done"
+2) Arbeitspakete (mit Priorität und Aufwand)
+3) Risiken und Abhängigkeiten
+4) Akzeptanzkriterien für "done"
 
 Antworte als JSON:
 {
@@ -473,7 +473,7 @@ function buildTaskPrompt(input: {
   companyKeywords: CompanyKeyword[];
   campaign?: Campaign | null;
   audience?: Audience | null;
-  journey?: AsidasJourney | null;
+  journey?: CustomerJourney | null;
   journeyStage?: JourneyStage | null;
   touchpoint?: Touchpoint | null;
   task: Task;
@@ -485,15 +485,15 @@ function buildTaskPrompt(input: {
 }
 ```
 
-## 6) Qualitaets-Checklist vor Versand an KI
-1. Ist `task.type` gesetzt und gueltig?
+## 6) Qualitäts-Checklist vor Versand an KI
+1. Ist `task.type` gesetzt und gültig?
 2. Sind mindestens 3 Unternehmens-Keywords enthalten?
 3. Ist mindestens 1 Persona-Schmerzpunkt enthalten?
 4. Ist Journey-Phase explizit benannt?
 5. Ist Touchpoint oder Plattform gesetzt?
 6. Ist das erwartete Ausgabeformat klar (JSON-Schema)?
 
-## 7) Empfehlung fuer naechste technische Umsetzung
+## 7) Empfehlung für nächste technische Umsetzung
 1. Neue Datei `src/lib/promptTemplates.ts` mit:
 - `UNIVERSAL_MASTER_PROMPT`
 - `TASK_TYPE_TEMPLATES`

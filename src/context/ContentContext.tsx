@@ -43,7 +43,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }, [companyId]);
 
     const addContent = useCallback(async (content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<string> => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
         const created = await api.createContent(content, companyId);
         setContents(prev => [...prev, created]);
         return created.id;

@@ -121,13 +121,13 @@ export default function ManualPage() {
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                 <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) steuerst du das Rollenkonzept und die Team-Zuweisung.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <li>Bestehende Benutzer koennen im Team-Tab per E-Mail zum aktiven Unternehmen zugewiesen werden. Neue Zuweisungen starten standardmaessig als <strong>Member</strong>.</li>
+                                    <li>Bestehende Benutzer können im Team-Tab per E-Mail zum aktiven Unternehmen zugewiesen werden. Neue Zuweisungen starten standardmäßig als <strong>Member</strong>.</li>
                                     <li>Wenn eine E-Mail noch nicht als Benutzer existiert, zeigt das System eine Fehlermeldung mit dem Hinweis, den Benutzer zuerst anzulegen.</li>
                                     <li><strong>Manager:</strong> Dürfen Kampagnen, Zielgruppen und Budgets erstellen und verwalten. Zudem können sie Elemente (Kampagnen, Touchpoints, Personas, Content, Aufgaben etc.) löschen.</li>
                                     <li><strong>Member:</strong> Können nur Aufgaben sehen und abarbeiten. Sie sehen keine Budgets, können keine wesentlichen Elemente löschen und haben keinen Zugriff auf Einstellungen.</li>
                                 </ul>
                                 <p style={{ marginBottom: '16px' }}>
-                                    Als <strong>Super-Admin</strong> kannst du zusaetzlich im Super-Admin-Panel Benutzer direkt bestehenden Unternehmen zuweisen und ihre Rolle pro Unternehmen sofort aendern.
+                                    Als <strong>Super-Admin</strong> kannst du zusätzlich im Super-Admin-Panel Benutzer direkt bestehenden Unternehmen zuweisen und ihre Rolle pro Unternehmen sofort ändern.
                                 </p>
                                 <TipBox title="Sicherheit">
                                     Befördere Nutzer nur zum Admin, wenn sie wirklich globale Systemeinstellungen (wie API-Keys) ändern dürfen. In 90% der Fälle ist die Manager-Rolle für Teamleiter völlig ausreichend.

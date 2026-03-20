@@ -319,12 +319,27 @@ interface NewCreativeModalProps {
 }
 
 export function NewCreativeModal({ campaign, newCreative, setNewCreative, onClose, onSubmit }: NewCreativeModalProps) {
+    const hasUnsavedChanges = Boolean(
+        newCreative.title.trim() ||
+        newCreative.description.trim() ||
+        newCreative.platform ||
+        newCreative.type !== 'Post' ||
+        newCreative.scope !== 'single'
+    );
+
+    const requestClose = () => {
+        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
+
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={requestClose}>
             <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <div className="modal-title">Neues Creative erstellen</div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={18} /></button>
+                    <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={18} /></button>
                 </div>
                 <div className="modal-body">
                     <div className="form-group">
@@ -363,7 +378,7 @@ export function NewCreativeModal({ campaign, newCreative, setNewCreative, onClos
                     </div>
                 </div>
                 <div className="modal-footer">
-                    <button className="btn btn-ghost" onClick={onClose}>Abbrechen</button>
+                    <button className="btn btn-ghost" onClick={requestClose}>Abbrechen</button>
                     <button className="btn btn-primary" onClick={onSubmit} disabled={!newCreative.title.trim()}>
                         <Plus size={16} /> Creative erstellen
                     </button>

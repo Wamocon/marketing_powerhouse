@@ -21,7 +21,7 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 ✅ **Benachrichtigungs-Einstellungen** — Schaltbare Benachrichtigungs-Typen pro Unternehmen, im Browser gespeichert  
 ✅ **Kampagnen-Management** — Multi-Channel-Kampagnen mit 3-Schritt-Erstellung, Master-Prompt, Zielgruppen und Keywords  
 ✅ **Creative-Workflow (10 Stufen)** — Entwurf → KI-Vorschlag → Review → Freigabe → Posting → KI-Analyse  
-✅ **Customer Journey (5-Phasen + ASIDAS)** — Awareness bis Advocacy mit Content-Deep-Links und Touchpoint-Integration  
+✅ **Customer Journey (5-Phasen)** — Awareness bis Advocacy mit Content-Deep-Links und Touchpoint-Integration  
 ✅ **Kanäle & Touchpoints** — Single-Source-of-Truth mit bidirektionaler Kampagnen- und Content-Analyse sowie aggregierten KPIs  
 ✅ **Content-System** — Kalender- und Kartenansicht, 6-stufiger Status-Workflow, bidirektionale Aufgaben-Verknüpfung  
 ✅ **Zielgruppen-Management** — Persona-Avatare, B2B/B2C-Filter, Journey-Integration, CRUD via Supabase  
@@ -158,7 +158,6 @@ marketing_powerhouse/
 │   │   └── [id]/page.tsx             ← Kampagnen-Detail (/campaigns/:id)
 │   ├── audiences/page.tsx            ← Zielgruppen (/audiences)
 │   ├── journeys/page.tsx             ← Customer Journey (/journeys)
-│   ├── asidas/page.tsx               ← ASIDAS Funnel (/asidas)
 │   ├── touchpoints/page.tsx          ← Kanäle & Touchpoints (/touchpoints)
 │   ├── content/page.tsx              ← Content-Kalender (/content)
 │   ├── content-overview/page.tsx     ← Content-Übersicht (/content-overview)
@@ -204,7 +203,7 @@ marketing_powerhouse/
         ├── SuperAdminPage.tsx          ← NEU: Super-Admin Panel
         ├── CampaignsPage.tsx / CampaignDetailPage.tsx
         ├── AudiencesPage.tsx / CustomerJourneyPage.tsx
-        ├── AsidasFunnelPage.tsx / TouchpointsPage.tsx
+        ├── TouchpointsPage.tsx
         ├── ContentCalendarPage.tsx / ContentOverviewPage.tsx
         ├── BudgetPage.tsx / TasksPage.tsx
         ├── PositioningPage.tsx / ManualPage.tsx
@@ -281,7 +280,7 @@ Die Sidebar ist nach Bereichen gegliedert:
 | **Unternehmens-Kontext** | Aktives Unternehmen + Wechsel-Button |
 | **Super-Admin** | Super-Admin Panel (nur für Super-Admins) |
 | **Übersicht** | Dashboard |
-| **Marketing** | Kampagnen, Zielgruppen, Customer Journey, ASIDAS-Funnel, Kanäle & Touchpoints, Content-Übersicht, Content-Kalender, Budget & Controlling |
+| **Marketing** | Kampagnen, Zielgruppen, Customer Journey, Kanäle & Touchpoints, Content-Übersicht, Content-Kalender, Budget & Controlling |
 | **Team** | Aufgaben |
 | **Unternehmen** | Digitale Positionierung |
 | **System** | Handbuch, Einstellungen |

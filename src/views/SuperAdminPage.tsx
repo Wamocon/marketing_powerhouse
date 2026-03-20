@@ -130,7 +130,7 @@ export default function SuperAdminPage() {
         const selectedUserId = assignByCompany[companyId]?.userId;
         const selectedRole = assignByCompany[companyId]?.role ?? 'member';
         if (!selectedUserId) {
-            setCompanyMessage(companyId, { error: 'Bitte zuerst einen Benutzer auswaehlen.' });
+            setCompanyMessage(companyId, { error: 'Bitte zuerst einen Benutzer auswählen.' });
             return;
         }
         try {
@@ -229,11 +229,11 @@ export default function SuperAdminPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <PageHelp title="Super-Admin: Benutzer und Unternehmen">
-                        <p><strong>Unternehmen-Tab:</strong> Bestehende Benutzer koennen einem Unternehmen zugewiesen und ihre Rolle pro Unternehmen direkt angepasst werden.</p>
+                        <p><strong>Unternehmen-Tab:</strong> Bestehende Benutzer können einem Unternehmen zugewiesen und ihre Rolle pro Unternehmen direkt angepasst werden.</p>
                         <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
-                            <li>"Benutzer waehlen" zeigt nur Benutzer, die noch nicht Mitglied des Unternehmens sind.</li>
-                            <li>Rollen sind unternehmensbezogen und koennen als Admin, Manager oder Member gesetzt werden.</li>
-                            <li>Aenderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Unternehmen.</li>
+                            <li>"Benutzer wählen" zeigt nur Benutzer, die noch nicht Mitglied des Unternehmens sind.</li>
+                            <li>Rollen sind unternehmensbezogen und können als Admin, Manager oder Member gesetzt werden.</li>
+                            <li>Änderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Unternehmen.</li>
                         </ul>
                         <p style={{ marginTop: '10px' }}><strong>Benutzer-Tab:</strong> Hier werden globale Benutzer gepflegt, inkl. Super-Admin-Status.</p>
                     </PageHelp>
@@ -411,7 +411,7 @@ export default function SuperAdminPage() {
                                                         }))}
                                                         style={{ minWidth: '250px' }}
                                                     >
-                                                        <option value="">Benutzer waehlen</option>
+                                                        <option value="">Benutzer wählen</option>
                                                         {users
                                                             .filter(user => !(companyMembers[company.id] ?? []).some(member => member.userId === user.id))
                                                             .map(user => (

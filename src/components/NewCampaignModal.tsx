@@ -7,7 +7,7 @@ interface NewCampaignModalProps {
 }
 
 export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
-    const { audiences: allAudiences, touchpoints, addCampaign, users } = useData();
+    const { audiences: allAudiences, touchpoints, addCampaign, users, companyKeywords } = useData();
     const [modalStep, setModalStep] = useState(1);
     const [campaignName, setCampaignName] = useState('');
     const [description, setDescription] = useState('');
@@ -16,9 +16,31 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
     const [budget, setBudget] = useState('');
     const [selectedAudiences, setSelectedAudiences] = useState<string[]>([]);
     const [campaignKeywords, setCampaignKeywords] = useState('');
+    const [masterPrompt, setMasterPrompt] = useState('');
     const [selectedTouchpoints, setSelectedTouchpoints] = useState<string[]>([]);
     const [responsibleManagerId, setResponsibleManagerId] = useState('');
     const [selectedTeamMemberIds, setSelectedTeamMemberIds] = useState<string[]>([]);
+
+    const hasUnsavedChanges = Boolean(
+        campaignName.trim() ||
+        description.trim() ||
+        startDate ||
+        endDate ||
+        budget ||
+        masterPrompt.trim() ||
+        campaignKeywords.trim() ||
+        responsibleManagerId ||
+        selectedAudiences.length ||
+        selectedTouchpoints.length ||
+        selectedTeamMemberIds.length
+    );
+
+    const requestClose = () => {
+        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
 
     const managers = users.filter(u => u.role === 'company_admin' || u.role === 'manager');
     const allMembers = users;
@@ -39,7 +61,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={requestClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
                 <div className="modal-header">
                     <div>
@@ -57,7 +79,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             Schritt {modalStep} von 3: {modalStep === 1 ? 'Grunddaten' : modalStep === 2 ? 'Master-Prompt & Zielgruppen' : 'Schlüsselbegriffe'}
                         </div>
                     </div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+                    <button className="btn btn-ghost btn-icon" onClick={requestClose}>✕</button>
                 </div>
 
                 <div className="modal-body">
@@ -201,6 +223,8 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                     className="form-input form-textarea"
                                     placeholder="Beschreibe Ton, Zielgruppe, USPs, Kernbotschaft und Dos & Don'ts dieser Kampagne…"
                                     style={{ minHeight: '160px', fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}
+                                    value={masterPrompt}
+                                    onChange={e => setMasterPrompt(e.target.value)}
                                 />
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -277,9 +301,15 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                         🔒 Unternehmensweite Keywords (werden automatisch eingebunden)
                                     </div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                        {['DSGVO-konform', 'Made in Europe', 'Nachhaltigkeit', 'Premium-Qualität', 'Vertrauen'].map(kw => (
-                                            <span key={kw} className="keyword-tag keyword-tag--company">🔒 {kw}</span>
-                                        ))}
+                                        {companyKeywords.length > 0 ? (
+                                            companyKeywords.map(kw => (
+                                                <span key={kw.id} className="keyword-tag keyword-tag--company">🔒 {kw.term}</span>
+                                            ))
+                                        ) : (
+                                            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                                Keine unternehmensweiten Keywords vorhanden.
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +324,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                         </button>
                     )}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                        <button className="btn btn-secondary" onClick={onClose}>Abbrechen</button>
+                        <button className="btn btn-secondary" onClick={requestClose}>Abbrechen</button>
                         {modalStep < 3 ? (
                             <button className="btn btn-primary" onClick={() => setModalStep(prev => prev + 1)}>
                                 Weiter →
@@ -311,7 +341,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                     channels: selectedTouchpoints.map(tpId => touchpoints.find(t => t.id === tpId)?.name || ''),
                                     touchpointIds: selectedTouchpoints,
                                     description,
-                                    masterPrompt: '',
+                                    masterPrompt,
                                     targetAudiences: selectedAudiences,
                                     campaignKeywords: campaignKeywords.split(',').map(k => k.trim()).filter(Boolean),
                                     kpis: { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },

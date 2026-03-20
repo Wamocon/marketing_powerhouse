@@ -24,6 +24,8 @@ interface TouchpointDetailModalProps {
     onSave?: (tp: Touchpoint) => void;
 }
 
+const JOURNEY_PHASES = ['Awareness', 'Consideration', 'Purchase', 'Retention', 'Advocacy'];
+
 export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, onSave }: TouchpointDetailModalProps) {
     const { can } = useAuth();
     const { campaigns } = useData();
@@ -31,8 +33,29 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
     const router = useRouter();
     const canManage = can('canManageTouchpoints');
     const canDelete = can('canDeleteItems');
+    const baseEditedTp = {
+        ...touchpoint,
+        journeyPhases: touchpoint.journeyPhases ?? (touchpoint.journeyPhase ? [touchpoint.journeyPhase] : []),
+    };
     const [isEditing, setIsEditing] = useState(false);
-    const [editedTp, setEditedTp] = useState({ ...touchpoint });
+    const [editedTp, setEditedTp] = useState(baseEditedTp);
+    const hasUnsavedEdits = isEditing && JSON.stringify(editedTp) !== JSON.stringify(baseEditedTp);
+
+    const requestClose = () => {
+        if (hasUnsavedEdits && !window.confirm('Es gibt ungespeicherte Änderungen. Möchtest du das Modal wirklich schließen?')) {
+            return false;
+        }
+        onClose();
+        return true;
+    };
+
+    const handleCancelEdit = () => {
+        if (hasUnsavedEdits && !window.confirm('Ungespeicherte Änderungen verwerfen?')) {
+            return;
+        }
+        setEditedTp(baseEditedTp);
+        setIsEditing(false);
+    };
 
     if (!touchpoint) return null;
 
@@ -45,7 +68,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={() => { requestClose(); }} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', height: '100%', width: '100%', maxWidth: '600px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -72,7 +95,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
                                 <Trash2 size={16} />
                             </button>
                         )}
-                        <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                        <button className="btn btn-ghost btn-icon" onClick={() => { requestClose(); }}><X size={20} /></button>
                     </div>
                 </div>
 
@@ -149,16 +172,38 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
                             <div style={{ color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600, fontSize: '0.65rem' }}>Journey Phase</div>
                             <div>
                                 {isEditing ? (
-                                    <select className="form-select" value={editedTp.journeyPhase || ''} onChange={e => setEditedTp({ ...editedTp, journeyPhase: e.target.value })}>
-                                        <option value="">Keine Phase</option>
-                                        <option value="Awareness">Awareness</option>
-                                        <option value="Consideration">Consideration</option>
-                                        <option value="Purchase">Purchase</option>
-                                        <option value="Retention">Retention</option>
-                                        <option value="Advocacy">Advocacy</option>
-                                    </select>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {JOURNEY_PHASES.map(phase => {
+                                            const checked = editedTp.journeyPhases.includes(phase);
+                                            return (
+                                                <label key={phase} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={event => {
+                                                            setEditedTp(prev => {
+                                                                const phases = event.target.checked
+                                                                    ? [...prev.journeyPhases, phase]
+                                                                    : prev.journeyPhases.filter(item => item !== phase);
+                                                                return {
+                                                                    ...prev,
+                                                                    journeyPhases: phases,
+                                                                    journeyPhase: phases[0] ?? '',
+                                                                };
+                                                            });
+                                                        }}
+                                                    />
+                                                    {phase}
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
                                 ) : (
-                                    <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{touchpoint.journeyPhase || 'Nicht verknüpft'}</span>
+                                    <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>
+                                        {touchpoint.journeyPhases?.length
+                                            ? touchpoint.journeyPhases.join(', ')
+                                            : (touchpoint.journeyPhase || 'Nicht verknüpft')}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -172,7 +217,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
                             {getLinkedCampaigns(touchpoint.id).map(c => (
                                 <div
                                     key={c.id}
-                                    onClick={() => { onClose(); router.push(`/campaigns/${c.id}`); }}
+                                    onClick={() => { if (requestClose()) router.push(`/campaigns/${c.id}`); }}
                                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', cursor: 'pointer' }}
                                 >
                                     <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>{c.name}</span>
@@ -235,7 +280,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             {campaignBreakdown.map(({ campaign: c, kpi }) => (
                                                 <div key={c.id}
-                                                    onClick={() => { onClose(); router.push(`/campaigns/${c.id}`); }}
+                                                    onClick={() => { if (requestClose()) router.push(`/campaigns/${c.id}`); }}
                                                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-hover)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', cursor: 'pointer', fontSize: 'var(--font-size-xs)' }}
                                                 >
                                                     <span style={{ fontWeight: 600 }}>{c.name}</span>
@@ -279,8 +324,18 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
 
                 {isEditing && (
                     <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
-                        <button className="btn btn-ghost" onClick={() => { setEditedTp({ ...touchpoint }); setIsEditing(false); }}>Abbrechen</button>
-                        <button className="btn btn-primary" onClick={() => { if (onSave) onSave(editedTp); setIsEditing(false); }}>Speichern</button>
+                        <button className="btn btn-ghost" onClick={handleCancelEdit}>Abbrechen</button>
+                        <button className="btn btn-primary" onClick={() => {
+                            if (onSave) {
+                                const normalizedPhases = Array.from(new Set(editedTp.journeyPhases));
+                                onSave({
+                                    ...editedTp,
+                                    journeyPhases: normalizedPhases,
+                                    journeyPhase: normalizedPhases[0] ?? '',
+                                });
+                            }
+                            setIsEditing(false);
+                        }}>Speichern</button>
                     </div>
                 )}
             </div>

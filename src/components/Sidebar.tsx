@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
-    Target, FileText, HelpCircle, Map, Radio, Zap,
+    Target, FileText, HelpCircle, Map, Radio,
     Building2, Shield, ArrowLeftRight, Compass,
     type LucideIcon,
 } from 'lucide-react';
@@ -14,7 +14,7 @@ import { useTasks } from '../context/TaskContext';
 import { useContents } from '../context/ContentContext';
 import type { PermissionKey, CompanyRole } from '../types';
 
-type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'asidas' | 'touchpoints' | 'tasks' | 'contents';
+type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'touchpoints' | 'tasks' | 'contents';
 
 interface NavItem {
     path: string;
@@ -44,7 +44,6 @@ const NAV: NavSection[] = [
             { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badgeKey: 'campaigns' as const, requiredPermission: null },
             { path: '/audiences', icon: Users2, label: 'Zielgruppen', badgeKey: 'audiences' as const },
             { path: '/journeys', icon: Map, label: 'Customer Journey', badgeKey: 'journeys' as const },
-            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badgeKey: 'asidas' as const },
             { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badgeKey: 'touchpoints' as const },
             { path: '/content-overview', icon: FileText, label: 'Content-Übersicht', badgeKey: 'contents' as const },
             { path: '/content', icon: Calendar, label: 'Content-Kalender' },
@@ -81,7 +80,7 @@ interface SidebarProps {
 export default function Sidebar({ onLogout }: SidebarProps) {
     const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { activeCompany, deselectCompany } = useCompany();
-    const { campaigns, audiences, touchpoints, asidasJourneys, customerJourneys } = useData();
+    const { campaigns, audiences, touchpoints, customerJourneys } = useData();
     const { tasks } = useTasks();
     const { contents } = useContents();
     const pathname = usePathname();
@@ -90,7 +89,6 @@ export default function Sidebar({ onLogout }: SidebarProps) {
         campaigns: campaigns.length,
         audiences: audiences.length,
         journeys: customerJourneys.length,
-        asidas: asidasJourneys.length,
         touchpoints: touchpoints.length,
         tasks: tasks.length,
         contents: contents.length,

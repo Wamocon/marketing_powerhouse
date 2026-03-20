@@ -171,10 +171,8 @@ Getestete Mutatoren und ihre Zweige:
 | `addTouchpoint` | api.createTouchpoint aufgerufen | State appended, Rückgabe created |
 | `updateTouchpoint` | api.updateTouchpoint aufgerufen | State: matching updated |
 | `deleteTouchpoint` | api.deleteTouchpoint aufgerufen | State: item entfernt |
-| `addJourney(type='asidas')` | asidasJourneys erweitert | customerJourneys unverändert |
-| `addJourney(type='customer')` | customerJourneys erweitert | asidasJourneys unverändert |
-| `deleteJourney(type='asidas')` | asidasJourneys gefiltert | customerJourneys unverändert |
-| `deleteJourney(type='customer')` | customerJourneys gefiltert | asidasJourneys unverändert |
+| `addJourney()` | customerJourneys erweitert | Rückgabe enthält neue Journey |
+| `deleteJourney()` | customerJourneys gefiltert | Journey wird aus State entfernt |
 | `addKeyword` | api.createKeyword aufgerufen | State appended |
 | `deleteKeyword` | api.deleteKeyword aufgerufen | State gefiltert |
 

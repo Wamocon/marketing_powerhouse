@@ -29,6 +29,27 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskPlatform, setNewTaskPlatform] = useState(content.platform || '');
     const [newTaskAssignee, setNewTaskAssignee] = useState('');
+    const hasUnsavedEdits = isEditing && JSON.stringify(edited) !== JSON.stringify(content);
+    const hasUnsavedNewTask = Boolean(
+        newTaskTitle.trim() ||
+        newTaskAssignee.trim() ||
+        (newTaskPlatform || '') !== (content.platform || '')
+    );
+
+    const requestClose = () => {
+        if ((hasUnsavedEdits || hasUnsavedNewTask) && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
+
+    const handleCancelEditing = () => {
+        if (hasUnsavedEdits && !window.confirm('Ungespeicherte Änderungen verwerfen?')) {
+            return;
+        }
+        setIsEditing(false);
+        setEdited({ ...content });
+    };
 
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager';
     const canDelete = can ? can('canDeleteItems') : canEdit;
@@ -84,7 +105,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     if (!content) return null;
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', width: '100%', maxWidth: '750px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -98,7 +119,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         {canEdit && !isEditing && (
-                            <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => { setEdited({ ...content }); setIsEditing(true); }}>
                                 <Edit2 size={16} /> Bearbeiten
                             </button>
                         )}
@@ -112,7 +133,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                                 <Trash2 size={16} />
                             </button>
                         )}
-                        <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                        <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={20} /></button>
                     </div>
                 </div>
 
@@ -258,7 +279,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
             <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
                 {isEditing ? (
                     <>
-                        <button className="btn btn-ghost" onClick={() => { setIsEditing(false); setEdited({ ...content }); }}>Abbrechen</button>
+                        <button className="btn btn-ghost" onClick={handleCancelEditing}>Abbrechen</button>
                         <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Speichern</button>
                     </>
                 ) : (

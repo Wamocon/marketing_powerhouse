@@ -26,6 +26,27 @@ export default function NewTaskModal({ onClose }: NewTaskModalProps) {
     const [status, setStatus] = useState('draft');
     const [oneDriveLink, setOneDriveLink] = useState('');
 
+    const hasUnsavedChanges = Boolean(
+        title.trim() ||
+        description.trim() ||
+        platform ||
+        assignee ||
+        dueDate ||
+        publishDate ||
+        campaignId ||
+        touchpointId ||
+        oneDriveLink.trim() ||
+        type !== 'Task' ||
+        status !== 'draft'
+    );
+
+    const requestClose = () => {
+        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
+
     const handleSave = () => {
         if (!title.trim()) return;
         
@@ -49,7 +70,7 @@ export default function NewTaskModal({ onClose }: NewTaskModalProps) {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', width: '100%', maxWidth: '600px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -57,7 +78,7 @@ export default function NewTaskModal({ onClose }: NewTaskModalProps) {
             }}>
                 <div className="modal-header" style={{ background: 'var(--bg-surface)' }}>
                     <div className="modal-title">Neue Aufgabe erstellen</div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                    <button className="btn btn-ghost btn-icon" onClick={requestClose}><X size={20} /></button>
                 </div>
                 <div className="modal-body" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
                     <div className="form-group" style={{ marginBottom: '16px' }}>
@@ -160,7 +181,7 @@ export default function NewTaskModal({ onClose }: NewTaskModalProps) {
                     </div>
                 </div>
                 <div className="modal-footer" style={{ background: 'var(--bg-surface)', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <button className="btn btn-ghost" onClick={onClose}>Abbrechen</button>
+                    <button className="btn btn-ghost" onClick={requestClose}>Abbrechen</button>
                     <button className="btn btn-primary" onClick={handleSave} disabled={!title.trim()}><Save size={16} /> Aufgabe erstellen</button>
                 </div>
             </div>

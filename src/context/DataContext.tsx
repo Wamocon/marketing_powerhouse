@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import type { Audience, Touchpoint, AsidasJourney, User, Campaign } from '../types';
+import type { Audience, Touchpoint, CustomerJourney, User, Campaign } from '../types';
 import type { CompanyPositioning, CompanyKeyword, BudgetData, TeamMember, ActivityItem, ChartDataPoint, ChannelPerformanceItem } from '../types/dashboard';
 import { useCompany } from './CompanyContext';
 import * as api from '../lib/api';
@@ -14,8 +14,7 @@ interface DataContextValue {
     budgetData: BudgetData;
     teamMembers: TeamMember[];
     touchpoints: Touchpoint[];
-    asidasJourneys: AsidasJourney[];
-    customerJourneys: AsidasJourney[];
+    customerJourneys: CustomerJourney[];
     positioning: CompanyPositioning;
     companyKeywords: CompanyKeyword[];
     activityFeed: ActivityItem[];
@@ -36,8 +35,8 @@ interface DataContextValue {
     savePositioning: (pos: CompanyPositioning) => Promise<void>;
     addKeyword: (kw: Omit<CompanyKeyword, 'id'>) => Promise<void>;
     deleteKeyword: (id: string) => Promise<void>;
-    addJourney: (journey: Omit<AsidasJourney, 'id'>, type: 'asidas' | 'customer') => Promise<AsidasJourney>;
-    deleteJourney: (id: string, type: 'asidas' | 'customer') => Promise<void>;
+    addJourney: (journey: Omit<CustomerJourney, 'id'>) => Promise<CustomerJourney>;
+    deleteJourney: (id: string) => Promise<void>;
     refreshData: () => Promise<void>;
 }
 
@@ -65,8 +64,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [budgetData, setBudgetData] = useState<BudgetData>(emptyBudget);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [touchpoints, setTouchpoints] = useState<Touchpoint[]>([]);
-    const [asidasJourneys, setAsidasJourneys] = useState<AsidasJourney[]>([]);
-    const [customerJourneys, setCustomerJourneys] = useState<AsidasJourney[]>([]);
+    const [customerJourneys, setCustomerJourneys] = useState<CustomerJourney[]>([]);
     const [positioning, setPositioning] = useState<CompanyPositioning>(emptyPositioning);
     const [keywords, setKeywords] = useState<CompanyKeyword[]>([]);
     const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([]);
@@ -75,7 +73,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const clearAll = useCallback(() => {
         setCampaigns([]); setAudiences([]); setBudgetData(emptyBudget);
-        setTeamMembers([]); setTouchpoints([]); setAsidasJourneys([]);
+        setTeamMembers([]); setTouchpoints([]);
         setCustomerJourneys([]); setPositioning(emptyPositioning);
         setKeywords([]); setActivityFeed([]); setDashboardChartData([]);
         setChannelPerformance([]);
@@ -92,14 +90,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 return;
             }
 
-            const [c, a, b, tm, tp, aj, cj, p, kw, af, cd, cp] = await Promise.all([
+            const [c, a, b, tm, tp, cj, p, kw, af, cd, cp] = await Promise.all([
                 api.fetchCampaigns(companyId),
                 api.fetchAudiences(companyId),
                 api.fetchBudgetData(companyId).catch(() => emptyBudget),
                 api.fetchTeamMembers(companyId),
                 api.fetchTouchpoints(companyId),
-                api.fetchJourneys('asidas', companyId),
-                api.fetchJourneys('customer', companyId),
+                api.fetchJourneys(companyId),
                 api.fetchPositioning(companyId).catch(() => emptyPositioning),
                 api.fetchKeywords(companyId),
                 api.fetchActivityFeed(companyId),
@@ -108,7 +105,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             ]);
 
             setCampaigns(c); setAudiences(a); setBudgetData(b);
-            setTeamMembers(tm); setTouchpoints(tp); setAsidasJourneys(aj);
+            setTeamMembers(tm); setTouchpoints(tp);
             setCustomerJourneys(cj); setPositioning(p); setKeywords(kw);
             setActivityFeed(af); setDashboardChartData(cd); setChannelPerformance(cp);
         } catch (err) {
@@ -146,7 +143,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Campaign CRUD ──
     const addCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
         const created = await api.createCampaign(campaign, companyId);
         setCampaigns(prev => [...prev, created]);
         return created;
@@ -164,7 +161,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Touchpoint CRUD ──
     const addTouchpoint = useCallback(async (tp: Omit<Touchpoint, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
         const created = await api.createTouchpoint(tp, companyId);
         setTouchpoints(prev => [...prev, created]);
         return created;
@@ -200,24 +197,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }, []);
 
     // ── Journey CRUD ──
-    const addJourney = useCallback(async (journey: Omit<AsidasJourney, 'id'>, type: 'asidas' | 'customer') => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
-        const created = await api.createJourney(journey, type, companyId);
-        if (type === 'asidas') setAsidasJourneys(prev => [...prev, created]);
-        else setCustomerJourneys(prev => [...prev, created]);
+    const addJourney = useCallback(async (journey: Omit<CustomerJourney, 'id'>) => {
+        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        const created = await api.createJourney(journey, companyId);
+        setCustomerJourneys(prev => [...prev, created]);
         return created;
     }, [companyId]);
 
-    const deleteJourneyFn = useCallback(async (id: string, type: 'asidas' | 'customer') => {
+    const deleteJourneyFn = useCallback(async (id: string) => {
         await api.deleteJourney(id);
-        if (type === 'asidas') setAsidasJourneys(prev => prev.filter(j => j.id !== id));
-        else setCustomerJourneys(prev => prev.filter(j => j.id !== id));
+        setCustomerJourneys(prev => prev.filter(j => j.id !== id));
     }, []);
 
     return (
         <DataContext.Provider value={{
             users, campaigns, audiences, budgetData, teamMembers,
-            touchpoints, asidasJourneys, customerJourneys,
+            touchpoints, customerJourneys,
             positioning, companyKeywords: keywords,
             activityFeed, dashboardChartData, channelPerformance, loading,
             addAudience, updateAudience: updateAudienceFn, deleteAudience: deleteAudienceFn,

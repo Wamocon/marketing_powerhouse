@@ -7,6 +7,8 @@ interface NewTouchpointModalProps {
     onCreate: (tp: Omit<Touchpoint, 'id'>) => Promise<void>;
 }
 
+const JOURNEY_PHASES = ['Awareness', 'Consideration', 'Purchase', 'Retention', 'Advocacy'];
+
 export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointModalProps) {
     const [newTp, setNewTp] = useState({
         name: '',
@@ -14,17 +16,40 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
         type: 'Owned Website',
         url: '',
         status: 'active' as 'active' | 'planned' | 'inactive',
+        journeyPhases: [] as string[],
         journeyPhase: '',
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const hasUnsavedChanges = Boolean(
+        newTp.name.trim() ||
+        newTp.description.trim() ||
+        newTp.url.trim() ||
+        newTp.journeyPhases.length ||
+        newTp.type !== 'Owned Website' ||
+        newTp.status !== 'active'
+    );
+
+    const requestClose = () => {
+        if (isLoading) return;
+        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+            return;
+        }
+        onClose();
+    };
 
     const handleCreate = async () => {
         if (!newTp.name.trim()) return;
         setIsLoading(true);
         setError('');
         try {
-            await onCreate({ ...newTp });
+            const normalizedPhases = Array.from(new Set(newTp.journeyPhases));
+            await onCreate({
+                ...newTp,
+                journeyPhases: normalizedPhases,
+                journeyPhase: normalizedPhases[0] ?? '',
+            });
             // parent's onCreate calls setShowNewModal(false) on success
         } catch {
             setError('Fehler beim Speichern. Bitte versuche es erneut.');
@@ -33,7 +58,7 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+        <div className="modal-overlay" onClick={requestClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', width: '100%', maxWidth: '600px',
                 borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
@@ -44,7 +69,7 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
                         <Plus size={18} style={{ color: 'var(--color-primary)' }} />
                         Neuen Kanal anlegen
                     </div>
-                    <button className="btn btn-ghost btn-icon" onClick={onClose}><X size={20} /></button>
+                    <button className="btn btn-ghost btn-icon" onClick={requestClose} disabled={isLoading}><X size={20} /></button>
                 </div>
 
                 <div className="modal-body" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
@@ -98,16 +123,30 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
                                 </select>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Journey Phase</label>
-                                <select className="form-select" value={newTp.journeyPhase || ''} onChange={e => setNewTp({ ...newTp, journeyPhase: e.target.value })}>
-                                    <option value="">Keine Phase</option>
-                                    <option value="Awareness">Awareness</option>
-                                    <option value="Consideration">Consideration</option>
-                                    <option value="Purchase">Purchase</option>
-                                    <option value="Retention">Retention</option>
-                                    <option value="Advocacy">Advocacy</option>
-                                </select>
+                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                <label className="form-label">Journey Phasen</label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {JOURNEY_PHASES.map(phase => {
+                                        const checked = newTp.journeyPhases.includes(phase);
+                                        return (
+                                            <label key={phase} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={event => {
+                                                        setNewTp(prev => {
+                                                            const phases = event.target.checked
+                                                                ? [...prev.journeyPhases, phase]
+                                                                : prev.journeyPhases.filter(item => item !== phase);
+                                                            return { ...prev, journeyPhases: phases, journeyPhase: phases[0] ?? '' };
+                                                        });
+                                                    }}
+                                                />
+                                                {phase}
+                                            </label>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -124,7 +163,7 @@ export default function NewTouchpointModal({ onClose, onCreate }: NewTouchpointM
                         </div>
                     )}
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button className="btn btn-ghost" onClick={onClose} disabled={isLoading}>Abbrechen</button>
+                        <button className="btn btn-ghost" onClick={requestClose} disabled={isLoading}>Abbrechen</button>
                         <button className="btn btn-primary" onClick={handleCreate} disabled={!newTp.name.trim() || isLoading}>
                             {isLoading ? 'Wird gespeichert...' : 'Kanal anlegen'}
                         </button>
