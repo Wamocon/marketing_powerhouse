@@ -249,4 +249,203 @@ export interface Touchpoint {
   kpis?: TouchpointKpis;
 }
 
+// ─── Plan & Subscription Types ─────────────────────────────
+
+export interface Plan {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  priceMonthly: number;    // cents
+  priceYearly: number;     // cents
+  maxSeats: number;
+  maxProjects: number;
+  includedSocialAccounts: number;
+  features: PlanFeatures;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface PlanFeatures {
+  core: boolean;
+  ai_pro: boolean;
+  linkedin: boolean;
+  instagram: boolean;
+  max_ai_generations_month: number;   // -1 = unlimited
+}
+
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'paused';
+export type BillingCycle = 'monthly' | 'yearly';
+
+export interface Subscription {
+  id: string;
+  companyId: string;
+  planId: string;
+  status: SubscriptionStatus;
+  currentSeats: number;
+  currentProjects: number;
+  extraSocialAccounts: number;
+  billingCycle: BillingCycle;
+  stripeSubscriptionId?: string;
+  stripeCustomerId?: string;
+  trialEndsAt?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  canceledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Joined data
+  plan?: Plan;
+}
+
+// ─── Publishing & Social Account Types ─────────────────────
+
+export type SocialPlatform = 'linkedin' | 'instagram' | 'telegram' | 'twitter';
+
+export interface ConnectedAccount {
+  id: string;
+  companyId: string;
+  platform: SocialPlatform;
+  accountName: string;
+  accountId: string;
+  platformUserId?: string;
+  tokenExpiresAt?: string;
+  tokenScopes: string[];
+  isActive: boolean;
+  metadata: Record<string, unknown>;
+  connectedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ScheduledPostStatus =
+  | 'draft'
+  | 'text_generating' | 'text_ready'
+  | 'image_generating' | 'ready_for_review'
+  | 'approved' | 'scheduled'
+  | 'publishing' | 'published'
+  | 'failed' | 'canceled';
+
+export type PostType = 'text' | 'image' | 'carousel' | 'video' | 'reel';
+
+export interface ScheduledPost {
+  id: string;
+  companyId: string;
+  contentItemId?: string;
+  connectedAccountId: string;
+  postText: string;
+  postImageUrl?: string;
+  postType: PostType;
+  hashtags: string[];
+  scheduledAt: string;
+  publishedAt?: string;
+  status: ScheduledPostStatus;
+  platformPostId?: string;
+  platformPostUrl?: string;
+  errorMessage?: string;
+  retryCount: number;
+  maxRetries: number;
+  autoCommentText?: string;
+  autoCommentPosted: boolean;
+  autoCommentAt?: string;
+  createdBy?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Joined data
+  connectedAccount?: ConnectedAccount;
+  engagementMetrics?: EngagementMetric[];
+}
+
+export interface EngagementMetric {
+  id: string;
+  scheduledPostId: string;
+  impressions: number;
+  clicks: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  reach: number;
+  saves: number;
+  videoViews: number;
+  engagementRate: number;
+  rawData: Record<string, unknown>;
+  pulledAt: string;
+}
+
+export interface EngagementGroup {
+  id: string;
+  companyId: string;
+  platform: 'telegram' | 'whatsapp';
+  groupName: string;
+  chatId: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── AI Knowledge Base Types ───────────────────────────────
+
+export type KnowledgeCategory =
+  | 'brand_voice' | 'persona' | 'past_post' | 'product'
+  | 'guideline' | 'style_reference' | 'industry' | 'faq';
+
+export interface KnowledgeDocument {
+  id: string;
+  companyId: string;
+  category: KnowledgeCategory;
+  title: string;
+  content: string;
+  metadata: Record<string, unknown>;
+  source: string;
+  isActive: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Only present in search results
+  similarity?: number;
+}
+
+export type AiOutputFormat = 'text' | 'json' | 'image_url';
+
+export interface AiGenerationLog {
+  id: string;
+  companyId: string;
+  taskId?: string;
+  scheduledPostId?: string;
+  modelUsed: string;
+  promptTemplate: string;
+  contextDocumentsUsed: string[];
+  inputTokenCount?: number;
+  output: string;
+  outputTokenCount?: number;
+  outputFormat: AiOutputFormat;
+  userRating?: number;
+  userFeedback?: string;
+  wasAccepted?: boolean;
+  costCents: number;
+  latencyMs: number;
+  generatedBy?: string;
+  createdAt: string;
+}
+
+// ─── Usage Metering Types ──────────────────────────────────
+
+export type UsageMetric =
+  | 'ai_generation' | 'image_generation'
+  | 'post_published' | 'seat_count'
+  | 'social_account_count' | 'project_count';
+
+export interface UsageRecord {
+  id: string;
+  companyId: string;
+  subscriptionId: string;
+  metric: UsageMetric;
+  quantity: number;
+  periodStart: string;
+  periodEnd: string;
+  recordedAt: string;
+}
+
 export * from './dashboard';

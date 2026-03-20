@@ -21,6 +21,29 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import type { Campaign, Touchpoint } from '../../types';
 
+// ─── Mock CompanyContext so DataProvider can call useCompany ───────────────────
+vi.mock('@/context/CompanyContext', () => ({
+  useCompany: () => ({
+    activeCompany: { id: 'test-company', name: 'Test Co', slug: 'test', logo: '', description: '', industry: '', createdAt: '', createdBy: '' },
+    activeCompanyRole: 'company_admin',
+    userCompanies: [],
+    companyMembers: [],
+    loading: false,
+    selectCompany: vi.fn(),
+    deselectCompany: vi.fn(),
+    createCompany: vi.fn(),
+    updateCompany: vi.fn(),
+    deleteCompany: vi.fn(),
+    addMember: vi.fn(),
+    updateMemberRole: vi.fn(),
+    removeMember: vi.fn(),
+    refreshCompanies: vi.fn(),
+    refreshMembers: vi.fn(),
+    allCompanies: [],
+    loadAllCompanies: vi.fn(),
+  }),
+}));
+
 // ─── Mock the api module ──────────────────────────────────────────────────────
 vi.mock('@/lib/api', async () => {
   const emptyPositioning = {
@@ -106,7 +129,7 @@ describe('DataContext — Audience CRUD', () => {
       await result.current.addAudience(audienceBase);
     });
 
-    expect(api.createAudience).toHaveBeenCalledWith(audienceBase);
+    expect(api.createAudience).toHaveBeenCalledWith(audienceBase, 'test-company');
     expect(result.current.audiences).toHaveLength(2);
     expect(result.current.audiences.find(a => a.id === 'a-new')).toBeDefined();
   });

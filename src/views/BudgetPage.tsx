@@ -6,7 +6,9 @@ import {
 } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import PageHelp from '../components/PageHelp';
+import * as api from '../lib/api';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -34,8 +36,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function BudgetPage() {
     const { can } = useAuth();
-    const { budgetData } = useData();
+    const { activeCompany } = useCompany();
+    const { budgetData, refreshData } = useData();
     const [showExpenseForm, setShowExpenseForm] = useState(false);
+    const [expenseCategory, setExpenseCategory] = useState('');
+    const [expenseAmount, setExpenseAmount] = useState('');
+    const [expenseSaving, setExpenseSaving] = useState(false);
     if (!budgetData) return <div className="animate-in"><p>Lade Budget-Daten...</p></div>;
     const percentSpent = budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0;
     const isOverBudget = percentSpent > 90;
@@ -95,7 +101,7 @@ export default function BudgetPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">Budget & Controlling</h1>
-                    <p className="page-subtitle">Gesamtübersicht Q1/Q2 2026</p>
+                    <p className="page-subtitle">Gesamtübersicht — {new Date().getFullYear()}</p>
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title="Budget & Controlling">
@@ -122,11 +128,56 @@ export default function BudgetPage() {
                         <div className="card-title">Neue Ausgabe erfassen</div>
                         <button className="btn btn-ghost btn-sm" onClick={() => setShowExpenseForm(false)}><X size={16} /></button>
                     </div>
-                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                        Feature wird in der nächsten Version mit API-Anbindung verfügbar sein.
-                        Aktuell können Ausgaben direkt in der Supabase-Datenbank verwaltet werden.
-                    </p>
-                    <button className="btn btn-secondary" onClick={() => setShowExpenseForm(false)}>Schließen</button>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'end', marginTop: '12px' }}>
+                        <div>
+                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Kategorie</label>
+                            <select className="form-select" value={expenseCategory} onChange={e => setExpenseCategory(e.target.value)}>
+                                <option value="">Kategorie wählen...</option>
+                                {budgetData.categories.map(cat => (
+                                    <option key={cat.name} value={cat.name}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Betrag (€)</label>
+                            <input
+                                className="form-input"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="z.B. 500"
+                                value={expenseAmount}
+                                onChange={e => setExpenseAmount(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            className="btn btn-primary"
+                            disabled={!expenseCategory || !expenseAmount || expenseSaving}
+                            onClick={async () => {
+                                const cat = budgetData.categories.find(c => c.name === expenseCategory);
+                                if (!cat || !cat.id) return;
+                                const amount = parseFloat(expenseAmount);
+                                if (isNaN(amount) || amount <= 0) return;
+                                setExpenseSaving(true);
+                                try {
+                                    const newSpent = cat.spent + amount;
+                                    await api.updateBudgetCategory(cat.id!, { spent: newSpent });
+                                    const newTotalSpent = budgetData.spent + amount;
+                                    await api.updateBudgetOverview({ spent: newTotalSpent, remaining: budgetData.total - newTotalSpent }, activeCompany!.id);
+                                    await refreshData();
+                                    setExpenseAmount('');
+                                    setExpenseCategory('');
+                                    setShowExpenseForm(false);
+                                } catch (err) {
+                                    console.error('Failed to save expense:', err);
+                                } finally {
+                                    setExpenseSaving(false);
+                                }
+                            }}
+                        >
+                            {expenseSaving ? 'Speichere…' : 'Erfassen'}
+                        </button>
+                    </div>
                 </div>
             )}
             <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>

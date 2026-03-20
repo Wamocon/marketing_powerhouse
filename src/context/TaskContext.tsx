@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types';
 import * as api from '../lib/api';
+import { buildTaskPrompt, type PromptContext } from '../lib/promptBuilder';
+import { generateContent } from '../lib/gemini';
+import { useCompany } from './CompanyContext';
 
 interface TaskContextValue {
     tasks: Task[];
@@ -11,21 +14,27 @@ interface TaskContextValue {
     executeAiAgent: (id: string, prompt: string, taskType: string) => void;
     sendAiFeedback: (id: string, feedback: string) => void;
     analyzeTask: (id: string) => void;
+    setPromptContext: (ctx: Omit<PromptContext, 'task'>) => void;
 }
 
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id;
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [promptCtx, setPromptCtx] = useState<Omit<PromptContext, 'task'> | null>(null);
 
     useEffect(() => {
-        api.fetchTasks().then(setTasks).catch(console.error);
-    }, []);
+        if (!companyId) return;
+        api.fetchTasks(companyId).then(setTasks).catch(console.error);
+    }, [companyId]);
 
     const addTask = useCallback(async (task: Omit<Task, 'id'> & { id?: string }) => {
-        const created = await api.createTask(task);
+        if (!companyId) return;
+        const created = await api.createTask(task, companyId);
         setTasks(prev => [...prev, created]);
-    }, []);
+    }, [companyId]);
 
     const updateTaskFn = useCallback(async (id: string, updates: Partial<Task>) => {
         await api.updateTask(id, updates);
@@ -50,38 +59,87 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
     }, []);
 
-    const executeAiAgent = useCallback((id: string, prompt: string, taskType: string) => {
-        setTasks(prev => prev.map(c =>
-            c.id === id ? { ...c, status: 'ai_generating' as TaskStatus, aiPrompt: prompt } : c,
-        ));
-        api.updateTask(id, { status: 'ai_generating' as TaskStatus, aiPrompt: prompt });
-
-        setTimeout(async () => {
-            const isVisual = taskType === 'Video' || taskType === 'Post (Foto)' || taskType === 'Karousell';
-            const resultText = isVisual
-                ? `[KI INFO]: Asset/Konzept für "${taskType}" wurde generiert und an den verknüpften OneDrive-Ordner übergeben.`
-                : `(Generierter Entwurf basierend auf Typ '${taskType}')\n\nHeadline: Dein IT-Einstieg startet heute!\nBody: Entdecke, wie du ohne Vorkenntnisse in die Software-QA kommst. Sicher dir deinen Bildungsgutschein...\n\nCall-To-Action: Jetzt beim Webinar anmelden!`;
-            const updates = { status: 'ai_ready' as TaskStatus, aiSuggestion: resultText };
-            await api.updateTask(id, updates);
-            setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-        }, 2000);
+    const setPromptContext = useCallback((ctx: Omit<PromptContext, 'task'>) => {
+        setPromptCtx(ctx);
     }, []);
 
-    const sendAiFeedback = useCallback((id: string, feedback: string) => {
-        setTasks(prev => prev.map(c =>
-            c.id === id ? { ...c, status: 'revision' as TaskStatus } : c,
-        ));
-        api.updateTask(id, { status: 'revision' as TaskStatus });
+    const executeAiAgent = useCallback(async (id: string, _prompt: string, _taskType: string) => {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
 
-        setTimeout(async () => {
+        setTasks(prev => prev.map(c =>
+            c.id === id ? { ...c, status: 'ai_generating' as TaskStatus } : c,
+        ));
+        await api.updateTask(id, { status: 'ai_generating' as TaskStatus });
+
+        try {
+            // Build context-aware prompt using MASTER_PROMPT_SYSTEM
+            const fullPrompt = promptCtx
+                ? buildTaskPrompt({ ...promptCtx, task })
+                : _prompt;
+
+            // Save the prompt used
+            await api.updateTask(id, { aiPrompt: fullPrompt });
+
+            const result = await generateContent(fullPrompt);
+
+            if (result.error) {
+                const updates = {
+                    status: 'ai_ready' as TaskStatus,
+                    aiSuggestion: `⚠️ KI-Fehler: ${result.error}`,
+                };
+                await api.updateTask(id, updates);
+                setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+                return;
+            }
+
+            const updates = { status: 'ai_ready' as TaskStatus, aiSuggestion: result.text };
+            await api.updateTask(id, updates);
+            setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        } catch (err) {
+            console.error('AI generation failed:', err);
             const updates = {
                 status: 'ai_ready' as TaskStatus,
-                aiSuggestion: `(Überarbeiteter Entwurf nach Feedback: "${feedback}")\n\nHeadline: Starte deine neue Karriere als Tester!\nBody: Einfacher, emotionaler und praxisnäher. Du brauchst keine Vorkenntnisse für diesen Job...\n\nCall-To-Action: Kostenloses Webinar sichern!`,
+                aiSuggestion: `⚠️ Fehler bei der KI-Generierung: ${err instanceof Error ? err.message : String(err)}`,
             };
             await api.updateTask(id, updates);
             setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-        }, 1500);
-    }, []);
+        }
+    }, [tasks, promptCtx]);
+
+    const sendAiFeedback = useCallback(async (id: string, feedback: string) => {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        setTasks(prev => prev.map(c =>
+            c.id === id ? { ...c, status: 'revision' as TaskStatus } : c,
+        ));
+        await api.updateTask(id, { status: 'revision' as TaskStatus });
+
+        try {
+            const previousSuggestion = task.aiSuggestion || '';
+            const feedbackPrompt = promptCtx
+                ? buildTaskPrompt({ ...promptCtx, task }) + `\n\nVORHERIGER ENTWURF:\n${previousSuggestion}\n\nFEEDBACK DES NUTZERS:\n${feedback}\n\nBitte überarbeite den Entwurf basierend auf dem Feedback.`
+                : `Überarbeite folgenden Entwurf:\n${previousSuggestion}\n\nFeedback: ${feedback}`;
+
+            const result = await generateContent(feedbackPrompt);
+
+            const updates = {
+                status: 'ai_ready' as TaskStatus,
+                aiSuggestion: result.error ? `⚠️ KI-Fehler: ${result.error}` : result.text,
+            };
+            await api.updateTask(id, updates);
+            setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        } catch (err) {
+            console.error('AI feedback failed:', err);
+            const updates = {
+                status: 'ai_ready' as TaskStatus,
+                aiSuggestion: `⚠️ Fehler: ${err instanceof Error ? err.message : String(err)}`,
+            };
+            await api.updateTask(id, updates);
+            setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        }
+    }, [tasks, promptCtx]);
 
     const analyzeTask = useCallback((id: string) => {
         setTasks(prev => prev.map(c => {
@@ -102,7 +160,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <TaskContext.Provider value={{ tasks, addTask, updateTask: updateTaskFn, deleteTask: deleteTaskFn, updateTaskStatus, executeAiAgent, sendAiFeedback, analyzeTask }}>
+        <TaskContext.Provider value={{ tasks, addTask, updateTask: updateTaskFn, deleteTask: deleteTaskFn, updateTaskStatus, executeAiAgent, sendAiFeedback, analyzeTask, setPromptContext }}>
             {children}
         </TaskContext.Provider>
     );

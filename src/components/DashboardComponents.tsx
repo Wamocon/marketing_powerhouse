@@ -6,13 +6,34 @@ import {
     ArrowUpRight,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import type { Campaign } from '../types';
 
-export const dashboardStats = [
-    { label: 'Impressionen', value: '1.38M', change: '+12.5%', positive: true, icon: Eye, color: 'primary' },
-    { label: 'Klicks', value: '62.5K', change: '+8.3%', positive: true, icon: MousePointerClick, color: 'accent' },
-    { label: 'Conversions', value: '2.4K', change: '+15.2%', positive: true, icon: Target, color: 'success' },
-    { label: 'Ausgaben', value: '€39.3K', change: '-3.1%', positive: false, icon: Wallet, color: 'warning' },
-];
+function formatNumber(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return n.toLocaleString('de-DE');
+}
+
+export function computeDashboardStats(campaigns: Campaign[], totalBudgetSpent: number) {
+    const totals = campaigns.reduce(
+        (acc, c) => {
+            if (c.kpis) {
+                acc.impressions += c.kpis.impressions ?? 0;
+                acc.clicks += c.kpis.clicks ?? 0;
+                acc.conversions += c.kpis.conversions ?? 0;
+            }
+            return acc;
+        },
+        { impressions: 0, clicks: 0, conversions: 0 },
+    );
+
+    return [
+        { label: 'Impressionen', value: formatNumber(totals.impressions), change: campaigns.length > 0 ? `${campaigns.filter(c => c.status === 'active').length} aktive` : '0', positive: true, icon: Eye, color: 'primary' },
+        { label: 'Klicks', value: formatNumber(totals.clicks), change: totals.impressions > 0 ? `CTR ${(totals.clicks / totals.impressions * 100).toFixed(1)}%` : '—', positive: totals.clicks > 0, icon: MousePointerClick, color: 'accent' },
+        { label: 'Conversions', value: formatNumber(totals.conversions), change: totals.clicks > 0 ? `CR ${(totals.conversions / totals.clicks * 100).toFixed(1)}%` : '—', positive: totals.conversions > 0, icon: Target, color: 'success' },
+        { label: 'Ausgaben', value: `€${formatNumber(totalBudgetSpent)}`, change: `${campaigns.length} Kampagnen`, positive: false, icon: Wallet, color: 'warning' },
+    ];
+}
 
 export const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -41,7 +62,7 @@ export const CustomTooltip = ({ active, payload, label }: any) => {
 export const getTaskColorLogic = (dueDateStr: string) => {
     if (!dueDateStr) return { color: 'var(--border-color)', bgColor: 'transparent', label: 'Kein Datum' };
     const due = new Date(dueDateStr);
-    const today = new Date('2026-03-10');
+    const today = new Date();
 
     due.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
@@ -61,7 +82,7 @@ export function BudgetOverview({ navigate }: { navigate: (path: string) => void 
         <div className="card">
             <div className="card-header">
                 <div>
-                    <div className="card-title">Budget-Übersicht Q1 2026</div>
+                    <div className="card-title">Budget-Übersicht {new Date().getFullYear()}</div>
                     <div className="card-subtitle">
                         €{budgetData.spent.toLocaleString('de-DE')} von €{budgetData.total.toLocaleString('de-DE')} ausgegeben ({budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0}%)
                     </div>

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { ContentItem, ContentStatus } from '../types';
 import * as api from '../lib/api';
+import { useCompany } from './CompanyContext';
 
 export const CONTENT_STATUSES: Record<ContentStatus, { label: string; color: string; icon: string }> = {
     idea: { label: 'Idee', color: '#94a3b8', icon: '💡' },
@@ -25,17 +26,21 @@ interface ContentContextValue {
 const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id;
     const [contents, setContents] = useState<ContentItem[]>([]);
 
     useEffect(() => {
-        api.fetchContents().then(setContents).catch(console.error);
-    }, []);
+        if (!companyId) return;
+        api.fetchContents(companyId).then(setContents).catch(console.error);
+    }, [companyId]);
 
     const addContent = useCallback(async (content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<string> => {
-        const created = await api.createContent(content);
+        if (!companyId) throw new Error('No active company');
+        const created = await api.createContent(content, companyId);
         setContents(prev => [...prev, created]);
         return created.id;
-    }, []);
+    }, [companyId]);
 
     const updateContent = useCallback(async (id: string, updates: Partial<ContentItem>) => {
         await api.updateContent(id, updates);
