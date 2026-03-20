@@ -5,8 +5,55 @@ import {
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import * as api from '../lib/api';
+import PageHelp from '../components/PageHelp';
 
 import { AdminSettings } from '../components/SettingsAdmin';
+
+type NotificationSettings = {
+    campaignUpdates: boolean;
+    budgetAlerts: boolean;
+    taskReminders: boolean;
+    teamActivities: boolean;
+    weeklyReport: boolean;
+    kpiAnomalies: boolean;
+};
+
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+    campaignUpdates: true,
+    budgetAlerts: true,
+    taskReminders: true,
+    teamActivities: false,
+    weeklyReport: true,
+    kpiAnomalies: false,
+};
+
+const NOTIFICATION_STORAGE_PREFIX = 'momentum_notification_settings';
+
+const normalizeNotificationSettings = (input: unknown): NotificationSettings => {
+    if (!input || typeof input !== 'object') {
+        return { ...DEFAULT_NOTIFICATION_SETTINGS };
+    }
+    const value = input as Partial<NotificationSettings>;
+    return {
+        campaignUpdates: typeof value.campaignUpdates === 'boolean' ? value.campaignUpdates : DEFAULT_NOTIFICATION_SETTINGS.campaignUpdates,
+        budgetAlerts: typeof value.budgetAlerts === 'boolean' ? value.budgetAlerts : DEFAULT_NOTIFICATION_SETTINGS.budgetAlerts,
+        taskReminders: typeof value.taskReminders === 'boolean' ? value.taskReminders : DEFAULT_NOTIFICATION_SETTINGS.taskReminders,
+        teamActivities: typeof value.teamActivities === 'boolean' ? value.teamActivities : DEFAULT_NOTIFICATION_SETTINGS.teamActivities,
+        weeklyReport: typeof value.weeklyReport === 'boolean' ? value.weeklyReport : DEFAULT_NOTIFICATION_SETTINGS.weeklyReport,
+        kpiAnomalies: typeof value.kpiAnomalies === 'boolean' ? value.kpiAnomalies : DEFAULT_NOTIFICATION_SETTINGS.kpiAnomalies,
+    };
+};
+
+const NOTIFICATION_SETTING_META: { key: keyof NotificationSettings; title: string; desc: string }[] = [
+    { key: 'campaignUpdates', title: 'Kampagnen-Updates', desc: 'Hinweis bei Statusaenderungen in Kampagnen' },
+    { key: 'budgetAlerts', title: 'Budget-Alerts', desc: 'Warnung bei Budgetueberschreitung (80%)' },
+    { key: 'taskReminders', title: 'Aufgaben-Erinnerungen', desc: 'Erinnerung 24h vor Deadline' },
+    { key: 'teamActivities', title: 'Team-Aktivitaeten', desc: 'Neue Kommentare und Freigaben' },
+    { key: 'weeklyReport', title: 'Woechentlicher Report', desc: 'Zusammenfassung im Dashboard-Hinweisbereich' },
+    { key: 'kpiAnomalies', title: 'KPI-Anomalien', desc: 'Benachrichtigung bei ungewoehnlichen KPI-Werten' },
+];
+
 const integrations = [
     { name: 'Google Analytics 4', status: 'connected', icon: '📊', desc: 'Website Traffic & Conversions' },
     { name: 'Google Ads', status: 'connected', icon: '🔍', desc: 'Suchmaschinenwerbung' },
@@ -29,6 +76,7 @@ export default function SettingsPage() {
         activeCompany,
         companyMembers,
         updateCompany,
+        addMember,
         updateMemberRole,
         removeMember,
     } = useCompany();
@@ -37,6 +85,12 @@ export default function SettingsPage() {
     const [wsDesc, setWsDesc] = useState('');
     const [savedMsg, setSavedMsg] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({ ...DEFAULT_NOTIFICATION_SETTINGS });
+    const [notificationsDirty, setNotificationsDirty] = useState(false);
+    const [notificationSavedMsg, setNotificationSavedMsg] = useState('');
+    const [notificationErrorMsg, setNotificationErrorMsg] = useState('');
 
     useEffect(() => {
         setWsName(activeCompany?.name ?? '');
@@ -44,6 +98,23 @@ export default function SettingsPage() {
         setSavedMsg('');
         setErrorMsg('');
     }, [activeCompany]);
+
+    useEffect(() => {
+        const storageKey = `${NOTIFICATION_STORAGE_PREFIX}:${activeCompany?.id ?? 'global'}`;
+        try {
+            const raw = localStorage.getItem(storageKey);
+            const parsed = raw ? JSON.parse(raw) : null;
+            setNotificationSettings(normalizeNotificationSettings(parsed));
+            setNotificationsDirty(false);
+            setNotificationSavedMsg('');
+            setNotificationErrorMsg('');
+        } catch {
+            setNotificationSettings({ ...DEFAULT_NOTIFICATION_SETTINGS });
+            setNotificationsDirty(false);
+            setNotificationSavedMsg('');
+            setNotificationErrorMsg('Benachrichtigungs-Einstellungen konnten nicht geladen werden. Standardwerte aktiv.');
+        }
+    }, [activeCompany?.id]);
 
     const handleSaveSettings = async () => {
         if (!activeCompany || !can('canManageSettings')) return;
@@ -95,6 +166,69 @@ export default function SettingsPage() {
         }
     };
 
+    const handleInviteByEmail = async () => {
+        if (!activeCompany || !can('canManageUsers')) return;
+        const normalizedEmail = inviteEmail.trim().toLowerCase();
+        if (!normalizedEmail || !normalizedEmail.includes('@')) {
+            setErrorMsg('Bitte eine gueltige E-Mail-Adresse eingeben.');
+            return;
+        }
+
+        try {
+            setInviteLoading(true);
+            setErrorMsg('');
+
+            const user = await api.fetchUserByEmail(normalizedEmail);
+            if (!user) {
+                setErrorMsg('Benutzer nicht gefunden. Bitte Benutzer zuerst anlegen und dann erneut zuweisen.');
+                return;
+            }
+
+            const alreadyAssigned = companyMembers.some(member => member.userId === user.id);
+            if (alreadyAssigned) {
+                setErrorMsg('Dieser Benutzer ist dem Unternehmen bereits zugewiesen.');
+                return;
+            }
+
+            await addMember(user.id, 'member');
+            setInviteEmail('');
+            setSavedMsg(`Benutzer ${user.name} wurde als Member zugewiesen.`);
+            setTimeout(() => setSavedMsg(''), 3000);
+        } catch {
+            setErrorMsg('Benutzer konnte nicht zugewiesen werden. Bitte erneut versuchen.');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const toggleNotificationSetting = (key: keyof NotificationSettings) => {
+        if (!can('canManageSettings') || !activeCompany) return;
+        setNotificationSettings(prev => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+        setNotificationsDirty(true);
+        setNotificationSavedMsg('');
+        setNotificationErrorMsg('');
+    };
+
+    const handleSaveNotificationSettings = () => {
+        if (!can('canManageSettings') || !activeCompany) {
+            setNotificationErrorMsg('Keine Berechtigung zum Speichern der Benachrichtigungen.');
+            return;
+        }
+        try {
+            const storageKey = `${NOTIFICATION_STORAGE_PREFIX}:${activeCompany.id}`;
+            localStorage.setItem(storageKey, JSON.stringify(notificationSettings));
+            setNotificationsDirty(false);
+            setNotificationErrorMsg('');
+            setNotificationSavedMsg('Benachrichtigungs-Einstellungen gespeichert.');
+            setTimeout(() => setNotificationSavedMsg(''), 2500);
+        } catch {
+            setNotificationErrorMsg('Speichern der Benachrichtigungen fehlgeschlagen.');
+        }
+    };
+
     const tabs = [
         { id: 'general', label: 'Allgemein', icon: Settings },
         { id: 'team', label: 'Team-Übersicht', icon: Users },
@@ -110,6 +244,16 @@ export default function SettingsPage() {
                     <h1 className="page-title">Einstellungen</h1>
                     <p className="page-subtitle">Workspace- und Kontoeinstellungen verwalten</p>
                 </div>
+                <PageHelp title="Einstellungen & Benutzerverwaltung">
+                    <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Uebersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Unternehmen zuweisen.</p>
+                    <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
+                        <li>Es werden nur bereits angelegte Benutzer akzeptiert.</li>
+                        <li>Bei erfolgreicher Zuweisung wird automatisch die Rolle <strong>Member</strong> vergeben.</li>
+                        <li>Existiert die E-Mail nicht, erscheint eine Fehlermeldung mit Hinweis zur Benutzeranlage.</li>
+                        <li>Rollen koennen danach in der Teamliste angepasst werden.</li>
+                        <li>Benachrichtigungs-Toggles im Tab "Benachrichtigungen" werden pro aktivem Unternehmen im Browser gespeichert.</li>
+                    </ul>
+                </PageHelp>
             </div>
 
             <div style={{ display: 'flex', gap: '24px' }}>
@@ -215,9 +359,33 @@ export default function SettingsPage() {
                                     <div className="card-subtitle">{companyMembers.length} Mitglieder im aktiven Unternehmen</div>
                                 </div>
                                 {can('canManageUsers') && (
-                                    <button className="btn btn-primary btn-sm" onClick={() => alert('Einladungsfunktion wird in der nächsten Version verfügbar sein.')}><Plus size={14} /> Einladen</button>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input
+                                            type="email"
+                                            className="form-input"
+                                            placeholder="E-Mail fuer Zuweisung"
+                                            value={inviteEmail}
+                                            onChange={e => setInviteEmail(e.target.value)}
+                                            style={{ minWidth: '260px' }}
+                                        />
+                                        <button className="btn btn-primary btn-sm" onClick={handleInviteByEmail} disabled={inviteLoading}>
+                                            <Plus size={14} /> {inviteLoading ? 'Pruefung...' : 'Per E-Mail zuweisen'}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
+                            {can('canManageUsers') && (
+                                <div style={{
+                                    marginBottom: '12px',
+                                    padding: '10px 12px',
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: 'var(--bg-hover)',
+                                    color: 'var(--text-tertiary)',
+                                    fontSize: 'var(--font-size-xs)',
+                                }}>
+                                    Nur vorhandene Benutzer koennen per E-Mail zugewiesen werden. Neue Zuweisungen erfolgen standardmaessig mit der Rolle Member.
+                                </div>
+                            )}
                             <div className="table-container">
                                 <table className="table">
                                     <thead>
@@ -370,14 +538,12 @@ export default function SettingsPage() {
                             <div className="card-header">
                                 <div className="card-title">Benachrichtigungs-Einstellungen</div>
                             </div>
-                            {[
-                                { title: 'Kampagnen-Updates', desc: 'Benachrichtigung bei Statusänderungen', enabled: true },
-                                { title: 'Budget-Alerts', desc: 'Warnung bei Budgetüberschreitung (80%)', enabled: true },
-                                { title: 'Aufgaben-Erinnerungen', desc: 'Erinnerung 24h vor Deadline', enabled: true },
-                                { title: 'Team-Aktivitäten', desc: 'Neue Kommentare und Freigaben', enabled: false },
-                                { title: 'Wöchentlicher Report', desc: 'Zusammenfassung per E-Mail', enabled: true },
-                                { title: 'KPI-Anomalien', desc: 'Benachrichtigung bei ungewöhnlichen KPI-Werten', enabled: false },
-                            ].map((setting, idx) => (
+                            {!activeCompany && (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
+                                    Kein aktives Unternehmen ausgewaehlt.
+                                </div>
+                            )}
+                            {NOTIFICATION_SETTING_META.map((setting, idx) => (
                                 <div key={idx} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     padding: '16px 0', borderBottom: idx < 5 ? '1px solid var(--border-color)' : 'none',
@@ -386,22 +552,44 @@ export default function SettingsPage() {
                                         <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 500 }}>{setting.title}</div>
                                         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '2px' }}>{setting.desc}</div>
                                     </div>
-                                    <button style={{
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleNotificationSetting(setting.key)}
+                                        disabled={!can('canManageSettings') || !activeCompany}
+                                        aria-label={`${setting.title} umschalten`}
+                                        style={{
                                         width: '44px', height: '24px', borderRadius: 'var(--radius-full)',
-                                        background: setting.enabled ? 'var(--color-primary)' : 'var(--bg-elevated)',
-                                        border: `1px solid ${setting.enabled ? 'var(--color-primary)' : 'var(--border-color-strong)'}`,
+                                        background: notificationSettings[setting.key] ? 'var(--color-primary)' : 'var(--bg-elevated)',
+                                        border: `1px solid ${notificationSettings[setting.key] ? 'var(--color-primary)' : 'var(--border-color-strong)'}`,
                                         position: 'relative', cursor: 'pointer', transition: 'all var(--transition-fast)',
-                                    }}>
+                                        opacity: !can('canManageSettings') || !activeCompany ? 0.55 : 1,
+                                    }}
+                                    >
                                         <div style={{
                                             width: '18px', height: '18px', borderRadius: '50%', background: 'white',
                                             position: 'absolute', top: '2px',
-                                            left: setting.enabled ? '22px' : '2px', transition: 'left var(--transition-fast)',
+                                            left: notificationSettings[setting.key] ? '22px' : '2px', transition: 'left var(--transition-fast)',
                                         }} />
                                     </button>
                                 </div>
                             ))}
+                            {(notificationSavedMsg || notificationErrorMsg) && (
+                                <div style={{
+                                    marginTop: '12px',
+                                    fontSize: 'var(--font-size-xs)',
+                                    color: notificationErrorMsg ? 'var(--color-danger)' : 'var(--color-success)',
+                                }}>
+                                    {notificationErrorMsg || notificationSavedMsg}
+                                </div>
+                            )}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
-                                <button className="btn btn-primary">Einstellungen speichern</button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleSaveNotificationSettings}
+                                    disabled={!can('canManageSettings') || !activeCompany || !notificationsDirty}
+                                >
+                                    Einstellungen speichern
+                                </button>
                             </div>
                         </div>
                     )}

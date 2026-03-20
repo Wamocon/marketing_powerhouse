@@ -4,18 +4,19 @@ import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
     Target, FileText, HelpCircle, Map, Radio, Zap,
-    Building2, Shield, ArrowLeftRight,
+    Building2, Shield, ArrowLeftRight, Compass,
     type LucideIcon,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useData } from '../context/DataContext';
 import type { PermissionKey, CompanyRole } from '../types';
 
 interface NavItem {
     path: string;
     icon: LucideIcon;
     label: string;
-    badge?: string;
+    badge?: string | number;
     requiredPermission?: PermissionKey | null;
     comingSoon?: boolean;
 }
@@ -35,11 +36,11 @@ const NAV: NavSection[] = [
     {
         section: 'Marketing',
         items: [
-            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badge: '4', requiredPermission: null },
-            { path: '/audiences', icon: Users2, label: 'Zielgruppen', badge: '3' },
-            { path: '/journeys', icon: Map, label: 'Customer Journey', badge: '2' },
-            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel', badge: '3' },
-            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badge: '6' },
+            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', requiredPermission: null },
+            { path: '/audiences', icon: Users2, label: 'Zielgruppen' },
+            { path: '/journeys', icon: Map, label: 'Customer Journey' },
+            { path: '/asidas', icon: Zap, label: 'ASIDAS Funnel' },
+            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints' },
             { path: '/content-overview', icon: FileText, label: 'Content-Übersicht' },
             { path: '/content', icon: Calendar, label: 'Content-Kalender' },
             { path: '/budget', icon: Wallet, label: 'Budget & Controlling', requiredPermission: 'canSeeBudget' },
@@ -61,6 +62,7 @@ const NAV: NavSection[] = [
     {
         section: 'System',
         items: [
+            { path: '/setup', icon: Compass, label: 'Projekt-Setup' },
             { path: '/manual', icon: HelpCircle, label: 'Anleitung' },
             { path: '/settings', icon: Settings, label: 'Einstellungen' },
         ],
@@ -74,8 +76,16 @@ interface SidebarProps {
 export default function Sidebar({ onLogout }: SidebarProps) {
     const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { activeCompany, deselectCompany } = useCompany();
+    const { campaigns, audiences, customerJourneys, asidasJourneys, touchpoints } = useData();
     const pathname = usePathname();
     const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
+    const liveBadgesByPath: Record<string, number> = {
+        '/campaigns': campaigns.length,
+        '/audiences': audiences.length,
+        '/journeys': customerJourneys.length,
+        '/asidas': asidasJourneys.length,
+        '/touchpoints': touchpoints.length,
+    };
 
     const isActivePath = (itemPath: string) => {
         if (itemPath === '/') return pathname === '/';
@@ -169,6 +179,8 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                             <div className="sidebar-section-label">{section}</div>
                             {visible.map(item => {
                                 const Icon = item.icon;
+                                const liveBadge = liveBadgesByPath[item.path];
+                                const badgeValue = liveBadge ?? item.badge;
                                 if (item.comingSoon) {
                                     return (
                                         <div key={item.path} className="sidebar-link" style={{ opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' }}>
@@ -190,14 +202,14 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>
-                                        {item.badge && (
+                                        {badgeValue !== undefined && (
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: 'var(--font-size-xs)',
                                                 background: 'var(--bg-hover)', padding: '1px 7px',
                                                 borderRadius: 'var(--radius-full)', color: 'var(--text-tertiary)',
                                                 fontWeight: 600,
                                             }}>
-                                                {item.badge}
+                                                {badgeValue}
                                             </span>
                                         )}
                                     </Link>

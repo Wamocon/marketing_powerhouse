@@ -233,11 +233,13 @@ const { activeCompany, selectCompany, deselectCompany, createCompany } = useComp
 **Als Super-Admin (`daniel@test-it-academy.de`)**
 - Nach Login: Unternehmens-Auswahl + Link zum Super-Admin Panel
 - Super-Admin Panel (/admin): Alle Unternehmen und Benutzer verwalten
+- Im Unternehmen-Tab: Bestehende Benutzer zu Unternehmen zuweisen und Rollen pro Unternehmen ändern
 - In jedem Unternehmen: Vollzugriff wie Unternehmens-Admin
 
 **Als Unternehmens-Admin (company_admin)**
 - Nach Login: Unternehmens-Auswahl, Unternehmen erstellen
 - Vollständige Navigation inkl. Budget & Einstellungen
+- In Einstellungen: Team-Zuweisung per E-Mail für bestehende Benutzer (Default-Rolle bei Erfolg: Member)
 - In Einstellungen: Tab "Benutzerverwaltung" mit Rollenzuweisung
 - Digitale Positionierung: **editierbar** (alle 5 Blöcke)
 - "Neue Kampagne"-Button: sichtbar
@@ -378,7 +380,8 @@ const { activeCompany, selectCompany, deselectCompany, createCompany } = useComp
 - [x] Felder disabled für Members
 - [x] **Admin**: Tab "Benutzerverwaltung" mit Rollen-Dropdown pro User
 - [x] **Speichern/Verwerfen**: Workspace-Einstellungen (lokal)
-- [x] **Team-Aktionen**: Placeholder für Einladen, Bearbeiten, Entfernen
+- [x] **Team-Aktionen**: E-Mail-Zuweisung bestehender Benutzer inkl. Fehlerfall "User muss zuerst angelegt werden"
+- [x] **Default-Rolle bei E-Mail-Zuweisung**: Member
 - [ ] Echtes Speichern in DB, API-Key Management
 
 ---

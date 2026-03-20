@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { ContentItem, ContentStatus } from '../types';
+import { useCompany } from './CompanyContext';
 import * as api from '../lib/api';
 
 export const CONTENT_STATUSES: Record<ContentStatus, { label: string; color: string; icon: string }> = {
@@ -25,17 +26,28 @@ interface ContentContextValue {
 const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id ?? null;
+    const prevCompanyId = useRef<string | null>(null);
     const [contents, setContents] = useState<ContentItem[]>([]);
 
     useEffect(() => {
-        api.fetchContents().then(setContents).catch(console.error);
-    }, []);
+        if (prevCompanyId.current !== companyId) {
+            prevCompanyId.current = companyId;
+            if (companyId) {
+                api.fetchContents(companyId).then(setContents).catch(console.error);
+            } else {
+                setContents([]);
+            }
+        }
+    }, [companyId]);
 
     const addContent = useCallback(async (content: Omit<ContentItem, 'id' | 'createdAt'>): Promise<string> => {
-        const created = await api.createContent(content);
+        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        const created = await api.createContent(content, companyId);
         setContents(prev => [...prev, created]);
         return created.id;
-    }, []);
+    }, [companyId]);
 
     const updateContent = useCallback(async (id: string, updates: Partial<ContentItem>) => {
         await api.updateContent(id, updates);

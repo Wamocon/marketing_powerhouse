@@ -9,7 +9,7 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import { useData } from '../context/DataContext';
-import { dashboardStats as stats, CustomTooltip, getTaskColorLogic, BudgetOverview } from './DashboardComponents';
+import { buildDashboardStats, CustomTooltip, getTaskColorLogic, BudgetOverview } from './DashboardComponents';
 
 interface DashboardViewProps {
     navigate: (path: string) => void;
@@ -21,8 +21,9 @@ interface DashboardViewProps {
 }
 
 export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedContent: _sc }: DashboardViewProps) {
-    const { campaigns, activityFeed, dashboardChartData, channelPerformance } = useData();
+    const { campaigns, activityFeed, dashboardChartData, channelPerformance, budgetData } = useData();
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
+    const stats = buildDashboardStats(dashboardChartData, budgetData);
     return (
         <>
             <div className="stats-grid">

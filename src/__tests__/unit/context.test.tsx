@@ -61,6 +61,12 @@ vi.mock('@/lib/api', async () => {
   };
 });
 
+vi.mock('@/context/CompanyContext', () => ({
+  useCompany: () => ({
+    activeCompany: { id: 'c1' },
+  }),
+}));
+
 import * as api from '@/lib/api';
 import { DataProvider, useData } from '@/context/DataContext';
 
@@ -106,7 +112,7 @@ describe('DataContext — Audience CRUD', () => {
       await result.current.addAudience(audienceBase);
     });
 
-    expect(api.createAudience).toHaveBeenCalledWith(audienceBase);
+    expect(api.createAudience).toHaveBeenCalledWith(audienceBase, 'c1');
     expect(result.current.audiences).toHaveLength(2);
     expect(result.current.audiences.find(a => a.id === 'a-new')).toBeDefined();
   });

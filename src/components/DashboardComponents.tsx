@@ -6,13 +6,49 @@ import {
     ArrowUpRight,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import type { BudgetData } from '../types/dashboard';
+import type { ChartDataPoint } from '../types/dashboard';
 
-export const dashboardStats = [
-    { label: 'Impressionen', value: '1.38M', change: '+12.5%', positive: true, icon: Eye, color: 'primary' },
-    { label: 'Klicks', value: '62.5K', change: '+8.3%', positive: true, icon: MousePointerClick, color: 'accent' },
-    { label: 'Conversions', value: '2.4K', change: '+15.2%', positive: true, icon: Target, color: 'success' },
-    { label: 'Ausgaben', value: '€39.3K', change: '-3.1%', positive: false, icon: Wallet, color: 'warning' },
-];
+function formatCompactNumber(value: number): string {
+    return new Intl.NumberFormat('de-DE', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(value);
+}
+
+function formatPercentDelta(current: number, previous: number): { label: string; positive: boolean } {
+    if (previous === 0) {
+        if (current === 0) return { label: '0,0%', positive: true };
+        return { label: '+100,0%', positive: true };
+    }
+    const delta = ((current - previous) / previous) * 100;
+    const rounded = `${delta >= 0 ? '+' : ''}${delta.toFixed(1).replace('.', ',')}%`;
+    return { label: rounded, positive: delta >= 0 };
+}
+
+export function buildDashboardStats(chartData: ChartDataPoint[], budgetData: BudgetData) {
+    const totalImpressions = chartData.reduce((sum, point) => sum + point.impressions, 0);
+    const totalClicks = chartData.reduce((sum, point) => sum + point.clicks, 0);
+    const totalConversions = chartData.reduce((sum, point) => sum + point.conversions, 0);
+
+    const latest = chartData[chartData.length - 1];
+    const previous = chartData[chartData.length - 2];
+    const impressionsDelta = formatPercentDelta(latest?.impressions ?? 0, previous?.impressions ?? 0);
+    const clicksDelta = formatPercentDelta(latest?.clicks ?? 0, previous?.clicks ?? 0);
+    const conversionsDelta = formatPercentDelta(latest?.conversions ?? 0, previous?.conversions ?? 0);
+
+    const trendLength = budgetData.monthlyTrend.length;
+    const latestSpend = trendLength > 0 ? budgetData.monthlyTrend[trendLength - 1].actual : 0;
+    const previousSpend = trendLength > 1 ? budgetData.monthlyTrend[trendLength - 2].actual : 0;
+    const spendDelta = formatPercentDelta(latestSpend, previousSpend);
+
+    return [
+        { label: 'Impressionen', value: formatCompactNumber(totalImpressions), change: impressionsDelta.label, positive: impressionsDelta.positive, icon: Eye, color: 'primary' },
+        { label: 'Klicks', value: formatCompactNumber(totalClicks), change: clicksDelta.label, positive: clicksDelta.positive, icon: MousePointerClick, color: 'accent' },
+        { label: 'Conversions', value: formatCompactNumber(totalConversions), change: conversionsDelta.label, positive: conversionsDelta.positive, icon: Target, color: 'success' },
+        { label: 'Ausgaben', value: `€${formatCompactNumber(budgetData.spent)}`, change: spendDelta.label, positive: !spendDelta.positive, icon: Wallet, color: 'warning' },
+    ];
+}
 
 export const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

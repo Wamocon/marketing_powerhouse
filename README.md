@@ -16,6 +16,9 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 ✅ **4-Rollen-System** — Super-Admin, Unternehmens-Admin, Manager, Member mit granularen Berechtigungen  
 ✅ **Super-Admin Panel** — Globale Verwaltung aller Unternehmen und Benutzer  
 ✅ **Unternehmens-Verwaltung** — Unternehmen erstellen, bearbeiten, Mitglieder verwalten  
+✅ **Projekt-Zuweisung & Rollenwechsel** — Super-Admin weist bestehende Benutzer Unternehmen zu und ändert Rollen pro Unternehmen  
+✅ **Admin-Einladung per E-Mail** — Unternehmens-Admins weisen bestehende Benutzer per E-Mail zu (Default-Rolle: Member)  
+✅ **Benachrichtigungs-Einstellungen** — Schaltbare Benachrichtigungs-Typen pro Unternehmen, im Browser gespeichert  
 ✅ **Kampagnen-Management** — Multi-Channel-Kampagnen mit 3-Schritt-Erstellung, Master-Prompt, Zielgruppen und Keywords  
 ✅ **Creative-Workflow (10 Stufen)** — Entwurf → KI-Vorschlag → Review → Freigabe → Posting → KI-Analyse  
 ✅ **Customer Journey (5-Phasen + ASIDAS)** — Awareness bis Advocacy mit Content-Deep-Links und Touchpoint-Integration  
@@ -105,11 +108,13 @@ Dev-Server läuft unter: **http://localhost:3000**
 **Als Super-Admin (`daniel@test-it-academy.de`)**
 - Nach Login: Unternehmens-Auswahl + Link zum **Super-Admin Panel**
 - Super-Admin Panel: Alle Unternehmen verwalten, Benutzer verwalten, Super-Admin-Status vergeben
+- Unternehmen-Tab: Bestehende Benutzer einem Unternehmen zuweisen und deren Rolle pro Unternehmen direkt ändern
 - In jedem Unternehmen: Vollständige Kontrolle (wie Unternehmens-Admin)
 
 **Als Unternehmens-Admin (Rolle: `company_admin`)**
 - Nach Login: Unternehmens-Auswahl, Unternehmen erstellen
 - Im Unternehmen: Vollständige Navigation inkl. Budget & Einstellungen
+- In Einstellungen: Team-Zuweisung per E-Mail für bestehende Benutzer (bei Erfolg Default-Rolle Member)
 - In Einstellungen: Tab „Benutzerverwaltung" mit Rollen-Dropdown pro User
 - Digitale Positionierung: **inline editierbar** (alle 5 Blöcke)
 - „Neue Kampagne"-Button: **sichtbar**
@@ -219,7 +224,7 @@ Super-Admin (globale Ebene)
 
 Unternehmens-Admin (pro Unternehmen)
   └── Vollständige Kontrolle über ein Unternehmen
-       └── Kann Mitglieder einladen/verwalten
+  └── Kann bestehende Benutzer per E-Mail zuweisen und Rollen verwalten
 
 Manager (pro Unternehmen)
   └── Kampagnen, Content, Budget, Touchpoints verwalten

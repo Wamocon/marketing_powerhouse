@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { Audience, Touchpoint, AsidasJourney, User, Campaign } from '../types';
 import type { CompanyPositioning, CompanyKeyword, BudgetData, TeamMember, ActivityItem, ChartDataPoint, ChannelPerformanceItem } from '../types/dashboard';
+import { useCompany } from './CompanyContext';
 import * as api from '../lib/api';
 
 interface DataContextValue {
@@ -52,6 +53,11 @@ const emptyPositioning: CompanyPositioning = {
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id ?? null;
+    const prevCompanyId = useRef<string | null>(null);
+    const initialized = useRef(false);
+
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<User[]>([]);
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -67,25 +73,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [dashboardChartData, setDashboardChartData] = useState<ChartDataPoint[]>([]);
     const [channelPerformance, setChannelPerformance] = useState<ChannelPerformanceItem[]>([]);
 
+    const clearAll = useCallback(() => {
+        setCampaigns([]); setAudiences([]); setBudgetData(emptyBudget);
+        setTeamMembers([]); setTouchpoints([]); setAsidasJourneys([]);
+        setCustomerJourneys([]); setPositioning(emptyPositioning);
+        setKeywords([]); setActivityFeed([]); setDashboardChartData([]);
+        setChannelPerformance([]);
+    }, []);
+
     const loadAll = useCallback(async () => {
         setLoading(true);
         try {
-            const [u, c, a, b, tm, tp, aj, cj, p, kw, af, cd, cp] = await Promise.all([
-                api.fetchUsers(),
-                api.fetchCampaigns(),
-                api.fetchAudiences(),
-                api.fetchBudgetData(),
-                api.fetchTeamMembers(),
-                api.fetchTouchpoints(),
-                api.fetchJourneys('asidas'),
-                api.fetchJourneys('customer'),
-                api.fetchPositioning(),
-                api.fetchKeywords(),
-                api.fetchActivityFeed(),
-                api.fetchChartData(),
-                api.fetchChannelPerformance(),
+            const u = await api.fetchUsers();
+            setUsers(u);
+
+            if (!companyId) {
+                clearAll();
+                return;
+            }
+
+            const [c, a, b, tm, tp, aj, cj, p, kw, af, cd, cp] = await Promise.all([
+                api.fetchCampaigns(companyId),
+                api.fetchAudiences(companyId),
+                api.fetchBudgetData(companyId),
+                api.fetchTeamMembers(companyId),
+                api.fetchTouchpoints(companyId),
+                api.fetchJourneys('asidas', companyId),
+                api.fetchJourneys('customer', companyId),
+                api.fetchPositioning(companyId),
+                api.fetchKeywords(companyId),
+                api.fetchActivityFeed(companyId),
+                api.fetchChartData(companyId),
+                api.fetchChannelPerformance(companyId),
             ]);
-            setUsers(u); setCampaigns(c); setAudiences(a); setBudgetData(b);
+
+            setCampaigns(c); setAudiences(a); setBudgetData(b);
             setTeamMembers(tm); setTouchpoints(tp); setAsidasJourneys(aj);
             setCustomerJourneys(cj); setPositioning(p); setKeywords(kw);
             setActivityFeed(af); setDashboardChartData(cd); setChannelPerformance(cp);
@@ -94,15 +116,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [companyId, clearAll]);
 
-    useEffect(() => { loadAll(); }, [loadAll]);
+    // Reload when company changes
+    useEffect(() => {
+        if (!initialized.current || prevCompanyId.current !== companyId) {
+            initialized.current = true;
+            prevCompanyId.current = companyId;
+            loadAll();
+        }
+    }, [companyId, loadAll]);
 
     // ── Audience CRUD ──
     const addAudience = useCallback(async (audience: Omit<Audience, 'id'>) => {
-        const created = await api.createAudience(audience);
+        if (!companyId) return;
+        const created = await api.createAudience(audience, companyId);
         setAudiences(prev => [...prev, created]);
-    }, []);
+    }, [companyId]);
 
     const updateAudienceFn = useCallback(async (id: string, updates: Partial<Audience>) => {
         await api.updateAudience(id, updates);
@@ -116,10 +146,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Campaign CRUD ──
     const addCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
-        const created = await api.createCampaign(campaign);
+        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        const created = await api.createCampaign(campaign, companyId);
         setCampaigns(prev => [...prev, created]);
         return created;
-    }, []);
+    }, [companyId]);
 
     const updateCampaignFn = useCallback(async (id: string, updates: Partial<Campaign>) => {
         await api.updateCampaign(id, updates);
@@ -133,10 +164,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Touchpoint CRUD ──
     const addTouchpoint = useCallback(async (tp: Omit<Touchpoint, 'id'>) => {
-        const created = await api.createTouchpoint(tp);
+        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        const created = await api.createTouchpoint(tp, companyId);
         setTouchpoints(prev => [...prev, created]);
         return created;
-    }, []);
+    }, [companyId]);
 
     const updateTouchpointFn = useCallback(async (id: string, updates: Partial<Touchpoint>) => {
         await api.updateTouchpoint(id, updates);
@@ -150,15 +182,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Positioning ──
     const savePositioningFn = useCallback(async (pos: CompanyPositioning) => {
-        await api.savePositioning(pos);
+        if (!companyId) return;
+        await api.savePositioning(pos, companyId);
         setPositioning(pos);
-    }, []);
+    }, [companyId]);
 
     // ── Keywords ──
     const addKeyword = useCallback(async (kw: Omit<CompanyKeyword, 'id'>) => {
-        const created = await api.createKeyword(kw);
+        if (!companyId) return;
+        const created = await api.createKeyword(kw, companyId);
         setKeywords(prev => [...prev, created]);
-    }, []);
+    }, [companyId]);
 
     const deleteKeywordFn = useCallback(async (id: string) => {
         await api.deleteKeyword(id);
@@ -167,11 +201,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Journey CRUD ──
     const addJourney = useCallback(async (journey: Omit<AsidasJourney, 'id'>, type: 'asidas' | 'customer') => {
-        const created = await api.createJourney(journey, type);
+        if (!companyId) throw new Error('Kein Unternehmen ausgewaehlt');
+        const created = await api.createJourney(journey, type, companyId);
         if (type === 'asidas') setAsidasJourneys(prev => [...prev, created]);
         else setCustomerJourneys(prev => [...prev, created]);
         return created;
-    }, []);
+    }, [companyId]);
 
     const deleteJourneyFn = useCallback(async (id: string, type: 'asidas' | 'customer') => {
         await api.deleteJourney(id);

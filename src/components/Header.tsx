@@ -5,10 +5,13 @@ const routeTitles: Record<string, { breadcrumb: string; title: string }> = {
     '/': { breadcrumb: 'Dashboard', title: 'Übersicht' },
     '/campaigns': { breadcrumb: 'Kampagnen', title: 'Kampagnen-Management' },
     '/audiences': { breadcrumb: 'Zielgruppen', title: 'Zielgruppen & Personas' },
+    '/journeys': { breadcrumb: 'Journey', title: 'Customer Journey Map' },
+    '/touchpoints': { breadcrumb: 'Touchpoints', title: 'Kanaele & Touchpoints' },
     '/content': { breadcrumb: 'Content-Kalender', title: 'Redaktionsplanung' },
     '/budget': { breadcrumb: 'Budget', title: 'Budget & Controlling' },
     '/tasks': { breadcrumb: 'Aufgaben', title: 'Aufgabenverwaltung' },
     '/positioning': { breadcrumb: 'Positionierung', title: 'Digitale Positionierung' },
+    '/setup': { breadcrumb: 'Projekt-Setup', title: 'Gefuehrtes Projekt-Setup' },
     '/settings': { breadcrumb: 'Einstellungen', title: 'Workspace-Einstellungen' },
 };
 

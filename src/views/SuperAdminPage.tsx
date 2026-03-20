@@ -10,19 +10,22 @@ import { useCompany } from '../context/CompanyContext';
 import { useData } from '../context/DataContext';
 import type { Company, CompanyRole, User } from '../types';
 import * as api from '../lib/api';
+import PageHelp from '../components/PageHelp';
 
 type AdminTab = 'companies' | 'users';
 
 export default function SuperAdminPage() {
     const { currentUser, isSuperAdmin } = useAuth();
-    const { allCompanies, loadAllCompanies } = useCompany();
+    const { allCompanies, loadAllCompanies, activeCompany } = useCompany();
     const { users } = useData();
     const [activeTab, setActiveTab] = useState<AdminTab>('companies');
     const [searchQuery, setSearchQuery] = useState('');
     const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
-    const [companyMembers, setCompanyMembers] = useState<Record<string, { userId: string; role: CompanyRole; userName: string }[]>>({});
+    const [companyMembers, setCompanyMembers] = useState<Record<string, { memberId: string; userId: string; role: CompanyRole; userName: string; userEmail: string }[]>>({});
+    const [assignByCompany, setAssignByCompany] = useState<Record<string, { userId: string; role: CompanyRole }>>({});
+    const [companyFeedback, setCompanyFeedback] = useState<Record<string, { error?: string; success?: string }>>({});
 
     useEffect(() => {
         if (isSuperAdmin) {
@@ -92,16 +95,101 @@ export default function SuperAdminPage() {
     const loadCompanyMembers = async (companyId: string) => {
         try {
             const members = await api.fetchCompanyMembers(companyId);
+            const assignedUserIds = new Set(members.map(m => m.userId));
+            const firstUnassignedUser = users.find(u => !assignedUserIds.has(u.id));
             setCompanyMembers(prev => ({
                 ...prev,
                 [companyId]: members.map(m => ({
+                    memberId: m.id,
                     userId: m.userId,
                     role: m.role,
                     userName: m.userName ?? 'Unbekannt',
+                    userEmail: m.userEmail ?? '',
                 })),
+            }));
+            setAssignByCompany(prev => ({
+                ...prev,
+                [companyId]: prev[companyId] ?? {
+                    userId: firstUnassignedUser?.id ?? '',
+                    role: 'member',
+                },
             }));
         } catch (err) {
             console.error('Failed to load members:', err);
+        }
+    };
+
+    const setCompanyMessage = (companyId: string, payload: { error?: string; success?: string }) => {
+        setCompanyFeedback(prev => ({
+            ...prev,
+            [companyId]: payload,
+        }));
+    };
+
+    const handleAssignUserToCompany = async (companyId: string) => {
+        const selectedUserId = assignByCompany[companyId]?.userId;
+        const selectedRole = assignByCompany[companyId]?.role ?? 'member';
+        if (!selectedUserId) {
+            setCompanyMessage(companyId, { error: 'Bitte zuerst einen Benutzer auswaehlen.' });
+            return;
+        }
+        try {
+            setCompanyMessage(companyId, {});
+            await api.addCompanyMember(companyId, selectedUserId, selectedRole);
+            await loadCompanyMembers(companyId);
+            setCompanyMessage(companyId, { success: 'Benutzer erfolgreich zum Unternehmen zugewiesen.' });
+        } catch {
+            setCompanyMessage(companyId, { error: 'Zuweisung fehlgeschlagen. Benutzer ist ggf. bereits Mitglied.' });
+        }
+    };
+
+    const handleUpdateCompanyMemberRole = async (companyId: string, memberId: string, role: CompanyRole) => {
+        try {
+            setCompanyMessage(companyId, {});
+            await api.updateCompanyMemberRole(memberId, role);
+            setCompanyMembers(prev => ({
+                ...prev,
+                [companyId]: (prev[companyId] ?? []).map(member =>
+                    member.memberId === memberId ? { ...member, role } : member,
+                ),
+            }));
+            setCompanyMessage(companyId, { success: 'Projektrolle aktualisiert.' });
+        } catch {
+            setCompanyMessage(companyId, { error: 'Rolle konnte nicht aktualisiert werden.' });
+        }
+    };
+
+    const handleRemoveCompanyMember = async (companyId: string, memberId: string, userName: string) => {
+        const companyList = companyMembers[companyId] ?? [];
+        const targetMember = companyList.find(m => m.memberId === memberId);
+        if (!targetMember) {
+            setCompanyMessage(companyId, { error: 'Mitglied nicht gefunden.' });
+            return;
+        }
+
+        const isCurrentUserInActiveCompany =
+            targetMember.userId === currentUser?.id && activeCompany?.id === companyId;
+        if (isCurrentUserInActiveCompany) {
+            setCompanyMessage(companyId, { error: 'Du kannst deinen eigenen Account nicht aus dem aktiven Unternehmen entfernen.' });
+            return;
+        }
+
+        const adminCount = companyList.filter(m => m.role === 'company_admin').length;
+        const isLastAdmin = targetMember.role === 'company_admin' && adminCount <= 1;
+        if (isLastAdmin) {
+            setCompanyMessage(companyId, { error: 'Der letzte Admin eines Unternehmens kann nicht entfernt werden.' });
+            return;
+        }
+
+        const confirmed = confirm(`Soll ${userName} wirklich aus diesem Unternehmen entfernt werden?`);
+        if (!confirmed) return;
+        try {
+            setCompanyMessage(companyId, {});
+            await api.removeCompanyMember(memberId);
+            await loadCompanyMembers(companyId);
+            setCompanyMessage(companyId, { success: `${userName} wurde aus dem Unternehmen entfernt.` });
+        } catch {
+            setCompanyMessage(companyId, { error: 'Mitglied konnte nicht entfernt werden.' });
         }
     };
 
@@ -140,6 +228,15 @@ export default function SuperAdminPage() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <PageHelp title="Super-Admin: Benutzer und Unternehmen">
+                        <p><strong>Unternehmen-Tab:</strong> Bestehende Benutzer koennen einem Unternehmen zugewiesen und ihre Rolle pro Unternehmen direkt angepasst werden.</p>
+                        <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
+                            <li>"Benutzer waehlen" zeigt nur Benutzer, die noch nicht Mitglied des Unternehmens sind.</li>
+                            <li>Rollen sind unternehmensbezogen und koennen als Admin, Manager oder Member gesetzt werden.</li>
+                            <li>Aenderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Unternehmen.</li>
+                        </ul>
+                        <p style={{ marginTop: '10px' }}><strong>Benutzer-Tab:</strong> Hier werden globale Benutzer gepflegt, inkl. Super-Admin-Status.</p>
+                    </PageHelp>
                     <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
                         {currentUser?.name}
                     </span>
@@ -299,6 +396,57 @@ export default function SuperAdminPage() {
                                                 borderTop: '1px solid var(--border-color)',
                                             }}>
                                                 <div style={{
+                                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                                    marginBottom: '10px', flexWrap: 'wrap',
+                                                }}>
+                                                    <select
+                                                        className="form-select"
+                                                        value={assignByCompany[company.id]?.userId ?? ''}
+                                                        onChange={e => setAssignByCompany(prev => ({
+                                                            ...prev,
+                                                            [company.id]: {
+                                                                userId: e.target.value,
+                                                                role: prev[company.id]?.role ?? 'member',
+                                                            },
+                                                        }))}
+                                                        style={{ minWidth: '250px' }}
+                                                    >
+                                                        <option value="">Benutzer waehlen</option>
+                                                        {users
+                                                            .filter(user => !(companyMembers[company.id] ?? []).some(member => member.userId === user.id))
+                                                            .map(user => (
+                                                                <option key={user.id} value={user.id}>
+                                                                    {user.name} ({user.email})
+                                                                </option>
+                                                            ))}
+                                                    </select>
+                                                    <select
+                                                        className="form-select"
+                                                        value={assignByCompany[company.id]?.role ?? 'member'}
+                                                        onChange={e => setAssignByCompany(prev => ({
+                                                            ...prev,
+                                                            [company.id]: {
+                                                                userId: prev[company.id]?.userId ?? '',
+                                                                role: e.target.value as CompanyRole,
+                                                            },
+                                                        }))}
+                                                        style={{ minWidth: '130px' }}
+                                                    >
+                                                        <option value="company_admin">Admin</option>
+                                                        <option value="manager">Manager</option>
+                                                        <option value="member">Member</option>
+                                                    </select>
+                                                    <button
+                                                        className="btn btn-primary btn-sm"
+                                                        onClick={() => handleAssignUserToCompany(company.id)}
+                                                    >
+                                                        <UserCheck size={14} /> Zuweisen
+                                                    </button>
+                                                </div>
+                                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
+                                                    Hier weist du vorhandene Benutzer einem Unternehmen zu und setzt direkt ihre Projektrolle.
+                                                </div>
+                                                <div style={{
                                                     fontSize: 'var(--font-size-xs)', fontWeight: 600,
                                                     color: 'var(--text-tertiary)', marginBottom: '8px',
                                                     textTransform: 'uppercase',
@@ -313,15 +461,58 @@ export default function SuperAdminPage() {
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                         {(companyMembers[company.id] ?? []).map((member, idx) => {
                                                             const roleCfg = ROLE_CONFIG[member.role];
+                                                            const adminCount = (companyMembers[company.id] ?? []).filter(m => m.role === 'company_admin').length;
+                                                            const isLastAdmin = member.role === 'company_admin' && adminCount <= 1;
+                                                            const isCurrentUserInActiveCompany =
+                                                                member.userId === currentUser?.id && activeCompany?.id === company.id;
+                                                            const removeDisabled = isLastAdmin || isCurrentUserInActiveCompany;
+                                                            const removeTitle = isLastAdmin
+                                                                ? 'Letzten Admin kann man nicht entfernen'
+                                                                : isCurrentUserInActiveCompany
+                                                                    ? 'Eigenen Account im aktiven Unternehmen kann man nicht entfernen'
+                                                                    : 'Mitglied entfernen';
                                                             return (
                                                                 <div key={idx} style={{
-                                                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                                                    padding: '6px 8px', borderRadius: 'var(--radius-sm)',
+                                                                    display: 'grid',
+                                                                    gridTemplateColumns: 'minmax(0, 1fr) auto auto auto',
+                                                                    alignItems: 'center',
+                                                                    gap: '10px',
+                                                                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
                                                                     background: 'var(--bg-hover)',
                                                                 }}>
-                                                                    <span style={{ fontSize: 'var(--font-size-xs)', flex: 1 }}>
-                                                                        {member.userName}
-                                                                    </span>
+                                                                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                                        <div style={{
+                                                                            fontSize: 'var(--font-size-xs)',
+                                                                            fontWeight: 600,
+                                                                            color: 'var(--text-primary)',
+                                                                            whiteSpace: 'nowrap',
+                                                                            overflow: 'hidden',
+                                                                            textOverflow: 'ellipsis',
+                                                                        }}>
+                                                                            {member.userName}
+                                                                        </div>
+                                                                        {member.userEmail && (
+                                                                            <div style={{
+                                                                                fontSize: '0.68rem',
+                                                                                color: 'var(--text-tertiary)',
+                                                                                whiteSpace: 'nowrap',
+                                                                                overflow: 'hidden',
+                                                                                textOverflow: 'ellipsis',
+                                                                            }}>
+                                                                                {member.userEmail}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <select
+                                                                        className="form-select"
+                                                                        value={member.role}
+                                                                        onChange={e => handleUpdateCompanyMemberRole(company.id, member.memberId, e.target.value as CompanyRole)}
+                                                                        style={{ minWidth: '130px', fontSize: '0.72rem', width: '130px' }}
+                                                                    >
+                                                                        <option value="company_admin">Admin</option>
+                                                                        <option value="manager">Manager</option>
+                                                                        <option value="member">Member</option>
+                                                                    </select>
                                                                     <span style={{
                                                                         fontSize: '0.6rem', padding: '1px 6px',
                                                                         borderRadius: 'var(--radius-full)',
@@ -330,9 +521,27 @@ export default function SuperAdminPage() {
                                                                     }}>
                                                                         {roleCfg.shortLabel}
                                                                     </span>
+                                                                    <button
+                                                                        className="btn btn-ghost btn-sm"
+                                                                        style={{ color: 'var(--color-danger)', padding: '4px 6px', justifySelf: 'end' }}
+                                                                        onClick={() => handleRemoveCompanyMember(company.id, member.memberId, member.userName)}
+                                                                        title={removeTitle}
+                                                                        disabled={removeDisabled}
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
                                                                 </div>
                                                             );
                                                         })}
+                                                    </div>
+                                                )}
+                                                {(companyFeedback[company.id]?.error || companyFeedback[company.id]?.success) && (
+                                                    <div style={{
+                                                        marginTop: '8px',
+                                                        fontSize: 'var(--font-size-xs)',
+                                                        color: companyFeedback[company.id]?.error ? 'var(--color-danger)' : 'var(--color-success)',
+                                                    }}>
+                                                        {companyFeedback[company.id]?.error || companyFeedback[company.id]?.success}
                                                     </div>
                                                 )}
                                             </div>

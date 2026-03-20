@@ -123,7 +123,7 @@ describe('fetchUserById()', () => {
     const user = await api.fetchUserById('u1');
     expect(user).not.toBeNull();
     expect(user!.id).toBe('u1');
-    expect(user!.role).toBe('admin');
+    expect(user!.role).toBe('company_admin');
     expect(user!.jobTitle).toBe('Admin');   // snake→camel mapping
     expect(user!.joinedAt).toBe('2024-01-01');
   });
@@ -192,26 +192,26 @@ describe('fetchTouchpoints()', () => {
   // BRANCH: null data → [] (data ?? [])
   it('returns empty array when data is null', async () => {
     mockFrom({ data: null, error: null });
-    expect(await api.fetchTouchpoints()).toEqual([]);
+    expect(await api.fetchTouchpoints('c1')).toEqual([]);
   });
 
   // BRANCH: kpis present → included in result
   it('includes kpis object when the DB row has kpis', async () => {
     mockFrom({ data: [dbTouchpointWithKpis], error: null });
-    const tps = await api.fetchTouchpoints();
+    const tps = await api.fetchTouchpoints('c1');
     expect(tps[0].kpis).toEqual({ impressions: 100, clicks: 20, ctr: 0.2, conversions: 5 });
   });
 
   // BRANCH: kpis null → kpis is undefined in result
   it('sets kpis to undefined when the DB row has null kpis', async () => {
     mockFrom({ data: [dbTouchpointNoKpis], error: null });
-    const tps = await api.fetchTouchpoints();
+    const tps = await api.fetchTouchpoints('c1');
     expect(tps[0].kpis).toBeUndefined();
   });
 
   it('throws when Supabase returns an error', async () => {
     mockFrom({ data: null, error: new Error('fetch error') });
-    await expect(api.fetchTouchpoints()).rejects.toThrow();
+    await expect(api.fetchTouchpoints('c1')).rejects.toThrow();
   });
 });
 
@@ -224,7 +224,7 @@ describe('createTouchpoint()', () => {
   // BRANCH: no kpis provided → row.kpis: null
   it('stores kpis as null when not provided', async () => {
     mockFrom({ data: { ...dbTouchpointNoKpis }, error: null });
-    const tp = await api.createTouchpoint(base);
+    const tp = await api.createTouchpoint(base, 'c1');
     expect(tp.kpis).toBeUndefined(); // toCamelTouchpoint maps null kpis → undefined
   });
 
@@ -232,13 +232,13 @@ describe('createTouchpoint()', () => {
   it('stores provided kpis object', async () => {
     const kpis = { impressions: 500, clicks: 50, ctr: 0.1, conversions: 10, spend: 0, cpc: 0, cpa: 0 };
     mockFrom({ data: { ...dbTouchpointWithKpis, kpis }, error: null });
-    const tp = await api.createTouchpoint({ ...base, kpis });
+    const tp = await api.createTouchpoint({ ...base, kpis }, 'c1');
     expect(tp.kpis).toEqual(kpis);
   });
 
   it('throws when Supabase returns an error', async () => {
     mockFrom({ data: null, error: new Error('insert failed') });
-    await expect(api.createTouchpoint(base)).rejects.toThrow('insert failed');
+    await expect(api.createTouchpoint(base, 'c1')).rejects.toThrow('insert failed');
   });
 });
 
@@ -284,12 +284,12 @@ describe('deleteTouchpoint()', () => {
 describe('fetchCampaigns()', () => {
   it('returns empty array when data is null', async () => {
     mockFrom({ data: null, error: null });
-    expect(await api.fetchCampaigns()).toEqual([]);
+    expect(await api.fetchCampaigns('c1')).toEqual([]);
   });
 
   it('returns mapped campaigns', async () => {
     mockFrom({ data: [dbCampaign], error: null });
-    const campaigns = await api.fetchCampaigns();
+    const campaigns = await api.fetchCampaigns('c1');
     expect(campaigns).toHaveLength(1);
     expect(campaigns[0].startDate).toBe('2025-01-01');  // snake→camel
     expect(campaigns[0].channelKpis).toBeUndefined();   // null → undefined (??)
@@ -308,7 +308,7 @@ describe('createCampaign()', () => {
   // BRANCH: channelKpis undefined → null sent to DB
   it('creates campaign without channelKpis', async () => {
     mockFrom({ data: { ...dbCampaign }, error: null });
-    const c = await api.createCampaign(base);
+    const c = await api.createCampaign(base, 'c1');
     expect(c.id).toBe('c1');
     expect(c.channelKpis).toBeUndefined();
   });
@@ -317,13 +317,13 @@ describe('createCampaign()', () => {
   it('creates campaign with channelKpis', async () => {
     const channelKpis = { Instagram: { impressions: 1000, clicks: 50, conversions: 5, ctr: 0.05, spend: 100, cpc: 2, cpa: 20 } };
     mockFrom({ data: { ...dbCampaign, channel_kpis: channelKpis }, error: null });
-    const c = await api.createCampaign({ ...base, channelKpis });
+    const c = await api.createCampaign({ ...base, channelKpis }, 'c1');
     expect(c.channelKpis).toEqual(channelKpis);
   });
 
   it('throws on DB error', async () => {
     mockFrom({ data: null, error: new Error('insert failed') });
-    await expect(api.createCampaign(base)).rejects.toThrow();
+    await expect(api.createCampaign(base, 'c1')).rejects.toThrow();
   });
 });
 
@@ -371,12 +371,12 @@ describe('fetchJourneys()', () => {
   // BRANCH A: empty / null journeys → return []
   it('returns empty array when Supabase returns no journeys', async () => {
     mockFrom({ data: [], error: null });
-    expect(await api.fetchJourneys('asidas')).toEqual([]);
+    expect(await api.fetchJourneys('asidas', 'c1')).toEqual([]);
   });
 
   it('returns empty array when journey data is null', async () => {
     mockFrom({ data: null, error: null });
-    expect(await api.fetchJourneys('customer')).toEqual([]);
+    expect(await api.fetchJourneys('customer', 'c1')).toEqual([]);
   });
 
   // BRANCH B: journeys exist but no stages
@@ -385,7 +385,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },    // journeys query
       { data: [], error: null },             // stages query
     ]);
-    const journeys = await api.fetchJourneys('asidas');
+    const journeys = await api.fetchJourneys('asidas', 'c1');
     expect(journeys).toHaveLength(1);
     expect(journeys[0].id).toBe('j1');
     expect(journeys[0].stages).toEqual([]);
@@ -397,7 +397,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },
       { data: [dbStage], error: null },
     ]);
-    const journeys = await api.fetchJourneys('asidas');
+    const journeys = await api.fetchJourneys('asidas', 'c1');
     expect(journeys[0].stages).toHaveLength(1);
     expect(journeys[0].stages[0].phase).toBe('Awareness');
     expect(journeys[0].stages[0].contentFormats).toEqual([]); // snake→camel
@@ -406,7 +406,7 @@ describe('fetchJourneys()', () => {
 
   it('throws when first Supabase call returns error', async () => {
     mockFrom({ data: null, error: new Error('journey fetch error') });
-    await expect(api.fetchJourneys('asidas')).rejects.toThrow('journey fetch error');
+    await expect(api.fetchJourneys('asidas', 'c1')).rejects.toThrow('journey fetch error');
   });
 
   it('throws when stage fetch returns error', async () => {
@@ -414,7 +414,7 @@ describe('fetchJourneys()', () => {
       { data: [dbJourney], error: null },
       { data: null, error: new Error('stage fetch error') },
     ]);
-    await expect(api.fetchJourneys('asidas')).rejects.toThrow('stage fetch error');
+    await expect(api.fetchJourneys('asidas', 'c1')).rejects.toThrow('stage fetch error');
   });
 });
 
@@ -427,7 +427,7 @@ describe('createJourney()', () => {
   it('creates journey without stages', async () => {
     // Two from() calls: insert journey, then no stage insert
     mockFrom({ data: null, error: null });
-    const result = await api.createJourney(baseJourney, 'asidas');
+    const result = await api.createJourney(baseJourney, 'asidas', 'c1');
     expect(result.name).toBe('Test Journey');
     expect(result.stages).toEqual([]);
   });
@@ -443,14 +443,14 @@ describe('createJourney()', () => {
       touchpoints: [], contentFormats: [], emotions: [], painPoints: [],
       metrics: { label: '', value: '', trend: '' }, contentIds: [],
     };
-    const result = await api.createJourney({ ...baseJourney, stages: [stage] }, 'customer');
+    const result = await api.createJourney({ ...baseJourney, stages: [stage] }, 'customer', 'c1');
     expect(result.stages).toHaveLength(1);
     expect(result.stages[0].phase).toBe('Awareness');
   });
 
   it('throws on journey insert error', async () => {
     mockFrom({ data: null, error: new Error('insert failed') });
-    await expect(api.createJourney(baseJourney, 'asidas')).rejects.toThrow('insert failed');
+    await expect(api.createJourney(baseJourney, 'asidas', 'c1')).rejects.toThrow('insert failed');
   });
 
   it('throws on stage insert error', async () => {
@@ -463,7 +463,7 @@ describe('createJourney()', () => {
       { data: null, error: null },
       { data: null, error: new Error('stage insert failed') },
     ]);
-    await expect(api.createJourney({ ...baseJourney, stages: [stage] }, 'asidas'))
+    await expect(api.createJourney({ ...baseJourney, stages: [stage] }, 'asidas', 'c1'))
       .rejects.toThrow('stage insert failed');
   });
 });
@@ -496,12 +496,12 @@ const dbAudience = {
 describe('fetchAudiences()', () => {
   it('returns empty array when data is null', async () => {
     mockFrom({ data: null, error: null });
-    expect(await api.fetchAudiences()).toEqual([]);
+    expect(await api.fetchAudiences('c1')).toEqual([]);
   });
 
   it('returns mapped audiences', async () => {
     mockFrom({ data: [dbAudience], error: null });
-    const audiences = await api.fetchAudiences();
+    const audiences = await api.fetchAudiences('c1');
     expect(audiences[0].jobTitle).toBe('CEO');   // snake→camel
     expect(audiences[0].painPoints).toEqual([]); // snake→camel
   });

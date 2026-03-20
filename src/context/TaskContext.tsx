@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types';
+import { useCompany } from './CompanyContext';
 import * as api from '../lib/api';
 
 interface TaskContextValue {
@@ -16,16 +17,27 @@ interface TaskContextValue {
 const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+    const { activeCompany } = useCompany();
+    const companyId = activeCompany?.id ?? null;
+    const prevCompanyId = useRef<string | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
 
     useEffect(() => {
-        api.fetchTasks().then(setTasks).catch(console.error);
-    }, []);
+        if (prevCompanyId.current !== companyId) {
+            prevCompanyId.current = companyId;
+            if (companyId) {
+                api.fetchTasks(companyId).then(setTasks).catch(console.error);
+            } else {
+                setTasks([]);
+            }
+        }
+    }, [companyId]);
 
     const addTask = useCallback(async (task: Omit<Task, 'id'> & { id?: string }) => {
-        const created = await api.createTask(task);
+        if (!companyId) return;
+        const created = await api.createTask(task, companyId);
         setTasks(prev => [...prev, created]);
-    }, []);
+    }, [companyId]);
 
     const updateTaskFn = useCallback(async (id: string, updates: Partial<Task>) => {
         await api.updateTask(id, updates);
