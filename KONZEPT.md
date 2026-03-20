@@ -1,8 +1,8 @@
 # 🚀 Momentum — Konzept & Umsetzungsstand
 
-> **Letzte Aktualisierung:** 16.07.2025
-> **Version:** 0.8.0 — Supabase Backend-Integration (vollständig)
-> **Status:** Phase 1 — Backend-Anbindung (Supabase)
+> **Letzte Aktualisierung:** 20.03.2026
+> **Version:** 1.0.0 — Multi-Tenancy + 4-Rollen-System
+> **Status:** Phase 2 — Multi-Tenancy produktiv
 > **Produktname:** Momentum | **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ---
@@ -22,7 +22,7 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 | **Frontend** | React 19 | ✅ Aktiv |
 | **Styling** | Tailwind CSS v4 + Design System (CSS Custom Properties) | ✅ Aktiv |
 | **Routing** | Next.js App Router (dateibasiert) | ✅ Aktiv |
-| **State / Auth** | React Context (AuthContext, DataContext, TaskContext, ContentContext) | ✅ Aktiv |
+| **State / Auth** | React Context (AuthContext, CompanyContext, DataContext, TaskContext, ContentContext) | ✅ Aktiv |
 | **Charts** | Recharts | ✅ Aktiv |
 | **Icons** | Lucide React | ✅ Aktiv |
 | **Typografie** | Google Fonts (Inter) | ✅ Aktiv |
@@ -46,7 +46,8 @@ Marketing_powerhouse/
 ├── .env.local                        ← Supabase-Credentials (nicht im Git)
 ├── KONZEPT.md                        ← Dieses Dokument
 ├── scripts/
-│   └── migrate.mjs                   ← DB-Schema + Seed-Daten Migrationsskript
+│   ├── migrate.mjs                   ← DB-Schema + Seed-Daten (Initial-Setup)
+│   └── migrate_multi_tenant.mjs      ← Einmaliges Supabase-Upgrade (alle Multi-Tenancy DB-Änderungen)
 ├── app/                              ← Next.js App Router (Seiten-Routing)
 │   ├── layout.tsx                    ← Root-Layout (HTML, Fonts, Providers)
 │   ├── providers.tsx                 ← Client-seitiger Context-Provider-Wrapper
@@ -135,47 +136,72 @@ Marketing_powerhouse/
 
 ---
 
-## 4. 🔐 Rollen & Berechtigungen (RBAC)
+## 4. 🔐 Rollen & Berechtigungen (RBAC) — 4-Rollen-System
+
+### Rollen-Hierarchie
+
+```
+Super-Admin (globale Ebene, nicht pro Unternehmen)
+  └── Globale Verwaltung aller Unternehmen und Benutzer
+
+Unternehmens-Admin (pro Unternehmen via company_members)
+  └── Vollzugriff auf ein Unternehmen
+
+Manager (pro Unternehmen via company_members)
+  └── Kampagnen, Aufgaben, Budget, Touchpoints
+
+Member (pro Unternehmen via company_members)
+  └── Eigene Aufgaben, eingeschränkter Lesezugriff
+```
 
 ### Rollen-Definition
 
-| Rolle | Label | Farbe | Beschreibung |
-|---|---|---|---|
-| `admin` | Administrator | 🔴 Rot | Vollzugriff, User-Management, Positionierung bearbeiten |
-| `manager` | Marketing Manager | 🟣 Indigo | Kampagnen & Aufgaben erstellen, Budget sehen |
-| `member` | Team-Member | 🟢 Grün | Eigene Aufgaben bearbeiten, Lesen (keine Budget-Einsicht) |
+| Rolle | Typ | Label | Farbe | Beschreibung |
+|---|---|---|---|---|
+| `super_admin` | Global (users.is_super_admin) | Super-Administrator | 🟡 Gold | Globale Verwaltung aller Unternehmen und Benutzer |
+| `company_admin` | Pro Unternehmen | Unternehmens-Admin | 🔴 Rot | Vollzugriff, User-Management, Positionierung bearbeiten |
+| `manager` | Pro Unternehmen | Marketing Manager | 🟣 Indigo | Kampagnen & Aufgaben erstellen, Budget sehen |
+| `member` | Pro Unternehmen | Team-Member | 🟢 Grün | Eigene Aufgaben bearbeiten, Lesen (keine Budget-Einsicht) |
 
 ### Berechtigungs-Matrix
 
-| Berechtigung | Admin | Manager | Member |
-|---|:---:|:---:|:---:|
-| Positionierung bearbeiten | ✅ | ❌ | ❌ |
-| Unternehmensweite Keywords bearbeiten | ✅ | ❌ | ❌ |
-| User-Management | ✅ | ❌ | ❌ |
-| Einstellungen bearbeiten | ✅ | ❌ | ❌ |
-| Kampagne erstellen | ✅ | ✅ | ❌ |
-| Kampagne bearbeiten | ✅ | ✅ | ❌ |
-| Alle Kampagnen einsehen | ✅ | ✅ | 👁 (zugew.) |
-| Zielgruppen bearbeiten | ✅ | ✅ | ❌ |
-| Zielgruppen einsehen | ✅ | ✅ | ✅ |
-| Budget einsehen | ✅ | ✅ | ❌ |
-| Budget bearbeiten | ✅ | ✅ | ❌ |
-| Aufgaben in Kampagnen erstellen | ✅ | ✅ | ❌ |
-| Aufgaben zuweisen | ✅ | ✅ | ❌ |
-| Eigene Aufgaben bearbeiten | ✅ | ✅ | ✅ |
-| Touchpoints verwalten | ✅ | ✅ | ❌ |
-| Elemente löschen (Kampagnen, Personas, etc.) | ✅ | ✅ | ❌ |
-| Eigene Aufgaben bearbeiten | ✅ | ✅ | ✅ |
+| Berechtigung | Super-Admin | Unternehmens-Admin | Manager | Member |
+|---|:---:|:---:|:---:|:---:|
+| Unternehmen verwalten (global) | ✅ | ❌ | ❌ | ❌ |
+| Benutzer verwalten (global) | ✅ | ❌ | ❌ | ❌ |
+| Unternehmen erstellen | ✅ | ✅ | ❌ | ❌ |
+| Positionierung bearbeiten | ✅ | ✅ | ❌ | ❌ |
+| Unternehmensweite Keywords bearbeiten | ✅ | ✅ | ❌ | ❌ |
+| Mitglieder im Unternehmen verwalten | ✅ | ✅ | ❌ | ❌ |
+| Einstellungen bearbeiten | ✅ | ✅ | ❌ | ❌ |
+| Kampagne erstellen | ✅ | ✅ | ✅ | ❌ |
+| Kampagne bearbeiten | ✅ | ✅ | ✅ | ❌ |
+| Alle Kampagnen einsehen | ✅ | ✅ | ✅ | 👁 (zugew.) |
+| Zielgruppen bearbeiten | ✅ | ✅ | ✅ | ❌ |
+| Zielgruppen einsehen | ✅ | ✅ | ✅ | ✅ |
+| Budget einsehen | ✅ | ✅ | ✅ | ❌ |
+| Budget bearbeiten | ✅ | ✅ | ✅ | ❌ |
+| Aufgaben in Kampagnen erstellen | ✅ | ✅ | ✅ | ❌ |
+| Aufgaben zuweisen | ✅ | ✅ | ✅ | ❌ |
+| Eigene Aufgaben bearbeiten | ✅ | ✅ | ✅ | ✅ |
+| Touchpoints verwalten | ✅ | ✅ | ✅ | ❌ |
+| Elemente löschen | ✅ | ✅ | ✅ | ❌ |
 
 ### Technische Umsetzung
 
 ```typescript
 // src/context/AuthContext.tsx
-const { can, isRole, currentUser } = useAuth();
+const { can, isRole, isSuperAdmin, activeCompanyRole } = useAuth();
 
-// Beispiel-Nutzung im UI:
+// Prüfe granulare Berechtigung (berücksichtigt aktive Company-Rolle + Super-Admin):
 {can('canCreateCampaigns') && <button>Neue Kampagne</button>}
 {can('canSeeBudget') ? <BudgetDaten /> : <ZugriffVerweigert />}
+
+// Prüfe Super-Admin für globale Aktionen:
+{isSuperAdmin && <Link href="/admin">Super-Admin Panel</Link>}
+
+// src/context/CompanyContext.tsx
+const { activeCompany, selectCompany, deselectCompany, createCompany } = useCompany();
 ```
 
 ---
@@ -187,30 +213,44 @@ const { can, isRole, currentUser } = useAuth();
 
 ### Test-Accounts
 
-| Rolle | Name | E-Mail | Passwort | Abteilung | Status |
-|---|---|---|---|---|---|
-| 🔴 **Admin** | Daniel Moretz | `daniel@test-it-academy.de` | `admin123` | Geschäftsführung & Training | online |
-| 🟣 **Manager** | Waleri Moretz | `waleri@test-it-academy.de` | `manager123` | Training & Qualität | online |
-| 🟣 **Manager** | Anna Schmidt | `anna@test-it-academy.de` | `manager123` | Marketing | online |
-| 🟢 **Member** | Lisa Bauer | `lisa@test-it-academy.de` | `member123` | Marketing | away |
-| 🟢 **Member** | Tom Weber | `tom@test-it-academy.de` | `member123` | Performance Marketing | offline |
-| 🟢 **Member** | Jana Klein | `jana@test-it-academy.de` | `member123` | Kundenservice | online |
+| Rolle | Name | E-Mail | Passwort | Super-Admin |
+|---|---|---|---|---|
+| 🟡 **Super-Admin + U-Admin** | Daniel Moretz | `daniel@test-it-academy.de` | `admin123` | ✅ |
+| 🔴 **Unternehmens-Admin** | Waleri Moretz | `waleri@test-it-academy.de` | `manager123` | ❌ |
+| 🟣 **Manager** | Anna Schmidt | `anna@test-it-academy.de` | `manager123` | ❌ |
+| 🟢 **Member** | Lisa Bauer | `lisa@test-it-academy.de` | `member123` | ❌ |
+| 🟢 **Member** | Tom Weber | `tom@test-it-academy.de` | `member123` | ❌ |
+| 🟢 **Member** | Jana Klein | `jana@test-it-academy.de` | `member123` | ❌ |
+
+### Demo-Unternehmen
+
+| Unternehmen | Branche | Mitglieder |
+|---|---|---|
+| **WAMOCON Academy** | IT & Training | Daniel (Super-Admin + U-Admin), Waleri (U-Admin), Anna (Manager), Lisa/Tom/Jana (Member) |
 
 ### Was jede Rolle sieht
 
-**Als Admin (`daniel@test-it-academy.de`)**
+**Als Super-Admin (`daniel@test-it-academy.de`)**
+- Nach Login: Unternehmens-Auswahl + Link zum Super-Admin Panel
+- Super-Admin Panel (/admin): Alle Unternehmen und Benutzer verwalten
+- In jedem Unternehmen: Vollzugriff wie Unternehmens-Admin
+
+**Als Unternehmens-Admin (company_admin)**
+- Nach Login: Unternehmens-Auswahl, Unternehmen erstellen
 - Vollständige Navigation inkl. Budget & Einstellungen
 - In Einstellungen: Tab "Benutzerverwaltung" mit Rollenzuweisung
 - Digitale Positionierung: **editierbar** (alle 5 Blöcke)
 - "Neue Kampagne"-Button: sichtbar
 
-**Als Manager (`waleri@test-it-academy.de` oder `anna@test-it-academy.de`)**
+**Als Manager (`anna@test-it-academy.de`)**
+- Nach Login: Unternehmens-Auswahl (nur zugewiesene Unternehmen)
 - Vollständige Navigation inkl. Budget
 - In Einstellungen: kein Benutzerverwaltungs-Tab, Felder read-only
 - Digitale Positionierung: read-only
 - "Neue Kampagne"-Button: sichtbar
 
 **Als Member (`lisa@test-it-academy.de`, `tom@test-it-academy.de` oder `jana@test-it-academy.de`)**
+- Nach Login: Unternehmens-Auswahl (nur zugewiesene Unternehmen)
 - Navigation: **Budget ausgeblendet**
 - Budget-Seite: "Kein Zugriff"-Sperrseite
 - Einstellungen: alle Felder deaktiviert, kein Admin-Tab
@@ -225,7 +265,7 @@ const { can, isRole, currentUser } = useAuth();
 - [x] Split-Screen Layout
 - [x] E-Mail/Passwort-Formular mit Validierung gegen Supabase-Datenbank
 - [x] Fehlermeldung bei ungültigen Credentials
-- [x] **Dev-Panel**: Ausklappbarer Schnellzugang mit allen 3 Rollen
+- [x] **Dev-Panel**: Ausklappbarer Schnellzugang mit allen 4 Rollen
 - [x] Passwort-Sichtbarkeit Toggle
 - [x] Login via Datenbank (Supabase, `api.loginUser`)
 - [x] Nutzer-Status (online/offline) bei Login/Logout
@@ -349,20 +389,22 @@ const { can, isRole, currentUser } = useAuth();
 > Row Level Security (RLS) ist auf allen Tabellen aktiviert.
 > Die API-Schicht (`src/lib/api.ts`) übernimmt die CRUD-Operationen inkl. snake_case ↔ camelCase Konvertierung.
 
-### Datenbank-Tabellen (17 Tabellen)
+### Datenbank-Tabellen (19 Tabellen)
 
 | Tabelle | Beschreibung | CRUD-Funktionen |
 |---|---|---|
-| `users` | Testnutzer mit Rollen | `fetchUsers`, `loginUser`, `updateUserStatus` |
-| `campaigns` | Kampagnen-Daten | `fetchCampaigns`, `createCampaign`, `updateCampaign`, `deleteCampaign` |
-| `audiences` | Zielgruppen/Personas | `fetchAudiences`, `createAudience`, `updateAudience`, `deleteAudience` |
-| `touchpoints` | Kanäle & Touchpoints | `fetchTouchpoints`, `createTouchpoint`, `updateTouchpoint`, `deleteTouchpoint` |
-| `tasks` | Aufgaben/Creatives | `fetchTasks`, `createTask`, `updateTask`, `deleteTask` |
-| `contents` | Content-Einträge | `fetchContents`, `createContent`, `updateContent`, `deleteContent` |
-| `company_positioning` | Unternehmenspositionierung | `fetchPositioning`, `savePositioning` |
-| `company_keywords` | Unternehmensweite Keywords | `fetchKeywords`, `createKeyword`, `deleteKeyword` |
-| `budget_overview` | Budget-Gesamtübersicht | `fetchBudgetData`, `updateBudgetOverview` |
-| `budget_categories` | Budget-Kategorien | `updateBudgetCategory`, `createBudgetCategory` |
+| `users` | Benutzer mit Rollen + `is_super_admin` | `fetchUsers`, `loginUser`, `updateUserStatus`, `createUser`, `deleteUser`, `updateUserSuperAdmin` |
+| `companies` | **NEU** — Unternehmen/Tenants | `fetchCompanies`, `fetchCompanyById`, `createCompany`, `updateCompany`, `deleteCompany` |
+| `company_members` | **NEU** — Benutzer↔Unternehmen-Zuordnung | `fetchCompanyMembers`, `addCompanyMember`, `updateCompanyMemberRole`, `removeCompanyMember`, `fetchUserCompanyRole` |
+| `campaigns` | Kampagnen-Daten (+ `company_id`) | `fetchCampaigns`, `createCampaign`, `updateCampaign`, `deleteCampaign` |
+| `audiences` | Zielgruppen/Personas (+ `company_id`) | `fetchAudiences`, `createAudience`, `updateAudience`, `deleteAudience` |
+| `touchpoints` | Kanäle & Touchpoints (+ `company_id`) | `fetchTouchpoints`, `createTouchpoint`, `updateTouchpoint`, `deleteTouchpoint` |
+| `tasks` | Aufgaben/Creatives (+ `company_id`) | `fetchTasks`, `createTask`, `updateTask`, `deleteTask` |
+| `contents` | Content-Einträge (+ `company_id`) | `fetchContents`, `createContent`, `updateContent`, `deleteContent` |
+| `company_positioning` | Unternehmenspositionierung (+ `company_id`) | `fetchPositioning`, `savePositioning` |
+| `company_keywords` | Unternehmensweite Keywords (+ `company_id`) | `fetchKeywords`, `createKeyword`, `deleteKeyword` |
+| `budget_overview` | Budget-Gesamtübersicht (+ `company_id`) | `fetchBudgetData`, `updateBudgetOverview` |
+| `budget_categories` | Budget-Kategorien (+ `company_id`) | `updateBudgetCategory`, `createBudgetCategory` |
 | `monthly_trends` | Monatliche Budget-Trends | (via `fetchBudgetData`) |
 | `activity_feed` | Aktivitäts-Feed | `fetchActivityFeed`, `createActivity` |
 | `team_members` | Team-Mitglieder | `fetchTeamMembers` |
@@ -377,7 +419,7 @@ const { can, isRole, currentUser } = useAuth();
 Projekt: Momentum
 Region: eu-central-1
 URL: ftbkqtteavvdqmhbmzoy.supabase.co
-RLS: Aktiviert auf allen 17 Tabellen
+RLS: Aktiviert auf allen 19 Tabellen
 Policies: "Allow all for anon" (Entwicklungsmodus)
 ```
 
@@ -388,10 +430,20 @@ NEXT_PUBLIC_SUPABASE_URL=https://ftbkqtteavvdqmhbmzoy.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 ```
 
-### Test-Nutzer (in `users`-Tabelle)
+### Benutzer (in `users`-Tabelle)
 ```
-{ id, name, email, password, role ('admin'|'manager'|'member'),
-  jobTitle, avatar, status, department, phone, joinedAt }
+{ id, name, email, password, role ('company_admin'|'manager'|'member'),
+  is_super_admin (boolean), jobTitle, avatar, status, department, phone, joinedAt }
+```
+
+### Unternehmen (in `companies`-Tabelle)
+```
+{ id, name, slug, logo, description, industry, created_at, created_by }
+```
+
+### Unternehmensmitglieder (in `company_members`-Tabelle)
+```
+{ id, company_id, user_id, role ('company_admin'|'manager'|'member'), joined_at }
 ```
 
 ### Unternehmenspositionierung (`companyPositioning`)
@@ -462,14 +514,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 
 ---
 
-## 9. Konzept: Vier-Ebenen-Modell
+## 9. Konzept: Fünf-Ebenen-Modell
 
 ```
-Systemebene (Admin)
-├── 👤 Benutzerverwaltung (Rollen & Rechte)
-└── ⚙️  Workspace-Einstellungen (Währung, Zeitzone, Sprache)
+Globale Ebene (Super-Admin)
+├── 🌐 Alle Unternehmen einsehen und verwalten
+├── 👤 Benutzer global verwalten + Super-Admin-Status vergeben
+└── 🔑 In jedes Unternehmen eintreten mit vollen Rechten
 
-Unternehmensebene (Admin schreibt, alle lesen)
+Unternehmensebene (Unternehmens-Admin)
+├── 🏢 Unternehmen erstellen und konfigurieren
+├── 👥 Mitglieder einladen und Rollen zuweisen
+└── ⚙️  Unternehmens-Einstellungen (Währung, Zeitzone, Sprache)
+
+Systemebene (Unternehmens-Admin schreibt, alle lesen)
 ├── 🏛️  Digitale Positionierung (Vision, Mission, Werte, Tone-of-Voice)
 ├── 🔒 Unternehmensweite Keywords (global, read-only in Kampagnen)
 └── 👥 Zielgruppen-Bibliothek (Personas, company-wide)
@@ -504,7 +562,9 @@ Inhaltsebene (Member arbeitet)
 
 ### Phase 1 — Backend (Supabase) ✅
 - [x] Supabase-Projekt + 17 Datenbank-Tabellen erstellt
-- [x] Migrationsskript (`scripts/migrate.mjs`) für Schema + Seed-Daten
+- [x] Migrationsskript (`scripts/migrate.mjs`) für Initial-Schema + Seed-Daten
+- [x] Upgrade-Skript (`scripts/migrate_multi_tenant.mjs`) für alle Multi-Tenancy-DB-Änderungen in Supabase
+- [x] Ein-Skript-Upgrade für Bestandsdatenbank (Companies, Company Members, Rollen-Constraint, `is_super_admin`, `company_id` + Mapping)
 - [x] Supabase-Client (`src/lib/supabase.ts`)
 - [x] Vollständige CRUD-API-Schicht (`src/lib/api.ts`, ~500 Zeilen)
 - [x] snake_case ↔ camelCase Konvertierung

@@ -20,7 +20,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
     const [responsibleManagerId, setResponsibleManagerId] = useState('');
     const [selectedTeamMemberIds, setSelectedTeamMemberIds] = useState<string[]>([]);
 
-    const managers = users.filter(u => u.role === 'admin' || u.role === 'manager');
+    const managers = users.filter(u => u.role === 'company_admin' || u.role === 'manager');
     const allMembers = users;
 
     const toggleTeamMember = (id: string) => {

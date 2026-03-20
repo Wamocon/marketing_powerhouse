@@ -3,7 +3,7 @@
 **Version:** 0.9  
 **Stand:** Januar 2026  
 **Testziel:** Validierung aller Kernprozesse und des Rollen-Rechte-Konzepts gegen KONZEPT.md  
-**Teststrategie:** Explorativ-strukturiert — alle Kernprozesse für alle 3 Rollen werden manuell durchgeführt
+**Teststrategie:** Explorativ-strukturiert — alle Kernprozesse für alle 4 Rollen werden manuell durchgeführt
 
 ---
 
@@ -20,8 +20,9 @@
 
 | Rolle | E-Mail | Passwort |
 |---|---|---|
-| **Admin** | daniel@test-it-academy.de | admin123 |
-| **Manager** | waleri@test-it-academy.de | manager123 |
+| **Super-Admin** | daniel@test-it-academy.de | admin123 |
+| **Unternehmens-Admin** | waleri@test-it-academy.de | manager123 |
+| **Manager** | anna@test-it-academy.de | manager123 |
 | **Member** | lisa@test-it-academy.de | member123 |
 
 ## Konventionen

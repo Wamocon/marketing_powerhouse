@@ -4,10 +4,12 @@ import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
     Target, FileText, HelpCircle, Map, Radio, Zap,
+    Building2, Shield, ArrowLeftRight,
     type LucideIcon,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
-import type { PermissionKey, Role } from '../types';
+import { useCompany } from '../context/CompanyContext';
+import type { PermissionKey, CompanyRole } from '../types';
 
 interface NavItem {
     path: string;
@@ -70,9 +72,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onLogout }: SidebarProps) {
-    const { currentUser, can } = useAuth();
+    const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
+    const { activeCompany, deselectCompany } = useCompany();
     const pathname = usePathname();
-    const roleConfig = currentUser ? ROLE_CONFIG[currentUser.role as Role] : null;
+    const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
+
+    const isActivePath = (itemPath: string) => {
+        if (itemPath === '/') return pathname === '/';
+        return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+    };
 
     // Filtert Einträge nach Rolle
     const getVisibleItems = (items: NavItem[]) =>
@@ -83,7 +91,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
     return (
         <aside className="sidebar">
-            {/* Logo — The Nexus */}
+            {/* Company Header */}
             <div className="sidebar-header">
                 <div className="sidebar-logo" style={{
                     display: 'flex',
@@ -100,6 +108,56 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                     <div className="sidebar-brand-sub">Marketing OS</div>
                 </div>
             </div>
+
+            {/* Active Company Indicator */}
+            {activeCompany && (
+                <div style={{
+                    margin: '0 12px 8px', padding: '10px 12px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-color)',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <Building2 size={14} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                        <span style={{
+                            fontSize: 'var(--font-size-xs)', fontWeight: 700,
+                            color: 'var(--text-primary)', overflow: 'hidden',
+                            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                            {activeCompany.name}
+                        </span>
+                    </div>
+                    <button
+                        onClick={deselectCompany}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '4px',
+                            fontSize: '0.6rem', color: 'var(--text-tertiary)',
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            padding: 0, fontWeight: 600,
+                        }}
+                    >
+                        <ArrowLeftRight size={10} /> Unternehmen wechseln
+                    </button>
+                </div>
+            )}
+
+            {/* Super-Admin Link */}
+            {isSuperAdmin && (
+                <div style={{ margin: '0 12px 8px' }}>
+                    <Link
+                        href="/admin"
+                        className="sidebar-link"
+                        style={{
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            borderLeft: '2px solid #f59e0b',
+                            color: '#f59e0b',
+                        }}
+                    >
+                        <Shield size={16} />
+                        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>Super-Admin Panel</span>
+                    </Link>
+                </div>
+            )}
 
             {/* Navigation */}
             <nav className="sidebar-nav">
@@ -128,7 +186,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                     <Link
                                         key={item.path}
                                         href={item.path}
-                                        className={`sidebar-link${(item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)) ? ' active' : ''}`}
+                                        className={`sidebar-link${isActivePath(item.path) ? ' active' : ''}`}
                                     >
                                         <Icon size={18} />
                                         <span>{item.label}</span>

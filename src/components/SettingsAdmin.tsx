@@ -77,7 +77,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                             fontSize: 'var(--font-size-xs)', padding: '4px 8px', cursor: 'pointer',
                                         }}
                                     >
-                                        <option value="admin">Admin</option>
+                                        <option value="company_admin">Admin</option>
                                         <option value="manager">Manager</option>
                                         <option value="member">Member</option>
                                     </select>

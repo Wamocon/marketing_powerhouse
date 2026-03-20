@@ -68,7 +68,7 @@ function mockFromOnce(results: Array<{ data: unknown; error: unknown }>) {
 // ─── Shared DB rows (snake_case) ──────────────────────────────────────────────
 const dbUser = {
   id: 'u1', name: 'Daniel Admin', email: 'daniel@test.de',
-  password: 'admin123', role: 'admin', job_title: 'Admin',
+  password: 'admin123', role: 'company_admin', is_super_admin: false, job_title: 'Admin',
   avatar: 'DA', status: 'online', department: 'IT', phone: '', joined_at: '2024-01-01',
 };
 

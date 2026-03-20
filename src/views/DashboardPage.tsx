@@ -47,7 +47,7 @@ export default function DashboardPage() {
                         </ul>
                     </PageHelp>
                     <button className="btn btn-secondary" onClick={() => router.push('/campaigns')}>Neue Kampagne</button>
-                    {role === 'manager' || role === 'admin' ? (
+                    {role === 'manager' || role === 'company_admin' ? (
                         <button className="btn btn-primary" onClick={() => router.push('/calendar')}>
                             <Megaphone size={16} /> Content Kalender
                         </button>
@@ -65,7 +65,7 @@ export default function DashboardPage() {
                 </span>
             </div>
 
-            {role === 'admin' && <AdminDashboard {...viewProps} />}
+            {role === 'company_admin' && <AdminDashboard {...viewProps} />}
             {role === 'manager' && <ManagerDashboard {...viewProps} />}
             {role === 'member' && <MemberDashboard {...viewProps} />}
 

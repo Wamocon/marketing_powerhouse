@@ -36,7 +36,7 @@ export function CampaignOverviewTab({
     const { touchpoints, companyKeywords, users, updateCampaign } = useData();
     const responsibleManager = users.find(u => u.id === campaign.responsibleManagerId);
     const teamMembers = users.filter(u => campaign.teamMemberIds?.includes(u.id));
-    const managers = users.filter(u => u.role === 'admin' || u.role === 'manager');
+    const managers = users.filter(u => u.role === 'company_admin' || u.role === 'manager');
 
     // ─── Team Edit State ───
     const [editingTeam, setEditingTeam] = useState(false);

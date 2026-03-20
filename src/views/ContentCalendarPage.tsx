@@ -17,12 +17,21 @@ const monthNames = [
 
 function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year, month) { const d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
+function formatLocalDate(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 export default function ContentCalendarPage() {
     const { contents } = useContents();
     useTasks();
     const { can } = useAuth();
-    const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 1));
+    const [currentDate, setCurrentDate] = useState(() => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+    });
     const [view, setView] = useState('month');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
@@ -34,7 +43,7 @@ export default function ContentCalendarPage() {
     const daysInPrevMonth = getDaysInMonth(year, month - 1);
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-    const today = '2026-03-10';
+    const today = formatLocalDate(new Date());
 
     interface CalendarDay {
         day: number;
@@ -111,7 +120,15 @@ export default function ContentCalendarPage() {
                     </h2>
                     <button className="btn btn-ghost btn-icon" onClick={nextMonth}><ChevronRight size={20} /></button>
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={() => setCurrentDate(new Date(2026, 2, 1))}>Heute</button>
+                <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                        const now = new Date();
+                        setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+                    }}
+                >
+                    Heute
+                </button>
             </div>
 
             {/* MONTH VIEW */}

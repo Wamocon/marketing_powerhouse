@@ -1,6 +1,10 @@
 // ─── User & Auth Types ─────────────────────────────────────
 
-export type Role = 'admin' | 'manager' | 'member';
+/** Per-company role assigned via company_members table */
+export type CompanyRole = 'company_admin' | 'manager' | 'member';
+
+/** Legacy-compatible Role type — includes all assignable roles */
+export type Role = 'company_admin' | 'manager' | 'member';
 
 export interface User {
   id: string;
@@ -8,6 +12,7 @@ export interface User {
   email: string;
   password: string;
   role: Role;
+  isSuperAdmin: boolean;
   jobTitle: string;
   avatar: string;
   status: 'online' | 'away' | 'offline';
@@ -24,11 +29,38 @@ export interface RoleConfig {
   description: string;
 }
 
+// ─── Company / Multi-Tenancy Types ─────────────────────────
+
+export interface Company {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string;
+  description: string;
+  industry: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface CompanyMember {
+  id: string;
+  companyId: string;
+  userId: string;
+  role: CompanyRole;
+  joinedAt: string;
+  /** Populated via join for display purposes */
+  userName?: string;
+  userEmail?: string;
+  userAvatar?: string;
+  userStatus?: User['status'];
+}
+
 export type PermissionKey =
   | 'canEditPositioning'
   | 'canEditCompanyKeywords'
   | 'canManageUsers'
   | 'canManageSettings'
+  | 'canManageCompany'
   | 'canCreateCampaigns'
   | 'canEditCampaigns'
   | 'canViewAllCampaigns'

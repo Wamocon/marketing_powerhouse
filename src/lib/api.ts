@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type {
   User, Campaign, Task, TaskStatus, ContentItem, ContentStatus,
   Audience, Touchpoint, AsidasJourney, JourneyStage,
+  Company, CompanyMember, CompanyRole,
 } from '../types';
 import type {
   CompanyPositioning, CompanyKeyword, BudgetData, BudgetCategory,
@@ -23,6 +24,7 @@ function toCamelUser(r: Record<string, unknown>): User {
     email: r.email as string,
     password: r.password as string,
     role: r.role as User['role'],
+    isSuperAdmin: (r.is_super_admin as boolean) ?? false,
     jobTitle: r.job_title as string,
     avatar: r.avatar as string,
     status: r.status as User['status'],
@@ -738,5 +740,175 @@ export async function createJourney(
 
 export async function deleteJourney(id: string): Promise<void> {
   const { error } = await supabase.from('journeys').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ─── Companies ─────────────────────────────────────────────
+
+function toCamelCompany(r: Record<string, unknown>): Company {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    slug: r.slug as string,
+    logo: (r.logo as string) ?? '',
+    description: (r.description as string) ?? '',
+    industry: (r.industry as string) ?? '',
+    createdAt: r.created_at as string,
+    createdBy: r.created_by as string,
+  };
+}
+
+function toCamelCompanyMember(r: Record<string, unknown>): CompanyMember {
+  return {
+    id: r.id as string,
+    companyId: r.company_id as string,
+    userId: r.user_id as string,
+    role: r.role as CompanyRole,
+    joinedAt: r.joined_at as string,
+  };
+}
+
+export async function fetchCompanies(): Promise<Company[]> {
+  const { data, error } = await supabase.from('companies').select('*').order('created_at');
+  if (error) throw error;
+  return (data ?? []).map(toCamelCompany);
+}
+
+export async function fetchCompanyById(id: string): Promise<Company | null> {
+  const { data, error } = await supabase.from('companies').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return toCamelCompany(data);
+}
+
+export async function fetchUserCompanies(userId: string): Promise<(Company & { role: CompanyRole })[]> {
+  const { data, error } = await supabase
+    .from('company_members')
+    .select('*, companies(*)')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => {
+    const company = r.companies as Record<string, unknown>;
+    return {
+      ...toCamelCompany(company),
+      role: r.role as CompanyRole,
+    };
+  });
+}
+
+export async function createCompany(company: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
+  const id = generateId();
+  const slug = company.slug || company.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const { data, error } = await supabase.from('companies').insert({
+    id,
+    name: company.name,
+    slug,
+    logo: company.logo || '',
+    description: company.description || '',
+    industry: company.industry || '',
+    created_by: company.createdBy,
+  }).select().single();
+  if (error) throw error;
+  return toCamelCompany(data);
+}
+
+export async function updateCompany(id: string, updates: Partial<Company>): Promise<void> {
+  const row: Record<string, unknown> = {};
+  if (updates.name !== undefined) row.name = updates.name;
+  if (updates.slug !== undefined) row.slug = updates.slug;
+  if (updates.logo !== undefined) row.logo = updates.logo;
+  if (updates.description !== undefined) row.description = updates.description;
+  if (updates.industry !== undefined) row.industry = updates.industry;
+  const { error } = await supabase.from('companies').update(row).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteCompany(id: string): Promise<void> {
+  const { error } = await supabase.from('companies').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ─── Company Members ───────────────────────────────────────
+
+export async function fetchCompanyMembers(companyId: string): Promise<CompanyMember[]> {
+  const { data, error } = await supabase
+    .from('company_members')
+    .select('*, users(name, email, avatar, status)')
+    .eq('company_id', companyId);
+  if (error) throw error;
+  return (data ?? []).map((r: Record<string, unknown>) => {
+    const user = r.users as Record<string, unknown> | null;
+    const member = toCamelCompanyMember(r);
+    if (user) {
+      member.userName = user.name as string;
+      member.userEmail = user.email as string;
+      member.userAvatar = user.avatar as string;
+      member.userStatus = user.status as User['status'];
+    }
+    return member;
+  });
+}
+
+export async function addCompanyMember(companyId: string, userId: string, role: CompanyRole): Promise<CompanyMember> {
+  const id = generateId();
+  const { data, error } = await supabase.from('company_members').insert({
+    id,
+    company_id: companyId,
+    user_id: userId,
+    role,
+  }).select().single();
+  if (error) throw error;
+  return toCamelCompanyMember(data);
+}
+
+export async function updateCompanyMemberRole(memberId: string, role: CompanyRole): Promise<void> {
+  const { error } = await supabase.from('company_members').update({ role }).eq('id', memberId);
+  if (error) throw error;
+}
+
+export async function removeCompanyMember(memberId: string): Promise<void> {
+  const { error } = await supabase.from('company_members').delete().eq('id', memberId);
+  if (error) throw error;
+}
+
+export async function fetchUserCompanyRole(userId: string, companyId: string): Promise<CompanyRole | null> {
+  const { data, error } = await supabase
+    .from('company_members')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('company_id', companyId)
+    .single();
+  if (error || !data) return null;
+  return data.role as CompanyRole;
+}
+
+// ─── Super-Admin: All Users ────────────────────────────────
+
+export async function updateUserSuperAdmin(userId: string, isSuperAdmin: boolean): Promise<void> {
+  const { error } = await supabase.from('users').update({ is_super_admin: isSuperAdmin }).eq('id', userId);
+  if (error) throw error;
+}
+
+export async function createUser(user: Omit<User, 'id'>): Promise<User> {
+  const id = generateId();
+  const { data, error } = await supabase.from('users').insert({
+    id,
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    role: user.role,
+    is_super_admin: user.isSuperAdmin ?? false,
+    job_title: user.jobTitle,
+    avatar: user.avatar,
+    status: user.status,
+    department: user.department,
+    phone: user.phone,
+    joined_at: user.joinedAt,
+  }).select().single();
+  if (error) throw error;
+  return toCamelUser(data);
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  const { error } = await supabase.from('users').delete().eq('id', userId);
   if (error) throw error;
 }

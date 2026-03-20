@@ -28,8 +28,8 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const [aiFeedbackText, setAiFeedbackText] = useState('');
 
     // Permissions: Admin, Manager, or the assigned user can edit
-    const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
-    const canDelete = can ? can('canDeleteItems') : (currentUser?.role === 'admin' || currentUser?.role === 'manager');
+    const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
+    const canDelete = can ? can('canDeleteItems') : (currentUser?.role === 'company_admin' || currentUser?.role === 'manager');
 
     // Find linked content(s) for this task
     const linkedContents = contents.filter(c => c.taskIds && c.taskIds.includes(task.id));

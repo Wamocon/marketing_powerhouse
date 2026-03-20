@@ -30,7 +30,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const [newTaskPlatform, setNewTaskPlatform] = useState(content.platform || '');
     const [newTaskAssignee, setNewTaskAssignee] = useState('');
 
-    const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'manager';
+    const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager';
     const canDelete = can ? can('canDeleteItems') : canEdit;
 
     const getCampaignName = (cId: string | null | undefined) => {

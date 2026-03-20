@@ -1,47 +1,55 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { User, Role, PermissionKey, PermissionMap, RoleConfig } from '../types';
+import type { User, Role, CompanyRole, PermissionKey, PermissionMap, RoleConfig } from '../types';
 import * as api from '../lib/api';
 
 const SESSION_KEY = 'momentum_session_user_id';
 
 export const ROLES = {
-    ADMIN: 'admin' as const,
+    COMPANY_ADMIN: 'company_admin' as const,
     MANAGER: 'manager' as const,
     MEMBER: 'member' as const,
 };
 
-export const PERMISSIONS: Record<Role, PermissionMap> = {
-    admin: {
+export const PERMISSIONS: Record<CompanyRole, PermissionMap> = {
+    company_admin: {
         canEditPositioning: true, canEditCompanyKeywords: true, canManageUsers: true,
-        canManageSettings: true, canCreateCampaigns: true, canEditCampaigns: true,
-        canViewAllCampaigns: true, canDeleteItems: true, canManageTouchpoints: true,
-        canEditAudiences: true, canViewAudiences: true, canSeeBudget: true,
-        canEditBudget: true, canAssignTasks: true, canCreateCampaignTasks: true,
-        canEditAllTasks: true, canEditOwnTasks: true, canEditContent: true,
+        canManageSettings: true, canManageCompany: true, canCreateCampaigns: true,
+        canEditCampaigns: true, canViewAllCampaigns: true, canDeleteItems: true,
+        canManageTouchpoints: true, canEditAudiences: true, canViewAudiences: true,
+        canSeeBudget: true, canEditBudget: true, canAssignTasks: true,
+        canCreateCampaignTasks: true, canEditAllTasks: true, canEditOwnTasks: true,
+        canEditContent: true,
     },
     manager: {
         canEditPositioning: false, canEditCompanyKeywords: false, canManageUsers: false,
-        canManageSettings: false, canCreateCampaigns: true, canEditCampaigns: true,
-        canViewAllCampaigns: true, canDeleteItems: true, canManageTouchpoints: true,
-        canEditAudiences: true, canViewAudiences: true, canSeeBudget: true,
-        canEditBudget: true, canAssignTasks: true, canCreateCampaignTasks: true,
-        canEditAllTasks: true, canEditOwnTasks: true, canEditContent: true,
+        canManageSettings: false, canManageCompany: false, canCreateCampaigns: true,
+        canEditCampaigns: true, canViewAllCampaigns: true, canDeleteItems: true,
+        canManageTouchpoints: true, canEditAudiences: true, canViewAudiences: true,
+        canSeeBudget: true, canEditBudget: true, canAssignTasks: true,
+        canCreateCampaignTasks: true, canEditAllTasks: true, canEditOwnTasks: true,
+        canEditContent: true,
     },
     member: {
         canEditPositioning: false, canEditCompanyKeywords: false, canManageUsers: false,
-        canManageSettings: false, canCreateCampaigns: false, canEditCampaigns: false,
-        canViewAllCampaigns: false, canDeleteItems: false, canManageTouchpoints: false,
-        canEditAudiences: false, canViewAudiences: true, canSeeBudget: false,
-        canEditBudget: false, canAssignTasks: false, canCreateCampaignTasks: false,
-        canEditAllTasks: false, canEditOwnTasks: true, canEditContent: false,
+        canManageSettings: false, canManageCompany: false, canCreateCampaigns: false,
+        canEditCampaigns: false, canViewAllCampaigns: false, canDeleteItems: false,
+        canManageTouchpoints: false, canEditAudiences: false, canViewAudiences: true,
+        canSeeBudget: false, canEditBudget: false, canAssignTasks: false,
+        canCreateCampaignTasks: false, canEditAllTasks: false, canEditOwnTasks: true,
+        canEditContent: false,
     },
 };
 
-export const ROLE_CONFIG: Record<Role, RoleConfig> = {
-    admin: {
-        label: 'Administrator', shortLabel: 'Admin',
+export const ROLE_CONFIG: Record<CompanyRole, RoleConfig> & { super_admin: RoleConfig } = {
+    super_admin: {
+        label: 'Super-Administrator', shortLabel: 'Super-Admin',
+        color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.12)',
+        description: 'Globale Verwaltung aller Unternehmen und Benutzer',
+    },
+    company_admin: {
+        label: 'Unternehmens-Admin', shortLabel: 'Admin',
         color: '#c1292e', bgColor: 'rgba(193, 41, 46, 0.12)',
-        description: 'Vollständige Lese- und Schreibrechte, User-Management',
+        description: 'Vollständige Kontrolle über das Unternehmen, User-Management',
     },
     manager: {
         label: 'Marketing Manager', shortLabel: 'Manager',
@@ -58,21 +66,31 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
 /**
  * Pure utility — testable without React context.
  * Returns whether the given role has the given permission.
+ * Super-admins always have all permissions.
  */
-export function computePermission(role: Role | null | undefined, permission: PermissionKey): boolean {
+export function computePermission(
+    role: CompanyRole | null | undefined,
+    permission: PermissionKey,
+    isSuperAdmin?: boolean,
+): boolean {
+    if (isSuperAdmin) return true;
     if (!role) return false;
-    return PERMISSIONS[role][permission] === true;
+    return PERMISSIONS[role]?.[permission] === true;
 }
 
 interface AuthContextValue {
     currentUser: User | null;
     sessionLoading: boolean;
+    /** The user's role in the currently selected company */
+    activeCompanyRole: CompanyRole | null;
+    setActiveCompanyRole: (role: CompanyRole | null) => void;
+    isSuperAdmin: boolean;
     login: (user: User) => void;
     loginWithCredentials: (email: string, password: string) => Promise<User | null>;
     logout: () => void;
     can: (permission: PermissionKey) => boolean;
     isRole: (role: Role) => boolean;
-    ROLE_CONFIG: Record<Role, RoleConfig>;
+    ROLE_CONFIG: typeof ROLE_CONFIG;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -80,6 +98,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [sessionLoading, setSessionLoading] = useState(true);
+    const [activeCompanyRole, setActiveCompanyRole] = useState<CompanyRole | null>(null);
 
     // Restore session from localStorage on mount
     useEffect(() => {
@@ -122,16 +141,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             api.updateUserStatus(currentUser.id, 'offline').catch(console.error);
         }
         localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem('momentum_active_company');
         setCurrentUser(null);
+        setActiveCompanyRole(null);
     }, [currentUser]);
 
-    const can = useCallback((permission: PermissionKey): boolean =>
-        computePermission(currentUser?.role, permission), [currentUser]);
+    const isSuperAdmin = currentUser?.isSuperAdmin === true;
 
-    const isRole = useCallback((role: Role) => currentUser?.role === role, [currentUser]);
+    const can = useCallback((permission: PermissionKey): boolean =>
+        computePermission(activeCompanyRole, permission, isSuperAdmin), [activeCompanyRole, isSuperAdmin]);
+
+    const isRole = useCallback((role: Role) => activeCompanyRole === role, [activeCompanyRole]);
 
     return (
-        <AuthContext.Provider value={{ currentUser, sessionLoading, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG }}>
+        <AuthContext.Provider value={{
+            currentUser, sessionLoading, activeCompanyRole, setActiveCompanyRole,
+            isSuperAdmin, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG,
+        }}>
             {children}
         </AuthContext.Provider>
     );
