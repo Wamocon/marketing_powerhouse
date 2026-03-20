@@ -832,7 +832,7 @@ export async function deleteCompany(id: string): Promise<void> {
 export async function fetchCompanyMembers(companyId: string): Promise<CompanyMember[]> {
   const { data, error } = await supabase
     .from('company_members')
-    .select('*, users(name, email, avatar, status)')
+    .select('*, users(name, email, avatar, status, is_super_admin)')
     .eq('company_id', companyId);
   if (error) throw error;
   return (data ?? []).map((r: Record<string, unknown>) => {
@@ -843,6 +843,7 @@ export async function fetchCompanyMembers(companyId: string): Promise<CompanyMem
       member.userEmail = user.email as string;
       member.userAvatar = user.avatar as string;
       member.userStatus = user.status as User['status'];
+      member.userIsSuperAdmin = (user.is_super_admin as boolean) ?? false;
     }
     return member;
   });

@@ -1,16 +1,48 @@
 import type { CSSProperties } from 'react';
-import type { User, RoleConfig } from '../types';
+import { useState } from 'react';
+import type { User } from '../types';
 import { Shield, Plus, Trash2 } from 'lucide-react';
-import { useData } from '../context/DataContext';
-import { ROLE_CONFIG } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
+import { ROLE_CONFIG, useAuth } from '../context/AuthContext';
 
 interface AdminSettingsProps {
     currentUser: User | null;
-    statusDot: (s: string) => CSSProperties;
+    statusDot: (s: 'online' | 'away' | 'offline' | undefined) => CSSProperties;
 }
 
 export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
-    const { users: testUsers } = useData();
+    const { can, isSuperAdmin } = useAuth();
+    const { companyMembers, updateMemberRole, removeMember } = useCompany();
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    if (!can('canManageUsers')) {
+        return null;
+    }
+
+    const handleRoleUpdate = async (memberId: string, role: 'company_admin' | 'manager' | 'member') => {
+        try {
+            setError('');
+            await updateMemberRole(memberId, role);
+            setSuccess('Rolle aktualisiert.');
+            setTimeout(() => setSuccess(''), 2500);
+        } catch {
+            setError('Rolle konnte nicht geaendert werden.');
+        }
+    };
+
+    const handleRemoveMember = async (memberId: string, memberName: string) => {
+        if (!confirm(`${memberName} wirklich aus dem Unternehmen entfernen?`)) return;
+        try {
+            setError('');
+            await removeMember(memberId);
+            setSuccess('Mitglied entfernt.');
+            setTimeout(() => setSuccess(''), 2500);
+        } catch {
+            setError('Mitglied konnte nicht entfernt werden.');
+        }
+    };
+
     return (
         <div className="animate-in">
             <div className="card" style={{ marginBottom: '16px', borderColor: 'rgba(239,68,68,0.25)' }}>
@@ -30,11 +62,12 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testUsers.map(user => {
-                    const cfg = ROLE_CONFIG[user.role] as RoleConfig;
-                    const isMe = user.id === currentUser?.id;
+                {companyMembers.map(member => {
+                    const cfg = ROLE_CONFIG[member.role];
+                    const isMe = member.userId === currentUser?.id;
+                    const isProtectedSuperAdmin = member.userIsSuperAdmin && !isSuperAdmin;
                     return (
-                        <div key={user.id} className="card" style={{ padding: '16px', borderLeft: `3px solid ${cfg.color}` }}>
+                        <div key={member.id} className="card" style={{ padding: '16px', borderLeft: `3px solid ${cfg.color}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                                 <div style={{
                                     width: 40, height: 40, borderRadius: 'var(--radius-md)', flexShrink: 0,
@@ -42,23 +75,26 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                     justifyContent: 'center', fontWeight: 700, color: cfg.color,
                                     fontSize: 'var(--font-size-xs)',
                                 }}>
-                                    {user.avatar}
+                                    {member.userAvatar || member.userName?.charAt(0) || '?'}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{user.name}</span>
+                                        <span style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>{member.userName || 'Unbekannt'}</span>
                                         {isMe && (
                                             <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: 'var(--radius-full)', background: 'rgba(220,38,38,0.1)', color: 'var(--color-primary-light)', fontWeight: 700 }}>Du</span>
                                         )}
+                                        {member.userIsSuperAdmin && (
+                                            <span style={{ fontSize: '0.6rem', padding: '1px 6px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontWeight: 700 }}>Super-Admin</span>
+                                        )}
                                     </div>
                                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                        {user.email} · {user.jobTitle} · {user.department}
+                                        {member.userEmail || 'Keine E-Mail'}
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                                    <div style={statusDot(user.status)} />
+                                    <div style={statusDot(member.userStatus || 'offline')} />
                                     <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                        {user.status === 'online' ? 'Online' : user.status === 'away' ? 'Abwesend' : 'Offline'}
+                                        {member.userStatus === 'online' ? 'Online' : member.userStatus === 'away' ? 'Abwesend' : 'Offline'}
                                     </span>
                                 </div>
                                 <span style={{
@@ -70,7 +106,10 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                 </span>
                                 <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                                     <select
-                                        defaultValue={user.role}
+                                        value={member.role}
+                                        onChange={e => handleRoleUpdate(member.id, e.target.value as 'company_admin' | 'manager' | 'member')}
+                                        disabled={isMe || isProtectedSuperAdmin}
+                                        title={isProtectedSuperAdmin ? 'Super-Admin Rollen duerfen nur von Super-Admins angepasst werden.' : ''}
                                         style={{
                                             background: 'var(--bg-elevated)', border: '1px solid var(--border-color)',
                                             borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
@@ -82,7 +121,13 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                         <option value="member">Member</option>
                                     </select>
                                     {!isMe && (
-                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)', padding: '4px 8px' }}>
+                                        <button
+                                            className="btn btn-ghost btn-sm"
+                                            style={{ color: 'var(--color-danger)', padding: '4px 8px' }}
+                                            disabled={isProtectedSuperAdmin}
+                                            onClick={() => handleRemoveMember(member.id, member.userName || 'Mitglied')}
+                                            title={isProtectedSuperAdmin ? 'Super-Admin darf nicht von Unternehmens-Admins entfernt werden.' : ''}
+                                        >
                                             <Trash2 size={13} />
                                         </button>
                                     )}
@@ -99,8 +144,13 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                 color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px',
             }}>
                 <Shield size={11} style={{ color: '#ef4444', flexShrink: 0 }} />
-                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Änderungen an deinem eigenen Account sind nicht möglich.
+                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Unternehmens-Admins duerfen Super-Admin-Rechte nicht aendern.
             </div>
+            {(error || success) && (
+                <div style={{ marginTop: '10px', fontSize: 'var(--font-size-xs)', color: error ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                    {error || success}
+                </div>
+            )}
         </div>
     );
 }
