@@ -3,7 +3,7 @@
  * Uses the Gemini 2.0 Flash model via REST API (no SDK dependency).
  */
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 function getApiKey(): string {
   const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '';
@@ -33,7 +33,7 @@ export async function generateContent(prompt: string): Promise<GeminiResponse> {
           temperature: 0.8,
           topP: 0.95,
           topK: 40,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 8192,
         },
         safetySettings: [
           { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
@@ -56,7 +56,10 @@ export async function generateContent(prompt: string): Promise<GeminiResponse> {
       return { text: '', error: 'Keine Antwort von Gemini erhalten.' };
     }
 
-    const text = candidate.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? '';
+    const text = candidate.content?.parts
+      ?.filter((p: { thought?: boolean }) => !p.thought)
+      ?.map((p: { text?: string }) => p.text ?? '')
+      .join('') ?? '';
     return { text };
   } catch (err) {
     console.error('Gemini fetch error:', err);
