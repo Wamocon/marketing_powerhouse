@@ -1,7 +1,7 @@
 # Testplan Unit-Tests — Momentum Marketing Dashboard
 
-**Version:** 0.9  
-**Stand:** Januar 2026  
+**Version:** 1.0  
+**Stand:** März 2026  
 **Testtool:** [Vitest](https://vitest.dev/) v4  
 **Coverage-Ziel:** 100 % Anweisungsüberdeckung, 100 % Zweigüberdeckung der Kernlogik
 
@@ -178,19 +178,40 @@ Getestete Mutatoren und ihre Zweige:
 
 ---
 
+### 3.4 Notification-System (neu)
+
+Neue Unit-Testfälle für das Benachrichtigungssystem:
+
+| Modul | Testfall | Zweck |
+|---|---|---|
+| `src/context/NotificationContext.tsx` | Initial-Load ohne `currentUser`/`activeCompany` | Guard-Branches validieren |
+| `src/context/NotificationContext.tsx` | Initial-Load mit User + Company | `fetchNotifications` geladen, State gesetzt |
+| `src/context/NotificationContext.tsx` | `markAsRead(id)` | Optimistic Update + API-Aufruf + Revert bei Fehler |
+| `src/context/NotificationContext.tsx` | `markAllAsRead()` | Batch-Read + Badge-Reset |
+| `src/context/NotificationContext.tsx` | `archiveNotification(id)` | Item entfernt + API-Aufruf |
+| `src/context/NotificationContext.tsx` | Settings-Filterung | Deaktivierte Kategorien erscheinen nicht im Panel |
+| `src/lib/notificationTriggers.ts` | `notifyTaskAssigned` | korrekter Payload-Typ `task_assigned` |
+| `src/lib/notificationTriggers.ts` | `notifyTaskStatusChanged` | Multi-Recipient-Verteilung + Self-Skip |
+| `src/lib/notificationTriggers.ts` | `notifyAiGenerationComplete` | success/error Prioritäts-Branch |
+| `src/lib/notificationTriggers.ts` | `notifyCampaignStatusChanged` | Typ `campaign_update` + Action URL |
+| `src/lib/notificationTriggers.ts` | `notifyBudgetAlert` | Schwellwert 80%/100% → high/urgent |
+| `src/lib/notificationTriggers.ts` | `notifyContentStatusChanged` | Status-Mapping `ready/published` |
+
+---
+
 ## 4. Ergebnisübersicht
 
 ```
 Test Files   3 passed (3)
-Tests       142 passed (142)
-Duration    ~2.3s
+Tests       145 passed (145)
+Duration    ~2.0s
 ```
 
 | Testdatei | Tests | Themen |
 |---|---|---|
 | `auth.test.ts` | 76 | computePermission (58), PERMISSIONS-Matrix (5), Session (4+2+2), can() (4), isRole() (3) |
 | `api.test.ts` | 51 | User (11), Touchpoints (12), Campaigns (10), Journeys (10), Audiences (6) |
-| `context.test.tsx` | 15 | Audience/Campaign/Touchpoint CRUD (9), Journey-Type-Branching (4), Keywords (2) |
+| `context.test.tsx` | 13 | Audience/Campaign/Touchpoint CRUD (9), Journey-Type-Branching (2), Keywords (2) |
 
 ---
 
@@ -230,6 +251,8 @@ Die folgenden Module sind **bewusst nicht** durch Unit-Tests abgedeckt, da sie e
 | `src/components/*.tsx` | React-Komponenten — Abdeckung durch Explorativen Test |
 | `src/context/ContentContext.tsx` | Selbes Muster wie DataContext, keine zusätzlichen Branches |
 | `src/context/TaskContext.tsx` | Selbes Muster wie DataContext + AI-Simulation (nicht testbar) |
+| `src/context/NotificationContext.tsx` | Realtime-Subscription nur mit Integrationstest/E2E belastbar testbar |
+| `src/lib/notificationTriggers.ts` | Geplant für isolierte Mock-Unit-Tests (Payload-Contract) |
 | `src/lib/supabase.ts` | Infrastruktur, intentional gemockt |
 | `app/**` (Next.js pages) | Routing-Logik, zu testen via E2E |
 

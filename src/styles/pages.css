@@ -5,23 +5,33 @@
 }
 
 /* === Login === */
+/*
+ * position:fixed + inset:0 lifts the login panel above body{overflow:hidden}
+ * so the left column can scroll independently of the main app layout.
+ */
 .login-page {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
   display: flex;
-  height: 100vh;
-  width: 100vw;
 }
 
 .login-left {
-  flex: 1;
+  flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: var(--space-2xl);
   background: var(--bg-base);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .login-right {
-  flex: 1;
+  flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), var(--color-accent));
   display: flex;
   align-items: center;
@@ -41,6 +51,9 @@
 .login-form-container {
   width: 100%;
   max-width: 400px;
+  padding: var(--space-xl) 0;
+  /* Ensures content has breathing room at bottom when scrolling */
+  padding-bottom: var(--space-2xl);
 }
 
 .login-title {
@@ -103,6 +116,28 @@
   font-size: var(--font-size-xs);
   opacity: 0.8;
   line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .login-right {
+    display: none;
+  }
+
+  .login-left {
+    flex: 0 0 100%;
+    width: 100%;
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .login-form-container {
+    max-width: 540px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-left {
+    padding: var(--space-lg) var(--space-md);
+  }
 }
 
 /* === Utility === */

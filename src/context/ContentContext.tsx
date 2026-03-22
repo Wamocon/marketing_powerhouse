@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { ContentItem, ContentStatus } from '../types';
 import { useCompany } from './CompanyContext';
+import { useAuth } from './AuthContext';
 import * as api from '../lib/api';
+import { notifyContentStatusChanged } from '../lib/notificationTriggers';
 
 export const CONTENT_STATUSES: Record<ContentStatus, { label: string; color: string; icon: string }> = {
     idea: { label: 'Idee', color: '#94a3b8', icon: '💡' },
@@ -27,7 +29,9 @@ const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
     const { activeCompany } = useCompany();
+    const { currentUser } = useAuth();
     const companyId = activeCompany?.id ?? null;
+    const currentUserId = currentUser?.id ?? null;
     const prevCompanyId = useRef<string | null>(null);
     const [contents, setContents] = useState<ContentItem[]>([]);
 
@@ -50,9 +54,28 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }, [companyId]);
 
     const updateContent = useCallback(async (id: string, updates: Partial<ContentItem>) => {
+        const oldContent = contents.find(c => c.id === id);
         await api.updateContent(id, updates);
         setContents(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    }, []);
+
+        // Notify author on relevant status changes
+        if (updates.status && oldContent && updates.status !== oldContent.status && companyId) {
+            const recipients: string[] = [];
+            if (oldContent.author && oldContent.author !== currentUserId) {
+                recipients.push(oldContent.author);
+            }
+            if (recipients.length > 0) {
+                notifyContentStatusChanged({
+                    companyId,
+                    triggeredByUserId: currentUserId ?? undefined,
+                    recipientUserIds: recipients,
+                    contentId: id,
+                    contentTitle: oldContent.title,
+                    newStatus: updates.status,
+                });
+            }
+        }
+    }, [contents, companyId, currentUserId]);
 
     const deleteContent = useCallback(async (id: string) => {
         await api.deleteContent(id);

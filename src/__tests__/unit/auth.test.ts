@@ -26,6 +26,7 @@ vi.mock('@/lib/api', async () => {
     fetchUserById: vi.fn(),
     updateUserStatus: vi.fn().mockResolvedValue(undefined),
     loginUser: vi.fn(),
+    registerUser: vi.fn(),
   };
 });
 
@@ -259,7 +260,57 @@ describe('loginWithCredentials()', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. logout() — 2 branches
+// 5. registerWithCredentials() - 2 branches
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('registerWithCredentials()', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(api.updateUserStatus).mockResolvedValue(undefined);
+  });
+
+  it('creates user, stores session, and marks user online', async () => {
+    const newUser: User = { ...adminUser, id: 'new-1', email: 'new@test.de', phone: '+491701112233' };
+    vi.mocked(api.registerUser).mockResolvedValue(newUser);
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.registerWithCredentials({
+        name: 'New User',
+        email: 'new@test.de',
+        password: 'secret123',
+        phone: '+491701112233',
+        whatsappConsent: true,
+      });
+    });
+
+    expect(result.current.currentUser).toEqual(newUser);
+    expect(localStorage.getItem('momentum_session_user_id')).toBe('new-1');
+    expect(api.updateUserStatus).toHaveBeenCalledWith('new-1', 'online');
+  });
+
+  it('propagates registerUser errors and leaves session untouched', async () => {
+    vi.mocked(api.registerUser).mockRejectedValue(new Error('already exists'));
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.sessionLoading).toBe(false));
+
+    await expect(result.current.registerWithCredentials({
+      name: 'New User',
+      email: 'new@test.de',
+      password: 'secret123',
+      phone: '+491701112233',
+      whatsappConsent: true,
+    })).rejects.toThrow('already exists');
+
+    expect(result.current.currentUser).toBeNull();
+    expect(localStorage.getItem('momentum_session_user_id')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. logout() — 2 branches
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('logout()', () => {
   beforeEach(() => {
@@ -299,7 +350,7 @@ describe('logout()', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 6. can() via context — delegates to computePermission
+// 7. can() via context — delegates to computePermission
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('can() in AuthProvider context', () => {
   beforeEach(() => {
@@ -363,7 +414,7 @@ describe('can() in AuthProvider context', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 7. isRole() — 3 branches
+// 8. isRole() — 3 branches
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('isRole() in AuthProvider context', () => {
   beforeEach(() => {

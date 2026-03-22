@@ -12,6 +12,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     const { currentUser, sessionLoading, login, logout } = useAuth();
     const { activeCompany, loading: companyLoading } = useCompany();
     const pathname = usePathname();
+    const isPublicLegalRoute = pathname === '/impressum' || pathname === '/datenschutz' || pathname === '/agb';
 
     if (sessionLoading) {
         return (
@@ -34,6 +35,10 @@ export default function ClientShell({ children }: { children: ReactNode }) {
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
+    }
+
+    if (isPublicLegalRoute) {
+        return <>{children}</>;
     }
 
     if (!currentUser) {

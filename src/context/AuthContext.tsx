@@ -87,6 +87,14 @@ interface AuthContextValue {
     isSuperAdmin: boolean;
     login: (user: User) => void;
     loginWithCredentials: (email: string, password: string) => Promise<User | null>;
+    registerWithCredentials: (input: {
+        name: string;
+        email: string;
+        password: string;
+        phone: string;
+        whatsappConsent: boolean;
+        companyName?: string;
+    }) => Promise<User>;
     logout: () => void;
     can: (permission: PermissionKey) => boolean;
     isRole: (role: Role) => boolean;
@@ -136,6 +144,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return user;
     }, []);
 
+    const registerWithCredentials = useCallback(async (input: {
+        name: string;
+        email: string;
+        password: string;
+        phone: string;
+        whatsappConsent: boolean;
+        companyName?: string;
+    }): Promise<User> => {
+        const user = await api.registerUser(input);
+        localStorage.setItem(SESSION_KEY, user.id);
+        setCurrentUser(user);
+        api.updateUserStatus(user.id, 'online').catch(console.error);
+        return user;
+    }, []);
+
     const logout = useCallback(() => {
         if (currentUser) {
             api.updateUserStatus(currentUser.id, 'offline').catch(console.error);
@@ -156,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <AuthContext.Provider value={{
             currentUser, sessionLoading, activeCompanyRole, setActiveCompanyRole,
-            isSuperAdmin, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG,
+            isSuperAdmin, login, loginWithCredentials, registerWithCredentials, logout, can, isRole, ROLE_CONFIG,
         }}>
             {children}
         </AuthContext.Provider>

@@ -3,20 +3,22 @@ import { useRouter } from 'next/navigation';
 import { Plus, Search, Calendar, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import PageHelp from '../components/PageHelp';
 import NewCampaignModal from '../components/NewCampaignModal';
 
 const statusConfig = {
-    active: { label: 'Aktiv', badge: 'badge-success' },
-    planned: { label: 'Geplant', badge: 'badge-info' },
-    draft: { label: 'Entwurf', badge: 'badge-warning' },
-    completed: { label: 'Abgeschlossen', badge: 'badge-primary' },
-    paused: { label: 'Pausiert', badge: 'badge-danger' },
+    active: { label: { de: 'Aktiv', en: 'Active' }, badge: 'badge-success' },
+    planned: { label: { de: 'Geplant', en: 'Planned' }, badge: 'badge-info' },
+    draft: { label: { de: 'Entwurf', en: 'Draft' }, badge: 'badge-warning' },
+    completed: { label: { de: 'Abgeschlossen', en: 'Completed' }, badge: 'badge-primary' },
+    paused: { label: { de: 'Pausiert', en: 'Paused' }, badge: 'badge-danger' },
 };
 
 export default function CampaignsPage() {
     const router = useRouter();
     const { can } = useAuth();
+    const { language, locale } = useLanguage();
     const { campaigns, users } = useData();
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -30,24 +32,21 @@ export default function CampaignsPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Kampagnen</h1>
-                    <p className="page-subtitle">{campaigns.length} Kampagnen insgesamt · {campaigns.filter(c => c.status === 'active').length} aktiv</p>
+                    <h1 className="page-title">{language === 'en' ? 'Campaigns' : 'Kampagnen'}</h1>
+                    <p className="page-subtitle">{campaigns.length} {language === 'en' ? 'campaigns total' : 'Kampagnen insgesamt'} - {campaigns.filter(c => c.status === 'active').length} {language === 'en' ? 'active' : 'aktiv'}</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title="Kampagnen-Management">
-                        <p style={{ marginBottom: '12px' }}>Die Kommandozentrale für all deine großen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.</p>
+                    <PageHelp title={language === 'en' ? 'Campaign management' : 'Kampagnen-Management'}>
+                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'The command center for your key initiatives. Everything is organized by campaign.' : 'Die Kommandozentrale fuer all deine grossen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.'}</p>
                         <ul className="help-list">
-                            <li><strong>Dashboard-Sicht:</strong> Sehe sofort den Fortschritt und die Budget-Auslastung laufender Kampagnen in Kachelansicht.</li>
-                            <li><strong>Neue Kampagnen erstellen:</strong> Vergib Budgets, eine Laufzeit (Start/Ende), Keywords und setze verbindlich Zielgruppen, die du zuvor mit dem Team erarbeitet hast.</li>
-                            <li><strong>Verantwortlicher Manager:</strong> Jede Kampagne hat einen verantwortlichen Manager, der als Ansprechpartner und Entscheider fungiert. Wähle ihn beim Erstellen oder Bearbeiten der Kampagne.</li>
-                            <li><strong>Team-Mitglieder:</strong> Plane Team-Mitglieder für die Kampagne ein. So sieht jeder auf einen Blick, wer an welcher Kampagne arbeitet.</li>
-                            <li><strong>Deep-Dive:</strong> Mit einem Klick auf "Details" oder die Kachel gelangst du ins Herz (die Detailseite) der Kampagne. Dort planst du den Content, Creatives und checkst die Performance tiefergehend.</li>
+                            <li><strong>{language === 'en' ? 'Dashboard view' : 'Dashboard-Sicht'}:</strong> {language === 'en' ? 'Instant progress and budget utilization for running campaigns in card view.' : 'Sehe sofort den Fortschritt und die Budget-Auslastung laufender Kampagnen in Kachelansicht.'}</li>
+                            <li><strong>{language === 'en' ? 'Create campaigns' : 'Neue Kampagnen erstellen'}:</strong> {language === 'en' ? 'Define budget, timeline, keywords and target audiences.' : 'Vergib Budgets, eine Laufzeit (Start/Ende), Keywords und setze verbindlich Zielgruppen.'}</li>
                         </ul>
                     </PageHelp>
                     {can('canCreateCampaigns') && (
                         <button className="btn btn-primary" onClick={() => setShowNewCampaignModal(true)}>
                             <Plus size={16} />
-                            Neue Kampagne
+                            {language === 'en' ? 'New campaign' : 'Neue Kampagne'}
                         </button>
                     )}
                 </div>
@@ -61,7 +60,7 @@ export default function CampaignsPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder="Kampagnen durchsuchen…"
+                        placeholder={language === 'en' ? 'Search campaigns...' : 'Kampagnen durchsuchen...'}
                         style={{ paddingLeft: '36px', width: '100%' }}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -69,11 +68,11 @@ export default function CampaignsPage() {
                 </div>
                 <div className="tabs" style={{ marginBottom: 0, borderBottom: 'none', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
                     {[
-                        { key: 'all', label: 'Alle' },
-                        { key: 'active', label: 'Aktiv' },
-                        { key: 'planned', label: 'Geplant' },
-                        { key: 'draft', label: 'Entwurf' },
-                        { key: 'completed', label: 'Abgeschlossen' },
+                        { key: 'all', label: language === 'en' ? 'All' : 'Alle' },
+                        { key: 'active', label: language === 'en' ? 'Active' : 'Aktiv' },
+                        { key: 'planned', label: language === 'en' ? 'Planned' : 'Geplant' },
+                        { key: 'draft', label: language === 'en' ? 'Draft' : 'Entwurf' },
+                        { key: 'completed', label: language === 'en' ? 'Completed' : 'Abgeschlossen' },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -116,13 +115,13 @@ export default function CampaignsPage() {
                                         {campaign.description}
                                     </p>
                                 </div>
-                                <span className={`badge ${status.badge}`}>{status.label}</span>
+                                <span className={`badge ${status.badge}`}>{status.label[language]}</span>
                             </div>
 
                             {/* Progress */}
                             <div style={{ marginBottom: '16px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                    <span>Fortschritt</span>
+                                    <span>{language === 'en' ? 'Progress' : 'Fortschritt'}</span>
                                     <span>{campaign.progress}%</span>
                                 </div>
                                 <div className="progress-bar">
@@ -154,7 +153,7 @@ export default function CampaignsPage() {
                                         background: 'rgba(16,185,129,0.15)',
                                         color: '#10b981',
                                     }}>
-                                        <Users size={10} /> {linkedAudienceCount} Persona{linkedAudienceCount !== 1 ? 's' : ''}
+                                        <Users size={10} /> {linkedAudienceCount} {language === 'en' ? `persona${linkedAudienceCount !== 1 ? 's' : ''}` : `Persona${linkedAudienceCount !== 1 ? 's' : ''}`}
                                     </span>
                                 )}
                                 {keywordCount > 0 && (
@@ -174,7 +173,7 @@ export default function CampaignsPage() {
                             <div style={{ display: 'flex', gap: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <Calendar size={12} />
-                                    <span>{new Date(campaign.startDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })} – {new Date(campaign.endDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}</span>
+                                    <span>{new Date(campaign.startDate).toLocaleDateString(locale, { day: '2-digit', month: 'short' })} - {new Date(campaign.endDate).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}</span>
                                 </div>
                                 {manager && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -185,7 +184,7 @@ export default function CampaignsPage() {
                                 {teamCount > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <UsersRound size={12} style={{ color: '#0ea5e9' }} />
-                                        <span>{teamCount} Mitglied{teamCount !== 1 ? 'er' : ''}</span>
+                                        <span>{teamCount} {language === 'en' ? `member${teamCount !== 1 ? 's' : ''}` : `Mitglied${teamCount !== 1 ? 'er' : ''}`}</span>
                                     </div>
                                 )}
                             </div>
@@ -214,9 +213,9 @@ export default function CampaignsPage() {
                                 borderTop: '1px solid var(--border-color)',
                                 fontSize: 'var(--font-size-sm)',
                             }}>
-                                <span style={{ color: 'var(--text-secondary)' }}>Budget</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>{language === 'en' ? 'Budget' : 'Budget'}</span>
                                 <span style={{ fontWeight: 600 }}>
-                                    €{campaign.spent.toLocaleString('de-DE')} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{campaign.budget.toLocaleString('de-DE')}</span>
+                                    €{campaign.spent.toLocaleString(locale)} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{campaign.budget.toLocaleString(locale)}</span>
                                 </span>
                             </div>
                         </div>

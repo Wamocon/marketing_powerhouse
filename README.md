@@ -18,7 +18,7 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 ✅ **Unternehmens-Verwaltung** — Unternehmen erstellen, bearbeiten, Mitglieder verwalten  
 ✅ **Projekt-Zuweisung & Rollenwechsel** — Super-Admin weist bestehende Benutzer Unternehmen zu und ändert Rollen pro Unternehmen  
 ✅ **Admin-Einladung per E-Mail** — Unternehmens-Admins weisen bestehende Benutzer per E-Mail zu (Default-Rolle: Member)  
-✅ **Benachrichtigungs-Einstellungen** — Schaltbare Benachrichtigungs-Typen pro Unternehmen, im Browser gespeichert  
+✅ **Benachrichtigungssystem** — Echtzeit-Notifications via Supabase Realtime, Notification-Center mit Glocken-Symbol, rollenbasierte Benachrichtigungen für Kampagnen, Tasks, Budget, Content und Team-Events, steuerbar über Notification-Settings pro Unternehmen  
 ✅ **Kampagnen-Management** — Multi-Channel-Kampagnen mit 3-Schritt-Erstellung, Master-Prompt, Zielgruppen und Keywords  
 ✅ **Creative-Workflow (10 Stufen)** — Entwurf → KI-Vorschlag → Review → Freigabe → Posting → KI-Analyse  
 ✅ **Customer Journey (5-Phasen)** — Awareness bis Advocacy mit Content-Deep-Links und Touchpoint-Integration  
@@ -59,12 +59,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://<dein-projekt>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<dein-anon-key>
 ```
 
-### Supabase Upgrade (ein Skript)
+### Supabase Upgrade (Migrationen)
 
 Für bestehende Datenbanken sind **alle Multi-Tenancy-DB-Änderungen** in einem Skript gebündelt:
 
 ```bash
 node scripts/migrate_multi_tenant.mjs
+```
+
+Für das neue Benachrichtigungssystem zusätzlich ausführen:
+
+```bash
+node scripts/migrate_notifications.mjs
 ```
 
 Das Skript enthält:
@@ -73,6 +79,11 @@ Das Skript enthält:
 - Rollen-Constraint-Umstellung auf `company_admin|manager|member`
 - `company_id`-Spalten + Indizes für alle relevanten Datentabellen
 - Seed/Mapping für **WAMOCON Academy** inkl. Rollenzuweisung aller bestehenden Benutzer
+
+Das Notification-Skript enthält:
+- Tabellen `notifications` und `notification_preferences`
+- Indizes für `recipient_user_id`, `company_id`, `is_read`
+- Typisierte Notification-Kategorien (Task, Campaign, Budget, Content, Team, System)
 
 ### Starten
 
@@ -170,7 +181,8 @@ marketing_powerhouse/
     ├── index.css                     ← Tailwind CSS v4 + Design System
     ├── lib/
     │   ├── supabase.ts               ← Supabase-Client (Singleton)
-    │   ├── api.ts                    ← Vollständige CRUD-API (~700 Zeilen, inkl. Company-API)
+    │   ├── api.ts                    ← Vollständige CRUD-API (inkl. Company-API, Notifications)
+    │   ├── notificationTriggers.ts   ← Notification-Erzeugungs-Helper für alle Entitäten
     │   └── constants.ts              ← Content-Type-Farben
     ├── types/
     │   ├── index.ts                  ← Zentrale TypeScript-Typdefinitionen (User, Company, etc.)
@@ -180,7 +192,8 @@ marketing_powerhouse/
     │   ├── CompanyContext.tsx         ← NEU: Multi-Tenancy, Unternehmens-Auswahl/-Verwaltung
     │   ├── DataContext.tsx            ← Zentraler Daten-Provider (Supabase CRUD)
     │   ├── ContentContext.tsx         ← Content-State-Management (async)
-    │   └── TaskContext.tsx            ← Aufgaben-State-Management (async)
+    │   ├── TaskContext.tsx            ← Aufgaben-State-Management (async)
+    │   └── NotificationContext.tsx    ← Benachrichtigungs-Provider mit Supabase Realtime
     ├── components/                    ← Wiederverwendbare UI-Komponenten
     │   ├── Layout.tsx / Sidebar.tsx / Header.tsx
     │   ├── DashboardViews.tsx / DashboardComponents.tsx
@@ -190,6 +203,7 @@ marketing_powerhouse/
     │   ├── AudienceDetailModal.tsx / ContentDetailModal.tsx
     │   ├── TaskDetailModal.tsx / TouchpointDetailModal.tsx
     │   ├── TaskAiAgent.tsx
+    │   ├── NotificationBell.tsx / NotificationPanel.tsx / NotificationItem.tsx
     │   ├── PositioningComponents.tsx / ManualComponents.tsx
     │   ├── SettingsAdmin.tsx / PageHelp.tsx
     │   └── ui/
@@ -347,6 +361,8 @@ npm run test:coverage  # Test-Coverage-Report
 | `channel_performance` | Kanal-Performance-Daten (mit `company_id`) |
 | `journeys` | Customer Journeys (mit `company_id`) |
 | `journey_stages` | Journey-Phasen/Stages |
+| `notifications` | **NEU** — Benachrichtigungen pro Benutzer (mit `company_id`, Realtime) |
+| `notification_preferences` | **NEU** — Individuelle Notification-Einstellungen pro Benutzer/Unternehmen |
 
 Alle Datentabellen verwenden `company_id` als Foreign Key zur `companies`-Tabelle für Multi-Tenancy-Isolation.
 

@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { Task, TaskStatus } from '../types';
 import { useCompany } from './CompanyContext';
+import { useAuth } from './AuthContext';
 import * as api from '../lib/api';
 import { buildTaskPrompt, type PromptContext } from '../lib/promptBuilder';
+import { notifyTaskAssigned, notifyTaskStatusChanged, notifyAiGenerationComplete } from '../lib/notificationTriggers';
 import { generateContent } from '../lib/gemini';
 
 interface TaskContextValue {
@@ -21,7 +23,9 @@ const TaskContext = createContext<TaskContextValue | null>(null);
 
 export function TaskProvider({ children }: { children: ReactNode }) {
     const { activeCompany } = useCompany();
+    const { currentUser } = useAuth();
     const companyId = activeCompany?.id ?? null;
+    const currentUserId = currentUser?.id ?? null;
     const prevCompanyId = useRef<string | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [promptCtx, setPromptCtx] = useState<Omit<PromptContext, 'task'> | null>(null);
@@ -41,12 +45,35 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         if (!companyId) return;
         const created = await api.createTask(task, companyId);
         setTasks(prev => [...prev, created]);
-    }, [companyId]);
+
+        // Notify assignee if task is assigned to someone else
+        if (created.assignee && created.assignee !== currentUserId && companyId) {
+            notifyTaskAssigned({
+                companyId,
+                triggeredByUserId: currentUserId ?? undefined,
+                assigneeUserId: created.assignee,
+                taskId: created.id,
+                taskTitle: created.title,
+            });
+        }
+    }, [companyId, currentUserId]);
 
     const updateTaskFn = useCallback(async (id: string, updates: Partial<Task>) => {
+        const oldTask = tasks.find(t => t.id === id);
         await api.updateTask(id, updates);
         setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    }, []);
+
+        // Notify on assignee change
+        if (updates.assignee && oldTask && updates.assignee !== oldTask.assignee && updates.assignee !== currentUserId && companyId) {
+            notifyTaskAssigned({
+                companyId,
+                triggeredByUserId: currentUserId ?? undefined,
+                assigneeUserId: updates.assignee,
+                taskId: id,
+                taskTitle: updates.title ?? oldTask.title,
+            });
+        }
+    }, [tasks, companyId, currentUserId]);
 
     const deleteTaskFn = useCallback(async (id: string) => {
         await api.deleteTask(id);
@@ -54,6 +81,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const updateTaskStatus = useCallback(async (id: string, newStatus: TaskStatus) => {
+        const oldTask = tasks.find(t => t.id === id);
         const updates: Partial<Task> = { status: newStatus };
         if (newStatus === 'monitoring') {
             updates.performance = {
@@ -64,7 +92,23 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         }
         await api.updateTask(id, updates);
         setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    }, []);
+
+        // Notify relevant people about status change
+        if (oldTask && companyId) {
+            const recipients = new Set<string>();
+            if (oldTask.assignee) recipients.add(oldTask.assignee);
+            if (oldTask.author) recipients.add(oldTask.author);
+            notifyTaskStatusChanged({
+                companyId,
+                triggeredByUserId: currentUserId ?? undefined,
+                recipientUserIds: [...recipients],
+                taskId: id,
+                taskTitle: oldTask.title,
+                oldStatus: oldTask.status,
+                newStatus,
+            });
+        }
+    }, [tasks, companyId, currentUserId]);
 
     const setPromptContext = useCallback((ctx: Omit<PromptContext, 'task'>) => {
         setPromptCtx(ctx);
@@ -103,6 +147,17 @@ export function TaskProvider({ children }: { children: ReactNode }) {
             const updates = { status: 'ai_ready' as TaskStatus, aiSuggestion: result.text };
             await api.updateTask(id, updates);
             setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+
+            // Notify task assignee that AI generation is complete
+            if (companyId && task.assignee) {
+                notifyAiGenerationComplete({
+                    companyId,
+                    recipientUserId: task.assignee,
+                    taskId: id,
+                    taskTitle: task.title,
+                    success: true,
+                });
+            }
         } catch (err) {
             console.error('AI generation failed:', err);
             const updates = {
@@ -111,8 +166,18 @@ export function TaskProvider({ children }: { children: ReactNode }) {
             };
             await api.updateTask(id, updates);
             setTasks(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+
+            if (companyId && task.assignee) {
+                notifyAiGenerationComplete({
+                    companyId,
+                    recipientUserId: task.assignee,
+                    taskId: id,
+                    taskTitle: task.title,
+                    success: false,
+                });
+            }
         }
-    }, [tasks, promptCtx]);
+    }, [tasks, promptCtx, companyId]);
 
     const sendAiFeedback = useCallback(async (id: string, feedback: string) => {
         const task = tasks.find(t => t.id === id);

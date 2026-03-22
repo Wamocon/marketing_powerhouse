@@ -4,9 +4,11 @@ import {
     Plus, Check, X, Lock, Trash2,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
+import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { useCompany } from '../context/CompanyContext';
 import * as api from '../lib/api';
 import PageHelp from '../components/PageHelp';
+import { NOTIFICATION_SETTING_TYPE_MAP, type NotificationType } from '../types';
 
 import { AdminSettings } from '../components/SettingsAdmin';
 
@@ -29,6 +31,45 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 };
 
 const NOTIFICATION_STORAGE_PREFIX = 'momentum_notification_settings';
+const NOTIFICATION_SETTINGS_CHANGED_EVENT = 'momentum_notification_settings_changed';
+
+const getNotificationStorageKey = (companyId: string, userId: string) =>
+    `${NOTIFICATION_STORAGE_PREFIX}:${companyId}:${userId}`;
+
+const mapPreferencesToSettings = (
+    preferences: Array<{ type: NotificationType; enabled: boolean }>,
+): NotificationSettings => {
+    if (preferences.length === 0) return { ...DEFAULT_NOTIFICATION_SETTINGS };
+
+    const byType = new Map<NotificationType, boolean>(
+        preferences.map(pref => [pref.type, pref.enabled]),
+    );
+    const result: NotificationSettings = { ...DEFAULT_NOTIFICATION_SETTINGS };
+
+    for (const [settingKey, types] of Object.entries(NOTIFICATION_SETTING_TYPE_MAP)) {
+        const key = settingKey as keyof NotificationSettings;
+        const values = types
+            .map(type => byType.has(type) ? byType.get(type) : undefined)
+            .filter((value): value is boolean => typeof value === 'boolean');
+
+        if (values.length > 0) {
+            result[key] = values.every(Boolean);
+        }
+    }
+
+    return result;
+};
+
+const mapSettingsToTypeFlags = (settings: NotificationSettings): Partial<Record<NotificationType, boolean>> => {
+    const result: Partial<Record<NotificationType, boolean>> = {};
+    for (const [settingKey, types] of Object.entries(NOTIFICATION_SETTING_TYPE_MAP)) {
+        const enabled = settings[settingKey as keyof NotificationSettings];
+        for (const type of types) {
+            result[type] = enabled;
+        }
+    }
+    return result;
+};
 
 const normalizeNotificationSettings = (input: unknown): NotificationSettings => {
     if (!input || typeof input !== 'object') {
@@ -46,10 +87,10 @@ const normalizeNotificationSettings = (input: unknown): NotificationSettings => 
 };
 
 const NOTIFICATION_SETTING_META: { key: keyof NotificationSettings; title: string; desc: string }[] = [
-    { key: 'campaignUpdates', title: 'Kampagnen-Updates', desc: 'Hinweis bei Statusänderungen in Kampagnen' },
-    { key: 'budgetAlerts', title: 'Budget-Alerts', desc: 'Warnung bei Budgetüberschreitung (80%)' },
-    { key: 'taskReminders', title: 'Aufgaben-Erinnerungen', desc: 'Erinnerung 24h vor Deadline' },
-    { key: 'teamActivities', title: 'Team-Aktivitäten', desc: 'Neue Kommentare und Freigaben' },
+    { key: 'campaignUpdates', title: 'Kampagnen-Updates', desc: 'Statusänderungen und neue Kampagnen im Notification-Center' },
+    { key: 'budgetAlerts', title: 'Budget-Alerts', desc: 'Warnung bei Budgetüberschreitung (ab 80%) – erscheint als dringende Benachrichtigung' },
+    { key: 'taskReminders', title: 'Aufgaben-Benachrichtigungen', desc: 'Zuweisung, Status-Änderungen und KI-Generierungsergebnisse' },
+    { key: 'teamActivities', title: 'Team-Aktivitäten', desc: 'Neue Team-Mitglieder und Rollenwechsel' },
     { key: 'weeklyReport', title: 'Wöchentlicher Report', desc: 'Zusammenfassung im Dashboard-Hinweisbereich' },
     { key: 'kpiAnomalies', title: 'KPI-Anomalien', desc: 'Benachrichtigung bei ungewöhnlichen KPI-Werten' },
 ];
@@ -72,6 +113,7 @@ const statusDot = (s: 'online' | 'away' | 'offline' | undefined) => ({
 
 export default function SettingsPage() {
     const { can, currentUser, isSuperAdmin } = useAuth();
+    const { language, setLanguage } = useLanguage();
     const {
         activeCompany,
         companyMembers,
@@ -91,6 +133,8 @@ export default function SettingsPage() {
     const [notificationsDirty, setNotificationsDirty] = useState(false);
     const [notificationSavedMsg, setNotificationSavedMsg] = useState('');
     const [notificationErrorMsg, setNotificationErrorMsg] = useState('');
+    const [generalLanguage, setGeneralLanguage] = useState<AppLanguage>(language);
+    const [languageSavedMsg, setLanguageSavedMsg] = useState('');
 
     useEffect(() => {
         setWsName(activeCompany?.name ?? '');
@@ -100,21 +144,64 @@ export default function SettingsPage() {
     }, [activeCompany]);
 
     useEffect(() => {
-        const storageKey = `${NOTIFICATION_STORAGE_PREFIX}:${activeCompany?.id ?? 'global'}`;
-        try {
-            const raw = localStorage.getItem(storageKey);
-            const parsed = raw ? JSON.parse(raw) : null;
-            setNotificationSettings(normalizeNotificationSettings(parsed));
-            setNotificationsDirty(false);
-            setNotificationSavedMsg('');
-            setNotificationErrorMsg('');
-        } catch {
-            setNotificationSettings({ ...DEFAULT_NOTIFICATION_SETTINGS });
-            setNotificationsDirty(false);
-            setNotificationSavedMsg('');
-            setNotificationErrorMsg('Benachrichtigungs-Einstellungen konnten nicht geladen werden. Standardwerte aktiv.');
-        }
-    }, [activeCompany?.id]);
+        let cancelled = false;
+
+        const loadNotificationSettings = async () => {
+            if (!activeCompany || !currentUser) {
+                if (!cancelled) {
+                    setNotificationSettings({ ...DEFAULT_NOTIFICATION_SETTINGS });
+                    setNotificationsDirty(false);
+                    setNotificationSavedMsg('');
+                    setNotificationErrorMsg('');
+                }
+                return;
+            }
+
+            const storageKey = getNotificationStorageKey(activeCompany.id, currentUser.id);
+
+            try {
+                const preferences = await api.fetchNotificationPreferences(currentUser.id, activeCompany.id);
+                if (cancelled) return;
+
+                if (preferences.length > 0) {
+                    const mapped = mapPreferencesToSettings(preferences);
+                    setNotificationSettings(mapped);
+                    localStorage.setItem(storageKey, JSON.stringify(mapped));
+                } else {
+                    const raw = localStorage.getItem(storageKey);
+                    const parsed = raw ? JSON.parse(raw) : null;
+                    setNotificationSettings(normalizeNotificationSettings(parsed));
+                }
+
+                setNotificationsDirty(false);
+                setNotificationSavedMsg('');
+                setNotificationErrorMsg('');
+            } catch {
+                if (cancelled) return;
+                try {
+                    const raw = localStorage.getItem(storageKey);
+                    const parsed = raw ? JSON.parse(raw) : null;
+                    setNotificationSettings(normalizeNotificationSettings(parsed));
+                    setNotificationErrorMsg('Einstellungen konnten nicht aus der Cloud geladen werden. Lokale Werte aktiv.');
+                } catch {
+                    setNotificationSettings({ ...DEFAULT_NOTIFICATION_SETTINGS });
+                    setNotificationErrorMsg('Benachrichtigungs-Einstellungen konnten nicht geladen werden. Standardwerte aktiv.');
+                }
+                setNotificationsDirty(false);
+                setNotificationSavedMsg('');
+            }
+        };
+
+        void loadNotificationSettings();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeCompany?.id, currentUser?.id]);
+
+    useEffect(() => {
+        setGeneralLanguage(language);
+    }, [language]);
 
     const handleSaveSettings = async () => {
         if (!activeCompany || !can('canManageSettings')) return;
@@ -212,14 +299,22 @@ export default function SettingsPage() {
         setNotificationErrorMsg('');
     };
 
-    const handleSaveNotificationSettings = () => {
-        if (!can('canManageSettings') || !activeCompany) {
+    const handleSaveNotificationSettings = async () => {
+        if (!can('canManageSettings') || !activeCompany || !currentUser) {
             setNotificationErrorMsg('Keine Berechtigung zum Speichern der Benachrichtigungen.');
             return;
         }
         try {
-            const storageKey = `${NOTIFICATION_STORAGE_PREFIX}:${activeCompany.id}`;
+            const storageKey = getNotificationStorageKey(activeCompany.id, currentUser.id);
             localStorage.setItem(storageKey, JSON.stringify(notificationSettings));
+
+            const enabledByType = mapSettingsToTypeFlags(notificationSettings);
+            await api.upsertNotificationPreferences(currentUser.id, activeCompany.id, enabledByType);
+
+            window.dispatchEvent(new CustomEvent(NOTIFICATION_SETTINGS_CHANGED_EVENT, {
+                detail: { companyId: activeCompany.id, userId: currentUser.id },
+            }));
+
             setNotificationsDirty(false);
             setNotificationErrorMsg('');
             setNotificationSavedMsg('Benachrichtigungs-Einstellungen gespeichert.');
@@ -229,20 +324,26 @@ export default function SettingsPage() {
         }
     };
 
+    const handleSaveLanguage = () => {
+        setLanguage(generalLanguage);
+        setLanguageSavedMsg(language === 'en' ? 'Language saved.' : 'Sprache gespeichert.');
+        setTimeout(() => setLanguageSavedMsg(''), 2500);
+    };
+
     const tabs = [
-        { id: 'general', label: 'Allgemein', icon: Settings },
-        { id: 'team', label: 'Team-Übersicht', icon: Users },
-        { id: 'integrations', label: 'Integrationen', icon: Plug },
-        { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
-        ...(can('canManageUsers') ? [{ id: 'admin', label: 'Benutzerverwaltung', icon: Shield, adminOnly: true }] : []),
+        { id: 'general', label: language === 'en' ? 'General' : 'Allgemein', icon: Settings },
+        { id: 'team', label: language === 'en' ? 'Team overview' : 'Team-Uebersicht', icon: Users },
+        { id: 'integrations', label: language === 'en' ? 'Integrations' : 'Integrationen', icon: Plug },
+        { id: 'notifications', label: language === 'en' ? 'Notifications' : 'Benachrichtigungen', icon: Bell },
+        ...(can('canManageUsers') ? [{ id: 'admin', label: language === 'en' ? 'User management' : 'Benutzerverwaltung', icon: Shield, adminOnly: true }] : []),
     ];
 
     return (
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Einstellungen</h1>
-                    <p className="page-subtitle">Workspace- und Kontoeinstellungen verwalten</p>
+                    <h1 className="page-title">{language === 'en' ? 'Settings' : 'Einstellungen'}</h1>
+                    <p className="page-subtitle">{language === 'en' ? 'Manage workspace and account settings' : 'Workspace- und Kontoeinstellungen verwalten'}</p>
                 </div>
                 <PageHelp title="Einstellungen & Benutzerverwaltung">
                     <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Übersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Unternehmen zuweisen.</p>
@@ -251,7 +352,12 @@ export default function SettingsPage() {
                         <li>Bei erfolgreicher Zuweisung wird automatisch die Rolle <strong>Member</strong> vergeben.</li>
                         <li>Existiert die E-Mail nicht, erscheint eine Fehlermeldung mit Hinweis zur Benutzeranlage.</li>
                         <li>Rollen können danach in der Teamliste angepasst werden.</li>
-                        <li>Benachrichtigungs-Toggles im Tab "Benachrichtigungen" werden pro aktivem Unternehmen im Browser gespeichert.</li>
+                    </ul>
+                    <p style={{ marginTop: '12px' }}><strong>Benachrichtigungen:</strong></p>
+                    <ul style={{ marginTop: '4px', paddingLeft: '18px' }}>
+                        <li>Im Tab "Benachrichtigungen" steuerst du, welche Notification-Typen im <strong>Glocken-Symbol</strong> (oben rechts) angezeigt werden.</li>
+                        <li>Deaktivierte Kategorien werden automatisch herausgefiltert — die Benachrichtigungen werden trotzdem gespeichert und können später wieder aktiviert werden.</li>
+                        <li>Die Einstellungen gelten pro Unternehmen.</li>
                     </ul>
                 </PageHelp>
             </div>
@@ -291,10 +397,10 @@ export default function SettingsPage() {
                     {activeTab === 'general' && (
                         <div className="card animate-in">
                             <div className="card-header">
-                                <div className="card-title">Unternehmens-Einstellungen</div>
+                                <div className="card-title">{language === 'en' ? 'Company settings' : 'Unternehmens-Einstellungen'}</div>
                                 {(!can('canManageSettings') || !activeCompany) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                        <Lock size={11} /> {!activeCompany ? 'Kein Unternehmen ausgewählt' : 'Nur-Lese-Modus'}
+                                        <Lock size={11} /> {!activeCompany ? (language === 'en' ? 'No company selected' : 'Kein Unternehmen ausgewaehlt') : (language === 'en' ? 'Read-only mode' : 'Nur-Lese-Modus')}
                                     </div>
                                 )}
                             </div>
@@ -304,37 +410,56 @@ export default function SettingsPage() {
                                     color: 'var(--text-tertiary)',
                                     marginBottom: '12px',
                                 }}>
-                                    Aktives Unternehmen: {activeCompany.name}
+                                    {language === 'en' ? 'Active company' : 'Aktives Unternehmen'}: {activeCompany.name}
                                 </div>
                             )}
                             <div className="form-group">
-                                <label className="form-label">Unternehmensname (Workspace-Name)</label>
+                                <label className="form-label">{language === 'en' ? 'Company name (workspace name)' : 'Unternehmensname (Workspace-Name)'}</label>
                                 <input type="text" className="form-input" value={wsName} onChange={e => setWsName(e.target.value)} disabled={!can('canManageSettings') || !activeCompany} />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Beschreibung</label>
+                                <label className="form-label">{language === 'en' ? 'Description' : 'Beschreibung'}</label>
                                 <textarea className="form-input form-textarea" value={wsDesc} onChange={e => setWsDesc(e.target.value)} disabled={!can('canManageSettings') || !activeCompany} />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Standard-Währung</label>
+                                <label className="form-label">{language === 'en' ? 'Default currency' : 'Standard-Waehrung'}</label>
                                 <select className="form-select" disabled={!can('canManageSettings') || !activeCompany}>
                                     <option>EUR (€)</option><option>USD ($)</option><option>CHF (CHF)</option>
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Zeitzone</label>
+                                <label className="form-label">{language === 'en' ? 'Timezone' : 'Zeitzone'}</label>
                                 <select className="form-select" disabled={!can('canManageSettings') || !activeCompany}>
                                     <option>Europe/Berlin (UTC+1)</option>
                                     <option>Europe/Zurich (UTC+1)</option>
                                     <option>Europe/Vienna (UTC+1)</option>
                                 </select>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Sprache</label>
-                                <select className="form-select" disabled={!can('canManageSettings') || !activeCompany}>
-                                    <option>Deutsch</option><option>English</option>
+
+                            <div className="form-group" style={{ marginTop: '16px' }}>
+                                <label className="form-label">{language === 'en' ? 'Application language' : 'Anwendungssprache'}</label>
+                                <select
+                                    className="form-select"
+                                    value={generalLanguage}
+                                    onChange={(e) => setGeneralLanguage(e.target.value as AppLanguage)}
+                                    style={{ maxWidth: '280px' }}
+                                >
+                                    <option value="de">Deutsch</option>
+                                    <option value="en">English</option>
                                 </select>
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+                                    {language === 'en'
+                                        ? 'Saved per user and applied after login.'
+                                        : 'Wird benutzerspezifisch gespeichert und nach dem Login angewendet.'}
+                                </div>
                             </div>
+
+                            {languageSavedMsg && (
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', marginTop: '8px' }}>
+                                    {languageSavedMsg}
+                                </div>
+                            )}
+
                             {(savedMsg || errorMsg) && (
                                 <div style={{ fontSize: 'var(--font-size-xs)', marginTop: '8px', color: errorMsg ? 'var(--color-danger)' : 'var(--color-success)' }}>
                                     {errorMsg || savedMsg}
@@ -343,8 +468,9 @@ export default function SettingsPage() {
                             {can('canManageSettings') && activeCompany && (
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px', alignItems: 'center' }}>
                                     {savedMsg && <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', marginRight: 'auto' }}><Check size={14} /> {savedMsg}</span>}
-                                    <button className="btn btn-secondary" onClick={handleDiscardSettings}>Verwerfen</button>
-                                    <button className="btn btn-primary" onClick={handleSaveSettings}>Speichern</button>
+                                    <button className="btn btn-secondary" onClick={handleDiscardSettings}>{language === 'en' ? 'Discard' : 'Verwerfen'}</button>
+                                    <button className="btn btn-secondary" onClick={handleSaveLanguage} disabled={generalLanguage === language}>{language === 'en' ? 'Save language' : 'Sprache speichern'}</button>
+                                    <button className="btn btn-primary" onClick={handleSaveSettings}>{language === 'en' ? 'Save' : 'Speichern'}</button>
                                 </div>
                             )}
                         </div>
@@ -537,6 +663,10 @@ export default function SettingsPage() {
                         <div className="card animate-in">
                             <div className="card-header">
                                 <div className="card-title">Benachrichtigungs-Einstellungen</div>
+                            </div>
+                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginBottom: '16px', padding: '12px 16px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', lineHeight: 1.6 }}>
+                                Diese Einstellungen steuern, welche Benachrichtigungen im <strong>Notification-Center</strong> (Glocken-Symbol oben rechts) angezeigt werden.
+                                Deaktivierte Kategorien werden automatisch herausgefiltert.
                             </div>
                             {!activeCompany && (
                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>

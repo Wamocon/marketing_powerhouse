@@ -4,7 +4,7 @@ import {
     Calendar, CheckSquare, Wallet, Settings, CheckCircle,
     FileText, Lightbulb, UserCheck, Search, Image as ImageIcon,
     MessageSquare, AlertTriangle, Link as LinkIcon, Map,
-    GitBranch, Clock, Users, Zap
+    GitBranch, Clock, Users, Zap, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PlaceholderImage, SectionTitle, TipBox, AccordionItem, TableOfContents, WorkflowCard } from '../components/ManualComponents';
@@ -26,6 +26,7 @@ export default function ManualPage() {
     const adminSections = [
         'Die Digitale Positionierung pflegen',
         'Systemeinstellungen & Integrationen',
+        'Benachrichtigungssystem',
         'Benutzerverwaltung & Berechtigungen'
     ];
 
@@ -108,7 +109,7 @@ export default function ManualPage() {
                                     <li><strong>Firmenprofil:</strong> Ändere den Namen und das globale Branding.</li>
                                     <li><strong>Kanäle & Touchpoints (Verwaltung):</strong> Du hast Vollzugriff auf die Central-Verwaltung aller Marketing-Kanäle. Stelle sicher, dass alle verwendeten Touchpoints (Google Ads, LinkedIn, E-Mail-CRM, etc.) hier hinterlegt sind, damit Manager später darauf aufbauen können. Jeder Touchpoint zeigt automatisch seine aggregierten <strong>Kanal-KPIs</strong> (Impressions, Clicks, CTR, Spend, CPC, CPA).</li>
                                     <li><strong>Integrationen:</strong> Hier hinterlegst du in Zukunft API-Keys für OpenAI, Meta Ads, Google Analytics oder LinkedIn. Diese Keys werden systemweit verschlüsselt genutzt.</li>
-                                    <li><strong>Benachrichtigungen:</strong> Lege fest, welche Hinweise (z.B. Kampagnen-Updates, Budget-Alerts, Deadline-Erinnerungen) im System aktiv sind. Die Einstellungen werden pro aktivem Unternehmen im Browser gespeichert.</li>
+                                    <li><strong>Benachrichtigungen:</strong> Lege fest, welche Hinweise (z.B. Kampagnen-Updates, Budget-Alerts, Deadline-Erinnerungen) im System aktiv sind. Die Einstellungen werden pro aktivem Unternehmen gespeichert und steuern, welche Benachrichtigungen im Notification-Center (Glocke oben rechts) angezeigt werden.</li>
                                 </ul>
                                 <PlaceholderImage
                                     title="Einstellungs-Dashboard" icon={Settings} color="#8b5cf6"
@@ -117,7 +118,31 @@ export default function ManualPage() {
                             </div>
                         </AccordionItem>
 
-                        <AccordionItem id="section-2" title="Benutzerverwaltung & Berechtigungen" icon={Users2} color="#ec4899">
+                        <AccordionItem id="section-2" title="Benachrichtigungssystem" icon={Bell} color="#f59e0b">
+                            <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                                <p style={{ marginBottom: '16px' }}>Das Benachrichtigungssystem hält alle Teammitglieder in Echtzeit über relevante Änderungen informiert. Es ist über das <strong>Glocken-Symbol</strong> oben rechts im Header erreichbar.</p>
+                                <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <li><strong>Automatische Benachrichtigungen:</strong> Das System erzeugt automatisch Benachrichtigungen bei wichtigen Aktionen:
+                                        <ul style={{ listStyleType: 'circle', paddingLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <li>Kampagnen-Updates (Status-Änderungen, neue Kampagnen)</li>
+                                            <li>Budget-Alerts (ab 80% Auslastung und bei Überschreitung)</li>
+                                            <li>Aufgaben-Benachrichtigungen (Zuweisung, Status-Änderung, KI-Generierung)</li>
+                                            <li>Content-Updates (Review-Bereitschaft, Freigabe, Veröffentlichung)</li>
+                                            <li>Team-Aktivitäten (neue Mitglieder)</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Notification-Center:</strong> Klick auf die Glocke öffnet ein Dropdown mit allen Benachrichtigungen, gruppiert nach Datum (Heute, Gestern, Älter). Ungelesene Einträge sind farblich hervorgehoben.</li>
+                                    <li><strong>Steuerung:</strong> Unter Einstellungen → Benachrichtigungen kann jeder Nutzer individuell festlegen, welche Benachrichtigungs-Typen er erhalten möchte.</li>
+                                    <li><strong>Navigation:</strong> Ein Klick auf eine Benachrichtigung navigiert direkt zur betroffenen Entität (z.B. Kampagne, Aufgabe, Content).</li>
+                                    <li><strong>Prioritäten:</strong> Budget-Überschreitungen werden als dringende (rote) Benachrichtigungen dargestellt, Budget-Warnungen als hoch (orange).</li>
+                                </ul>
+                                <TipBox title="Tipp: Benachrichtigungen verwalten">
+                                    Du kannst einzelne Benachrichtigungen archivieren (X-Button) oder alle auf einmal als gelesen markieren ("Alle gelesen"-Button). Dies hält dein Notification-Center übersichtlich.
+                                </TipBox>
+                            </div>
+                        </AccordionItem>
+
+                        <AccordionItem id="section-3" title="Benutzerverwaltung & Berechtigungen" icon={Users2} color="#ec4899">
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                 <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) steuerst du das Rollenkonzept und die Team-Zuweisung.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
