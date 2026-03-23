@@ -35,7 +35,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
     };
 
     const handleRemoveMember = async (memberId: string, memberName: string) => {
-        if (!confirm(`${memberName} wirklich aus dem Unternehmen entfernen?`)) return;
+        if (!confirm(`${memberName} wirklich aus dem Projekt entfernen?`)) return;
         try {
             setError('');
             await removeMember(memberId);
@@ -61,7 +61,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                 return;
             }
             if (companyMembers.some(member => member.userId === user.id)) {
-                setError('Dieser Benutzer ist bereits Mitglied im Unternehmen.');
+                setError('Dieser Benutzer ist bereits Mitglied im Projekt.');
                 return;
             }
             await addMember(user.id, 'member');
@@ -84,7 +84,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                             <Shield size={16} style={{ color: '#ef4444' }} /> Admin — Benutzerverwaltung
                         </div>
                         <div className="card-subtitle">
-                            Vollständige Kontrolle über Benutzer, Rollen und Berechtigungen im aktiven Unternehmen
+                            Vollständige Kontrolle über Benutzer, Rollen und Berechtigungen im aktiven Projekt
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -168,7 +168,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                                             style={{ color: 'var(--color-danger)', padding: '4px 8px' }}
                                             disabled={isProtectedSuperAdmin}
                                             onClick={() => handleRemoveMember(member.id, member.userName || 'Mitglied')}
-                                            title={isProtectedSuperAdmin ? 'Super-Admin darf nicht von Unternehmens-Admins entfernt werden.' : ''}
+                                            title={isProtectedSuperAdmin ? 'Super-Admin darf nicht von Projekt-Admins entfernt werden.' : ''}
                                         >
                                             <Trash2 size={13} />
                                         </button>
@@ -186,7 +186,7 @@ export function AdminSettings({ currentUser, statusDot }: AdminSettingsProps) {
                 color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px',
             }}>
                 <Shield size={11} style={{ color: '#ef4444', flexShrink: 0 }} />
-                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Unternehmens-Admins dürfen Super-Admin-Rechte nicht ändern.
+                Rollenänderungen erfordern in der Produktion eine Bestätigung per E-Mail. Projekt-Admins dürfen Super-Admin-Rechte nicht ändern.
             </div>
             {(error || success) && (
                 <div style={{ marginTop: '10px', fontSize: 'var(--font-size-xs)', color: error ? 'var(--color-danger)' : 'var(--color-success)' }}>

@@ -59,7 +59,7 @@ const NAV: NavSection[] = [
         ],
     },
     {
-        section: { de: 'Unternehmen', en: 'Company' },
+        section: { de: 'Projekt', en: 'Project' },
         items: [
             { path: '/positioning', icon: Target, label: { de: 'Digitale Positionierung', en: 'Digital positioning' } },
         ],
@@ -88,7 +88,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const companyBase = activeCompany ? `/company/${activeCompany.id}` : '';
+    const companyBase = activeCompany ? `/project/${activeCompany.id}` : '';
 
     const badgeCounts: Record<BadgeKey, number> = {
         campaigns: campaigns.length,
@@ -171,7 +171,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                             padding: 0, fontWeight: 600,
                         }}
                     >
-                        <ArrowLeftRight size={10} /> {language === 'en' ? 'Switch company' : 'Unternehmen wechseln'}
+                        <ArrowLeftRight size={10} /> {language === 'en' ? 'Switch project' : 'Projekt wechseln'}
                     </button>
                 </div>
             )}

@@ -7,9 +7,9 @@ import Layout from '@/components/Layout';
 import LoginPage from '@/views/LoginPage';
 import { usePathname, useRouter } from 'next/navigation';
 
-/** Extract companyId from /company/[companyId]/… paths */
-function extractCompanyId(pathname: string): string | null {
-    const match = pathname.match(/^\/company\/([^/]+)/);
+/** Extract projectId from /project/[projectId]/... paths */
+function extractProjectId(pathname: string): string | null {
+    const match = pathname.match(/^\/project\/([^/]+)/);
     return match ? match[1] : null;
 }
 
@@ -19,39 +19,46 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const isPublicLegalRoute = pathname === '/impressum' || pathname === '/datenschutz' || pathname === '/agb';
-    const isCompanyRoute = pathname.startsWith('/company/');
+    const isProjectRoute = pathname.startsWith('/project/');
+    const isLegacyCompanyRoute = pathname.startsWith('/company/');
     const isHomeRoute = pathname === '/';
     const isAdminRoute = pathname === '/admin';
-    const urlCompanyId = extractCompanyId(pathname);
+    const urlProjectId = extractProjectId(pathname);
 
-    // Sync company context with URL
+    // Sync project context with URL
     const syncRef = useRef(false);
     const syncAttemptedRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!currentUser || companyLoading || !urlCompanyId) return;
-        if (activeCompany?.id !== urlCompanyId && !syncRef.current) {
+        if (!currentUser || companyLoading || !urlProjectId) return;
+        if (activeCompany?.id !== urlProjectId && !syncRef.current) {
             syncRef.current = true;
-            syncAttemptedRef.current = urlCompanyId;
-            selectCompany(urlCompanyId).finally(() => { syncRef.current = false; });
+            syncAttemptedRef.current = urlProjectId;
+            selectCompany(urlProjectId).finally(() => { syncRef.current = false; });
         }
-    }, [currentUser, urlCompanyId, activeCompany?.id, companyLoading, selectCompany]);
+    }, [currentUser, urlProjectId, activeCompany?.id, companyLoading, selectCompany]);
 
     // If sync was attempted but company didn't change → invalid company, redirect to home
-    const syncFailed = isCompanyRoute && !companyLoading && !syncRef.current
-        && urlCompanyId !== null && activeCompany?.id !== urlCompanyId
-        && syncAttemptedRef.current === urlCompanyId;
+    const syncFailed = isProjectRoute && !companyLoading && !syncRef.current
+        && urlProjectId !== null && activeCompany?.id !== urlProjectId
+        && syncAttemptedRef.current === urlProjectId;
     useEffect(() => {
         if (syncFailed) router.replace('/');
     }, [syncFailed, router]);
 
     // Redirect old flat routes (e.g. /campaigns) to company-scoped equivalents
-    const isOldFlatRoute = !isCompanyRoute && !isHomeRoute && !isAdminRoute && !isPublicLegalRoute;
+    const isOldFlatRoute = !isProjectRoute && !isLegacyCompanyRoute && !isHomeRoute && !isAdminRoute && !isPublicLegalRoute;
     useEffect(() => {
         if (!currentUser || sessionLoading || companyLoading) return;
         if (isOldFlatRoute && activeCompany) {
-            router.replace(`/company/${activeCompany.id}${pathname}`);
+            router.replace(`/project/${activeCompany.id}${pathname}`);
         }
     }, [isOldFlatRoute, activeCompany, pathname, router, currentUser, sessionLoading, companyLoading]);
+
+    // Legacy /company routes redirect to /project
+    useEffect(() => {
+        if (!isLegacyCompanyRoute) return;
+        router.replace(pathname.replace('/company/', '/project/'));
+    }, [isLegacyCompanyRoute, pathname, router]);
 
     if (sessionLoading) {
         return (
@@ -94,6 +101,10 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         return <>{children}</>;
     }
 
+    if (isLegacyCompanyRoute) {
+        return null;
+    }
+
     // Redirect old flat routes — show spinner while redirect effect fires
     if (isOldFlatRoute) {
         return (
@@ -119,7 +130,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     }
 
     // Show company loading spinner (includes sync in progress)
-    if (companyLoading || (isCompanyRoute && syncRef.current)) {
+    if (companyLoading || (isProjectRoute && syncRef.current)) {
         return (
             <div style={{
                 display: 'flex', height: '100vh', alignItems: 'center',
@@ -142,7 +153,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         );
     }
 
-    // Company route — company must be loaded by now
+    // Project route — project must be loaded by now
     if (!activeCompany) {
         // Company ID from URL is invalid or user has no access — redirect home
         router.replace('/');

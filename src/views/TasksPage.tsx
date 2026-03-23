@@ -275,7 +275,7 @@ export default function TasksPage() {
                         <ul className="help-list">
                             <li><strong>To Do / Offen:</strong> Hier landen alle frischen Aufgaben, die an das kreative Team delegiert wurden.</li>
                             <li><strong>Detailansicht:</strong> Klicke auf eine Karte, um das Briefing des Managers zu lesen und den zugehörigen Content einzusehen.</li>
-                            <li><strong>Ressourcen-Link (WICHTIG):</strong> Sobald du als Bearbeiter fertig bist, lade deine Dateien im Unternehmens-OneDrive hoch und speichere den Link in dieser Aufgabe.</li>
+                            <li><strong>Ressourcen-Link (WICHTIG):</strong> Sobald du als Bearbeiter fertig bist, lade deine Dateien im Projekt-OneDrive hoch und speichere den Link in dieser Aufgabe.</li>
                             <li><strong>Status Updaten:</strong> Pflege den Status deiner Aufgaben gewissenhaft (auf In Progress oder Review), damit der Manager weiß, dass die Datei zur Freigabe liegt.</li>
                             <li><strong>Realtime-Benachrichtigungen:</strong> Zuweisungen und Statuswechsel erzeugen sofort Hinweise im Notification-Center (Glocke oben rechts).</li>
                             <li><strong>Ansichten:</strong> Oben rechts kannst du zwischen Kanban-Board und Listen-Ansicht wechseln.</li>

@@ -27,7 +27,7 @@ export default function ImpressumPage() {
                 <h2>Kontakt</h2>
                 <p>
                     E-Mail: kontakt@wamocon.de<br />
-                    Telefon: Bitte im Unternehmensprofil hinterlegte Kontaktwege verwenden.
+                    Telefon: Bitte im Projektprofil hinterlegte Kontaktwege verwenden.
                 </p>
             </section>
 
@@ -35,7 +35,7 @@ export default function ImpressumPage() {
                 <h2>Registerangaben</h2>
                 <p>
                     Handelsregister, Registernummer, Sitz sowie USt-IdNr. werden in der produktiven Fassung
-                    gemaess den offiziellen Unternehmensdaten gefuehrt.
+                    gemaess den offiziellen Projektdaten gefuehrt.
                 </p>
             </section>
 

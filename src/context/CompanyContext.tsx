@@ -198,7 +198,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         if (!activeCompany || !currentUser) return;
         const targetUser = await api.fetchUserById(userId);
         if (targetUser?.isSuperAdmin && !isSuperAdmin) {
-            throw new Error('Unternehmens-Admins dürfen Super-Admin-Rechte nicht verändern.');
+            throw new Error('Projekt-Admins dürfen Super-Admin-Rechte nicht verändern.');
         }
         await api.addCompanyMember(activeCompany.id, userId, role);
         const members = await api.fetchCompanyMembers(activeCompany.id);
@@ -209,7 +209,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const targetMember = companyMembers.find(m => m.id === memberId);
         if (!targetMember) throw new Error('Mitglied nicht gefunden.');
         if (targetMember.userIsSuperAdmin && !isSuperAdmin) {
-            throw new Error('Unternehmens-Admins dürfen Super-Admin-Rechte nicht verändern.');
+            throw new Error('Projekt-Admins dürfen Super-Admin-Rechte nicht verändern.');
         }
         await api.updateCompanyMemberRole(memberId, role);
         setCompanyMembers(prev => prev.map(m => m.id === memberId ? { ...m, role } : m));
@@ -219,7 +219,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const targetMember = companyMembers.find(m => m.id === memberId);
         if (!targetMember) throw new Error('Mitglied nicht gefunden.');
         if (targetMember.userIsSuperAdmin && !isSuperAdmin) {
-            throw new Error('Unternehmens-Admins dürfen Super-Admin-Rechte nicht verändern.');
+            throw new Error('Projekt-Admins dürfen Super-Admin-Rechte nicht verändern.');
         }
         await api.removeCompanyMember(memberId);
         setCompanyMembers(prev => prev.filter(m => m.id !== memberId));

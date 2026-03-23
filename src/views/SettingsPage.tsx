@@ -207,7 +207,7 @@ export default function SettingsPage() {
         if (!activeCompany || !can('canManageSettings')) return;
         const trimmedName = wsName.trim();
         if (!trimmedName) {
-            setErrorMsg('Bitte einen gültigen Unternehmensnamen eingeben.');
+            setErrorMsg('Bitte einen gültigen Projektnamen eingeben.');
             return;
         }
         try {
@@ -217,7 +217,7 @@ export default function SettingsPage() {
                 description: wsDesc.trim(),
                 slug: trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
             });
-            setSavedMsg('Unternehmensdaten gespeichert.');
+            setSavedMsg('Projektdaten gespeichert.');
             setTimeout(() => setSavedMsg(''), 3000);
         } catch {
             setErrorMsg('Speichern fehlgeschlagen. Bitte erneut versuchen.');
@@ -242,7 +242,7 @@ export default function SettingsPage() {
     };
 
     const handleMemberRemove = async (memberId: string, memberName: string) => {
-        if (!confirm(`${memberName} wirklich aus dem Unternehmen entfernen?`)) return;
+        if (!confirm(`${memberName} wirklich aus dem Projekt entfernen?`)) return;
         try {
             setErrorMsg('');
             await removeMember(memberId);
@@ -273,7 +273,7 @@ export default function SettingsPage() {
 
             const alreadyAssigned = companyMembers.some(member => member.userId === user.id);
             if (alreadyAssigned) {
-                setErrorMsg('Dieser Benutzer ist dem Unternehmen bereits zugewiesen.');
+                setErrorMsg('Dieser Benutzer ist dem Projekt bereits zugewiesen.');
                 return;
             }
 
@@ -346,7 +346,7 @@ export default function SettingsPage() {
                     <p className="page-subtitle">{language === 'en' ? 'Manage workspace and account settings' : 'Workspace- und Kontoeinstellungen verwalten'}</p>
                 </div>
                 <PageHelp title="Einstellungen & Benutzerverwaltung">
-                    <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Übersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Unternehmen zuweisen.</p>
+                    <p><strong>Team-Zuweisung per E-Mail (Admin):</strong> Im Tab "Team-Übersicht" kannst du bestehende Benutzer per E-Mail dem aktiven Projekt zuweisen.</p>
                     <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
                         <li>Es werden nur bereits angelegte Benutzer akzeptiert.</li>
                         <li>Bei erfolgreicher Zuweisung wird automatisch die Rolle <strong>Member</strong> vergeben.</li>
@@ -357,7 +357,7 @@ export default function SettingsPage() {
                     <ul style={{ marginTop: '4px', paddingLeft: '18px' }}>
                         <li>Im Tab "Benachrichtigungen" steuerst du, welche Notification-Typen im <strong>Glocken-Symbol</strong> (oben rechts) angezeigt werden.</li>
                         <li>Deaktivierte Kategorien werden automatisch herausgefiltert — die Benachrichtigungen werden trotzdem gespeichert und können später wieder aktiviert werden.</li>
-                        <li>Die Einstellungen gelten pro Unternehmen.</li>
+                        <li>Die Einstellungen gelten pro Projekt.</li>
                     </ul>
                 </PageHelp>
             </div>
@@ -397,10 +397,10 @@ export default function SettingsPage() {
                     {activeTab === 'general' && (
                         <div className="card animate-in">
                             <div className="card-header">
-                                <div className="card-title">{language === 'en' ? 'Company settings' : 'Unternehmens-Einstellungen'}</div>
+                                <div className="card-title">{language === 'en' ? 'Company settings' : 'Projekt-Einstellungen'}</div>
                                 {(!can('canManageSettings') || !activeCompany) && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                        <Lock size={11} /> {!activeCompany ? (language === 'en' ? 'No company selected' : 'Kein Unternehmen ausgewaehlt') : (language === 'en' ? 'Read-only mode' : 'Nur-Lese-Modus')}
+                                        <Lock size={11} /> {!activeCompany ? (language === 'en' ? 'No company selected' : 'Kein Projekt ausgewaehlt') : (language === 'en' ? 'Read-only mode' : 'Nur-Lese-Modus')}
                                     </div>
                                 )}
                             </div>
@@ -410,11 +410,11 @@ export default function SettingsPage() {
                                     color: 'var(--text-tertiary)',
                                     marginBottom: '12px',
                                 }}>
-                                    {language === 'en' ? 'Active company' : 'Aktives Unternehmen'}: {activeCompany.name}
+                                    {language === 'en' ? 'Active company' : 'Aktives Projekt'}: {activeCompany.name}
                                 </div>
                             )}
                             <div className="form-group">
-                                <label className="form-label">{language === 'en' ? 'Company name (workspace name)' : 'Unternehmensname (Workspace-Name)'}</label>
+                                <label className="form-label">{language === 'en' ? 'Company name (workspace name)' : 'Projektname (Workspace-Name)'}</label>
                                 <input type="text" className="form-input" value={wsName} onChange={e => setWsName(e.target.value)} disabled={!can('canManageSettings') || !activeCompany} />
                             </div>
                             <div className="form-group">
@@ -482,7 +482,7 @@ export default function SettingsPage() {
                             <div className="card-header">
                                 <div>
                                     <div className="card-title">Team-Mitglieder</div>
-                                    <div className="card-subtitle">{companyMembers.length} Mitglieder im aktiven Unternehmen</div>
+                                    <div className="card-subtitle">{companyMembers.length} Mitglieder im aktiven Projekt</div>
                                 </div>
                                 {can('canManageUsers') && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -596,7 +596,7 @@ export default function SettingsPage() {
                                                                     style={{ color: 'var(--color-danger)' }}
                                                                     disabled={isProtectedSuperAdmin}
                                                                     onClick={() => handleMemberRemove(member.id, member.userName || 'Mitglied')}
-                                                                    title={isProtectedSuperAdmin ? 'Super-Admin darf nicht von Unternehmens-Admins entfernt werden.' : ''}
+                                                                    title={isProtectedSuperAdmin ? 'Super-Admin darf nicht von Projekt-Admins entfernt werden.' : ''}
                                                                 >
                                                                     <Trash2 size={14} />
                                                                 </button>
@@ -670,7 +670,7 @@ export default function SettingsPage() {
                             </div>
                             {!activeCompany && (
                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Kein aktives Unternehmen ausgewählt.
+                                    Kein aktives Projekt ausgewählt.
                                 </div>
                             )}
                             {NOTIFICATION_SETTING_META.map((setting, idx) => (

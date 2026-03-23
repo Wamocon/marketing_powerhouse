@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Task, ContentItem } from '../types';
 import { Megaphone } from 'lucide-react';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import PageHelp from '../components/PageHelp';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,7 +12,7 @@ import ContentDetailModal from '../components/ContentDetailModal';
 import { AdminDashboard, ManagerDashboard, MemberDashboard } from '../components/DashboardViews';
 
 export default function DashboardPage() {
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const { currentUser, activeCompanyRole } = useAuth();
     const { locale, language } = useLanguage();
     const { tasks } = useTasks();

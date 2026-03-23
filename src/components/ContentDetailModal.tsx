@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCompanyPath } from '../hooks/useCompanyRouter';
+import { useProjectPath } from '../hooks/useProjectRouter';
 import { Calendar, FileText, CheckCircle, Plus, Clock, User, Edit2, Save, X, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
@@ -24,7 +24,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const { updateContent, deleteContent } = useContents();
     const { tasks, addTask } = useTasks();
     const { campaigns, touchpoints } = useData();
-    const companyPath = useCompanyPath();
+    const companyPath = useProjectPath();
     const [isEditing, setIsEditing] = useState(false);
     const [edited, setEdited] = useState({ ...content });
     const [showNewTask, setShowNewTask] = useState(false);

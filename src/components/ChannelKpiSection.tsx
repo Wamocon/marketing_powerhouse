@@ -1,4 +1,4 @@
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import { BarChart3, TrendingUp, MousePointerClick, Eye, DollarSign, Target } from 'lucide-react';
 import type { ElementType } from 'react';
 import type { ChannelKpi, Touchpoint } from '../types';
@@ -21,7 +21,7 @@ function formatCurrency(n: number): string {
 }
 
 export default function ChannelKpiSection({ channelKpis, touchpoints, title = 'Performance nach Kanal' }: ChannelKpiSectionProps) {
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
 
     const totalImpressions = Object.values(channelKpis).reduce((s, k) => s + k.impressions, 0);
 

@@ -85,10 +85,10 @@ export default function ManualPage() {
 
                         <AccordionItem id="section-0" title="Die Digitale Positionierung pflegen" icon={Target} color="#6366f1" defaultOpen={true}>
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                                <p style={{ marginBottom: '16px' }}>Die "Digitale Positionierung" (im Menü unter "Unternehmen") ist das Gehirn der App. Die hier eingegebenen Daten werden genutzt, um Content-Ideen zu generieren und Kampagnen auszurichten.</p>
+                                <p style={{ marginBottom: '16px' }}>Die "Digitale Positionierung" (im Menü unter "Projekt") ist das Gehirn der App. Die hier eingegebenen Daten werden genutzt, um Content-Ideen zu generieren und Kampagnen auszurichten.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <li><strong>DNA & Pitch:</strong> Definiere hier, wofür das Unternehmen in einem Satz steht.</li>
-                                    <li><strong>Pain Points & USPs:</strong> Die größten Schmerzpunkte der Zielgruppe und die Alleinstellungsmerkmale deines Unternehmens. Diese müssen messerscharf formuliert sein.</li>
+                                    <li><strong>DNA & Pitch:</strong> Definiere hier, wofür das Projekt in einem Satz steht.</li>
+                                    <li><strong>Pain Points & USPs:</strong> Die größten Schmerzpunkte der Zielgruppe und die Alleinstellungsmerkmale deines Projekt. Diese müssen messerscharf formuliert sein.</li>
                                     <li><strong>Keywords:</strong> Relevante Begriffe, die in Kampagnen und im SEO genutzt werden sollen.</li>
                                     <li><strong>Tone of Voice:</strong> Wie sprecht ihr mit der Zielgruppe? (z.B. informativ, per Du, auf Augenhöhe).</li>
                                 </ul>
@@ -109,7 +109,7 @@ export default function ManualPage() {
                                     <li><strong>Firmenprofil:</strong> Ändere den Namen und das globale Branding.</li>
                                     <li><strong>Kanäle & Touchpoints (Verwaltung):</strong> Du hast Vollzugriff auf die Central-Verwaltung aller Marketing-Kanäle. Stelle sicher, dass alle verwendeten Touchpoints (Google Ads, LinkedIn, E-Mail-CRM, etc.) hier hinterlegt sind, damit Manager später darauf aufbauen können. Jeder Touchpoint zeigt automatisch seine aggregierten <strong>Kanal-KPIs</strong> (Impressions, Clicks, CTR, Spend, CPC, CPA).</li>
                                     <li><strong>Integrationen:</strong> Hier hinterlegst du in Zukunft API-Keys für OpenAI, Meta Ads, Google Analytics oder LinkedIn. Diese Keys werden systemweit verschlüsselt genutzt.</li>
-                                    <li><strong>Benachrichtigungen:</strong> Lege fest, welche Hinweise (z.B. Kampagnen-Updates, Budget-Alerts, Deadline-Erinnerungen) im System aktiv sind. Die Einstellungen werden pro aktivem Unternehmen gespeichert und steuern, welche Benachrichtigungen im Notification-Center (Glocke oben rechts) angezeigt werden.</li>
+                                    <li><strong>Benachrichtigungen:</strong> Lege fest, welche Hinweise (z.B. Kampagnen-Updates, Budget-Alerts, Deadline-Erinnerungen) im System aktiv sind. Die Einstellungen werden pro aktivem Projekt gespeichert und steuern, welche Benachrichtigungen im Notification-Center (Glocke oben rechts) angezeigt werden.</li>
                                 </ul>
                                 <PlaceholderImage
                                     title="Einstellungs-Dashboard" icon={Settings} color="#8b5cf6"
@@ -146,13 +146,13 @@ export default function ManualPage() {
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                                 <p style={{ marginBottom: '16px' }}>Im Tab "Team" oder "Benutzerverwaltung" (innerhalb der Einstellungen) steuerst du das Rollenkonzept und die Team-Zuweisung.</p>
                                 <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <li>Bestehende Benutzer können im Team-Tab per E-Mail zum aktiven Unternehmen zugewiesen werden. Neue Zuweisungen starten standardmäßig als <strong>Member</strong>.</li>
+                                    <li>Bestehende Benutzer können im Team-Tab per E-Mail zum aktiven Projekt zugewiesen werden. Neue Zuweisungen starten standardmäßig als <strong>Member</strong>.</li>
                                     <li>Wenn eine E-Mail noch nicht als Benutzer existiert, zeigt das System eine Fehlermeldung mit dem Hinweis, den Benutzer zuerst anzulegen.</li>
                                     <li><strong>Manager:</strong> Dürfen Kampagnen, Zielgruppen und Budgets erstellen und verwalten. Zudem können sie Elemente (Kampagnen, Touchpoints, Personas, Content, Aufgaben etc.) löschen.</li>
                                     <li><strong>Member:</strong> Können nur Aufgaben sehen und abarbeiten. Sie sehen keine Budgets, können keine wesentlichen Elemente löschen und haben keinen Zugriff auf Einstellungen.</li>
                                 </ul>
                                 <p style={{ marginBottom: '16px' }}>
-                                    Als <strong>Super-Admin</strong> kannst du zusätzlich im Super-Admin-Panel Benutzer direkt bestehenden Unternehmen zuweisen und ihre Rolle pro Unternehmen sofort ändern.
+                                    Als <strong>Super-Admin</strong> kannst du zusätzlich im Super-Admin-Panel Benutzer direkt bestehenden Projekt zuweisen und ihre Rolle pro Projekt sofort ändern.
                                 </p>
                                 <TipBox title="Sicherheit">
                                     Befördere Nutzer nur zum Admin, wenn sie wirklich globale Systemeinstellungen (wie API-Keys) ändern dürfen. In 90% der Fälle ist die Manager-Rolle für Teamleiter völlig ausreichend.

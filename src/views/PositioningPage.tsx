@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import {
     Building2, Target, Megaphone, Globe,
     Lock, Plus, X,
@@ -11,7 +11,7 @@ import { SectionHeader, Field, CommsContent } from '../components/PositioningCom
 
 export default function PositioningPage() {
     const { can } = useAuth();
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const { positioning, companyKeywords, savePositioning, addKeyword, deleteKeyword } = useData();
     const [pos, setPos] = useState(positioning);
     const [editSection, setEditSection] = useState<string | null>(null);
@@ -57,14 +57,14 @@ export default function PositioningPage() {
                 <div className="page-header-left">
                     <h1 className="page-title">Digitale Positionierung</h1>
                     <p className="page-subtitle">
-                        Unternehmensidentität, Markenwerte und Kommunikations-DNA — die Grundlage all eurer Kampagnen.
+                        Projektidentität, Markenwerte und Kommunikations-DNA — die Grundlage all eurer Kampagnen.
                     </p>
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title="Digitale Positionierung">
                         <p style={{ marginBottom: '12px' }}>Dieses Modul ist das Gehirn eurer Marke. Es dient als "Single Source of Truth", an der sich alle Kampagnen, Creatives und KI-Assistenten messen lassen.</p>
                         <ul className="help-list">
-                            <li><strong>Unternehmens-DNA:</strong> Die harten Fakten zu Eurem Business.</li>
+                            <li><strong>Projekt-DNA:</strong> Die harten Fakten zu Eurem Business.</li>
                             <li><strong>Vision, Mission & Werte:</strong> Das "Warum". Dies gibt später allen Copywritern die Vorlage, wie der Benefit beim Kunden ankommen muss.</li>
                             <li><strong>Tone of Voice:</strong> Diese Parameter (Dos & Don'ts) ziehen sich die angeschlossenen KI-Modelle tief in ihre Prompts. Definiere die Sprache hier sehr exakt.</li>
                             <li><strong>Schlüsselbegriffe:</strong> Wenn es Wörter gibt, die ihr konsequent besetzen wollt (SEO relevant) kommen sie hier rein.</li>
@@ -86,11 +86,11 @@ export default function PositioningPage() {
                 </div>
             </div>
 
-            {/* ─── BLOCK 1: Unternehmens-DNA ─── */}
-            <SectionHeader id="dna" title="Unternehmens-DNA" icon={Building2} {...sectionProps}>
+            {/* ─── BLOCK 1: Projekt-DNA ─── */}
+            <SectionHeader id="dna" title="Projekt-DNA" icon={Building2} {...sectionProps}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                     {[
-                        { label: 'Unternehmensname', value: pos.name, key: 'name' },
+                        { label: 'Projektname', value: pos.name, key: 'name' },
                         { label: 'Tagline', value: pos.tagline, key: 'tagline' },
                         { label: 'Gegründet', value: pos.founded, key: 'founded' },
                         { label: 'Branche', value: pos.industry, key: 'industry' },
@@ -140,7 +140,7 @@ export default function PositioningPage() {
 
                 {/* Werte */}
                 <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                    ❤️ Unternehmenswerte
+                    ❤️ Projektwerte
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
                     {pos.values.map(value => (
@@ -193,7 +193,7 @@ export default function PositioningPage() {
             </SectionHeader>
 
             {/* ─── BLOCK 4: Schlüsselbegriffe ─── */}
-            <SectionHeader id="keywords" title="Unternehmensweite Schlüsselbegriffe" icon="🔑" {...sectionProps}>
+            <SectionHeader id="keywords" title="Projektweite Schlüsselbegriffe" icon="🔑" {...sectionProps}>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
                     {companyKeywords.map(kw => (
                         <div key={kw.id} style={{
@@ -254,7 +254,7 @@ export default function PositioningPage() {
                                 ))}
                             </div>
                         </div>
-                        <Field label="Zielunternehmensgröße" value={pos.targetCompanySize} section="market" editSection={editSection} />
+                        <Field label="Zielprojektgröße" value={pos.targetCompanySize} section="market" editSection={editSection} />
                     </div>
                     <div>
                         <div style={{ marginBottom: '16px' }}>

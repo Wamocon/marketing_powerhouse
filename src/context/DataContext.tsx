@@ -147,7 +147,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Campaign CRUD ──
     const addCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createCampaign(campaign, companyId);
         setCampaigns(prev => [...prev, created]);
 
@@ -214,7 +214,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Touchpoint CRUD ──
     const addTouchpoint = useCallback(async (tp: Omit<Touchpoint, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createTouchpoint(tp, companyId);
         setTouchpoints(prev => [...prev, created]);
         return created;
@@ -251,7 +251,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Journey CRUD ──
     const addJourney = useCallback(async (journey: Omit<CustomerJourney, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createJourney(journey, companyId);
         setCustomerJourneys(prev => [...prev, created]);
         return created;

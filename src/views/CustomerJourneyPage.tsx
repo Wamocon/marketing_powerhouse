@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import type { ContentItem, Touchpoint } from '../types';
 import { Share2, Plus, TrendingUp, Map, Heart, Frown, Megaphone, Search, DollarSign, Store, ExternalLink, FileText } from 'lucide-react';
 import { useData } from '../context/DataContext';
@@ -19,7 +19,7 @@ const PHASE_COLORS = {
 };
 
 export default function CustomerJourneyPage() {
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const { can } = useAuth();
     const canEdit = can('canEditPositioning');
     const { customerJourneys, audiences, touchpoints, addJourney } = useData();

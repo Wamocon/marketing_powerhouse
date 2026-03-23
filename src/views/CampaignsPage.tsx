@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import { Plus, Search, Calendar, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,7 @@ const statusConfig = {
 };
 
 export default function CampaignsPage() {
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const { can } = useAuth();
     const { language, locale } = useLanguage();
     const { campaigns, users } = useData();

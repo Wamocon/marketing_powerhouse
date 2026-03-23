@@ -4,13 +4,13 @@ import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCompany } from '@/context/CompanyContext';
 
-const GLOBAL_PREFIXES = ['/company/', '/admin', '/impressum', '/datenschutz', '/agb'];
+const GLOBAL_PREFIXES = ['/project/', '/project/', '/admin', '/impressum', '/datenschutz', '/agb'];
 
 /**
  * Drop-in replacement for useRouter() that auto-prefixes
- * push() calls with /company/{activeCompanyId}.
+ * push() calls with /project/{activeProjectId}.
  */
-export function useCompanyRouter() {
+export function useProjectRouter() {
     const router = useRouter();
     const { activeCompany } = useCompany();
 
@@ -19,7 +19,7 @@ export function useCompanyRouter() {
             router.push(path);
             return;
         }
-        const base = `/company/${activeCompany.id}`;
+        const base = `/project/${activeCompany.id}`;
         router.push(path === '/' ? base : `${base}${path}`);
     }, [router, activeCompany]);
 
@@ -27,12 +27,16 @@ export function useCompanyRouter() {
 }
 
 /**
- * Helper to build company-prefixed paths for <Link href={…}> components.
+ * Helper to build project-prefixed paths for <Link href={...}> components.
  */
-export function useCompanyPath() {
+export function useProjectPath() {
     const { activeCompany } = useCompany();
     return useCallback((path: string) => {
         if (!activeCompany) return path;
-        return path === '/' ? `/company/${activeCompany.id}` : `/company/${activeCompany.id}${path}`;
+        return path === '/' ? `/project/${activeCompany.id}` : `/project/${activeCompany.id}${path}`;
     }, [activeCompany]);
 }
+
+// Backward compatible aliases during transition.
+export const useCompanyRouter = useProjectRouter;
+export const useCompanyPath = useProjectPath;

@@ -4,7 +4,7 @@ import { HelpCircle, ChevronRight } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { useCompany } from '../context/CompanyContext';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 
 const sectionTitles: Record<string, { de: string; en: string }> = {
     'campaigns': { de: 'Kampagnen', en: 'Campaigns' },
@@ -23,16 +23,16 @@ const sectionTitles: Record<string, { de: string; en: string }> = {
 
 export default function Header() {
     const pathname = usePathname();
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const { language, setLanguage } = useLanguage();
     const { activeCompany } = useCompany();
 
-    // Parse breadcrumb segments from /company/[id]/section/[detailId]
-    const companyBase = activeCompany ? `/company/${activeCompany.id}` : '/';
-    const pathAfterCompany = pathname.startsWith('/company/')
-        ? pathname.replace(/^\/company\/[^/]+/, '')
+    // Parse breadcrumb segments from /project/[id]/section/[detailId]
+    const projectBase = activeCompany ? `/project/${activeCompany.id}` : '/';
+    const pathAfterProject = pathname.startsWith('/project/')
+        ? pathname.replace(/^\/project\/[^/]+/, '')
         : pathname;
-    const segments = pathAfterCompany.split('/').filter(Boolean);
+    const segments = pathAfterProject.split('/').filter(Boolean);
     // segments e.g. [] for dashboard, ['campaigns'] for list, ['campaigns', 'abc'] for detail
 
     const section = segments[0] || null;
@@ -43,17 +43,17 @@ export default function Header() {
         <header className="header">
             <div className="header-left">
                 <nav className="header-breadcrumb" aria-label="Breadcrumb">
-                    {/* Level 1: Unternehmensübersicht */}
+                    {/* Level 1: Projektübersicht */}
                     <Link href="/" className="header-breadcrumb-link">
-                        {language === 'en' ? 'Company overview' : 'Unternehmensübersicht'}
+                        {language === 'en' ? 'Project overview' : 'Projektübersicht'}
                     </Link>
 
-                    {/* Level 2: Company name (= Dashboard) */}
+                    {/* Level 2: Project name (= Dashboard) */}
                     {activeCompany && (
                         <>
                             <ChevronRight size={14} className="header-breadcrumb-separator" />
                             {section ? (
-                                <Link href={companyBase} className="header-breadcrumb-link">
+                                <Link href={projectBase} className="header-breadcrumb-link">
                                     {activeCompany.name}
                                 </Link>
                             ) : (
@@ -67,7 +67,7 @@ export default function Header() {
                         <>
                             <ChevronRight size={14} className="header-breadcrumb-separator" />
                             {hasDetail ? (
-                                <Link href={`${companyBase}/${section}`} className="header-breadcrumb-link">
+                                <Link href={`${projectBase}/${section}`} className="header-breadcrumb-link">
                                     {sectionTitle}
                                 </Link>
                             ) : (

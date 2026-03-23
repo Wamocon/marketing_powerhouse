@@ -44,12 +44,12 @@ export const ROLE_CONFIG: Record<CompanyRole, RoleConfig> & { super_admin: RoleC
     super_admin: {
         label: 'Super-Administrator', shortLabel: 'Super-Admin',
         color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.12)',
-        description: 'Globale Verwaltung aller Unternehmen und Benutzer',
+        description: 'Globale Verwaltung aller Projekt und Benutzer',
     },
     company_admin: {
-        label: 'Unternehmens-Admin', shortLabel: 'Admin',
+        label: 'Projekt-Admin', shortLabel: 'Admin',
         color: '#c1292e', bgColor: 'rgba(193, 41, 46, 0.12)',
-        description: 'Vollständige Kontrolle über das Unternehmen, User-Management',
+        description: 'Vollständige Kontrolle über das Projekt, User-Management',
     },
     manager: {
         label: 'Marketing Manager', shortLabel: 'Manager',

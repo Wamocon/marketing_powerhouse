@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useCompanyPath } from '../hooks/useCompanyRouter';
+import { useProjectPath } from '../hooks/useProjectRouter';
 import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
@@ -24,7 +24,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
     const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
-    const companyPath = useCompanyPath();
+    const companyPath = useProjectPath();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
     const [aiFeedbackText, setAiFeedbackText] = useState('');

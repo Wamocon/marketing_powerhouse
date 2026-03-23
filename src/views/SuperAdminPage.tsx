@@ -63,7 +63,7 @@ export default function SuperAdminPage() {
     );
 
     const handleDeleteCompany = async (id: string) => {
-        if (!confirm('Soll dieses Unternehmen wirklich gelöscht werden? Alle zugehörigen Daten gehen verloren.')) return;
+        if (!confirm('Soll dieses Projekt wirklich gelöscht werden? Alle zugehörigen Daten gehen verloren.')) return;
         try {
             await api.deleteCompany(id);
             loadAllCompanies();
@@ -137,7 +137,7 @@ export default function SuperAdminPage() {
             setCompanyMessage(companyId, {});
             await api.addCompanyMember(companyId, selectedUserId, selectedRole);
             await loadCompanyMembers(companyId);
-            setCompanyMessage(companyId, { success: 'Benutzer erfolgreich zum Unternehmen zugewiesen.' });
+            setCompanyMessage(companyId, { success: 'Benutzer erfolgreich zum Projekt zugewiesen.' });
         } catch {
             setCompanyMessage(companyId, { error: 'Zuweisung fehlgeschlagen. Benutzer ist ggf. bereits Mitglied.' });
         }
@@ -170,31 +170,31 @@ export default function SuperAdminPage() {
         const isCurrentUserInActiveCompany =
             targetMember.userId === currentUser?.id && activeCompany?.id === companyId;
         if (isCurrentUserInActiveCompany) {
-            setCompanyMessage(companyId, { error: 'Du kannst deinen eigenen Account nicht aus dem aktiven Unternehmen entfernen.' });
+            setCompanyMessage(companyId, { error: 'Du kannst deinen eigenen Account nicht aus dem aktiven Projekt entfernen.' });
             return;
         }
 
         const adminCount = companyList.filter(m => m.role === 'company_admin').length;
         const isLastAdmin = targetMember.role === 'company_admin' && adminCount <= 1;
         if (isLastAdmin) {
-            setCompanyMessage(companyId, { error: 'Der letzte Admin eines Unternehmens kann nicht entfernt werden.' });
+            setCompanyMessage(companyId, { error: 'Der letzte Admin eines Projekt kann nicht entfernt werden.' });
             return;
         }
 
-        const confirmed = confirm(`Soll ${userName} wirklich aus diesem Unternehmen entfernt werden?`);
+        const confirmed = confirm(`Soll ${userName} wirklich aus diesem Projekt entfernt werden?`);
         if (!confirmed) return;
         try {
             setCompanyMessage(companyId, {});
             await api.removeCompanyMember(memberId);
             await loadCompanyMembers(companyId);
-            setCompanyMessage(companyId, { success: `${userName} wurde aus dem Unternehmen entfernt.` });
+            setCompanyMessage(companyId, { success: `${userName} wurde aus dem Projekt entfernt.` });
         } catch {
             setCompanyMessage(companyId, { error: 'Mitglied konnte nicht entfernt werden.' });
         }
     };
 
     const tabs: { id: AdminTab; label: string; icon: typeof Building2; count: number }[] = [
-        { id: 'companies', label: 'Unternehmen', icon: Building2, count: allCompanies.length },
+        { id: 'companies', label: 'Projekt', icon: Building2, count: allCompanies.length },
         { id: 'users', label: 'Benutzer', icon: Users2, count: users.length },
     ];
 
@@ -228,12 +228,12 @@ export default function SuperAdminPage() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <PageHelp title="Super-Admin: Benutzer und Unternehmen">
-                        <p><strong>Unternehmen-Tab:</strong> Bestehende Benutzer können einem Unternehmen zugewiesen und ihre Rolle pro Unternehmen direkt angepasst werden.</p>
+                    <PageHelp title="Super-Admin: Benutzer und Projekt">
+                        <p><strong>Projekt-Tab:</strong> Bestehende Benutzer können einem Projekt zugewiesen und ihre Rolle pro Projekt direkt angepasst werden.</p>
                         <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
-                            <li>"Benutzer wählen" zeigt nur Benutzer, die noch nicht Mitglied des Unternehmens sind.</li>
-                            <li>Rollen sind unternehmensbezogen und können als Admin, Manager oder Member gesetzt werden.</li>
-                            <li>Änderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Unternehmen.</li>
+                            <li>"Benutzer wählen" zeigt nur Benutzer, die noch nicht Mitglied des Projekt sind.</li>
+                            <li>Rollen sind projektbezogen und können als Admin, Manager oder Member gesetzt werden.</li>
+                            <li>Änderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Projekt.</li>
                         </ul>
                         <p style={{ marginTop: '10px' }}><strong>Benutzer-Tab:</strong> Hier werden globale Benutzer gepflegt, inkl. Super-Admin-Status.</p>
                     </PageHelp>
@@ -285,7 +285,7 @@ export default function SuperAdminPage() {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Unternehmen</span>
+                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Projekt</span>
                                 <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
                                     {allCompanies.length}
                                 </span>
@@ -318,7 +318,7 @@ export default function SuperAdminPage() {
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder={activeTab === 'companies' ? 'Unternehmen suchen...' : 'Benutzer suchen...'}
+                                placeholder={activeTab === 'companies' ? 'Projekt suchen...' : 'Benutzer suchen...'}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 style={{ paddingLeft: '36px' }}
@@ -326,7 +326,7 @@ export default function SuperAdminPage() {
                         </div>
                         {activeTab === 'companies' && (
                             <button className="btn btn-primary" onClick={() => setShowCreateCompanyModal(true)}>
-                                <Plus size={16} /> Neues Unternehmen
+                                <Plus size={16} /> Neues Projekt
                             </button>
                         )}
                         {activeTab === 'users' && (
@@ -342,7 +342,7 @@ export default function SuperAdminPage() {
                             {filteredCompanies.length === 0 ? (
                                 <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
                                     <Building2 size={40} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-                                    <p style={{ color: 'var(--text-secondary)' }}>Keine Unternehmen gefunden.</p>
+                                    <p style={{ color: 'var(--text-secondary)' }}>Keine Projekt gefunden.</p>
                                 </div>
                             ) : (
                                 filteredCompanies.map(company => (
@@ -444,7 +444,7 @@ export default function SuperAdminPage() {
                                                     </button>
                                                 </div>
                                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
-                                                    Hier weist du vorhandene Benutzer einem Unternehmen zu und setzt direkt ihre Projektrolle.
+                                                    Hier weist du vorhandene Benutzer einem Projekt zu und setzt direkt ihre Projektrolle.
                                                 </div>
                                                 <div style={{
                                                     fontSize: 'var(--font-size-xs)', fontWeight: 600,
@@ -469,7 +469,7 @@ export default function SuperAdminPage() {
                                                             const removeTitle = isLastAdmin
                                                                 ? 'Letzten Admin kann man nicht entfernen'
                                                                 : isCurrentUserInActiveCompany
-                                                                    ? 'Eigenen Account im aktiven Unternehmen kann man nicht entfernen'
+                                                                    ? 'Eigenen Account im aktiven Projekt kann man nicht entfernen'
                                                                     : 'Mitglied entfernen';
                                                             return (
                                                                 <div key={idx} style={{

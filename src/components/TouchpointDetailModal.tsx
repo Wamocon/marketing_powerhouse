@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Megaphone, ExternalLink, ListTodo, Edit2, Trash2, X, BarChart3, Eye, MousePointerClick, TrendingUp, DollarSign, Target } from 'lucide-react';
-import { useCompanyRouter } from '../hooks/useCompanyRouter';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import { useData } from '../context/DataContext';
 import { useContents } from '../context/ContentContext';
 import { useAuth } from '../context/AuthContext';
@@ -30,7 +30,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
     const { can } = useAuth();
     const { campaigns } = useData();
     const { contents } = useContents();
-    const router = useCompanyRouter();
+    const router = useProjectRouter();
     const canManage = can('canManageTouchpoints');
     const canDelete = can('canDeleteItems');
     const baseEditedTp = {
