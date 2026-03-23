@@ -6,6 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import PageHelp from '../components/PageHelp';
 import AudienceDetailModal from '../components/AudienceDetailModal';
+import ImportExportPanel from '../components/ImportExportPanel';
+import { downloadAudienceExport } from '../lib/importExport';
+import type { AudienceExportData } from '../types/importExport';
 
 const segmentConfig = {
     'B2C': { badge: 'badge-info', label: 'B2C' },
@@ -19,7 +22,7 @@ const typeConfig = {
 
 export default function AudiencesPage() {
     const { audiences, campaigns, addAudience } = useData();
-    const { can } = useAuth();
+    const { can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { language } = useLanguage();
     const isGerman = language === 'de';
     const [searchQuery, setSearchQuery] = useState('');
@@ -340,6 +343,48 @@ export default function AudiencesPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Import / Export – Audience Level */}
+            {(isSuperAdmin || activeCompanyRole === 'company_admin') && (
+                <ImportExportPanel
+                    level="audience"
+                    onImport={async (raw) => {
+                        const data = raw as AudienceExportData;
+                        const a = data.audience;
+                        const initials = a.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'XX';
+                        const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899'];
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        await addAudience({
+                            name: a.name,
+                            type: a.type || 'buyer',
+                            segment: a.segment || 'B2B',
+                            color,
+                            initials,
+                            age: a.age || '',
+                            gender: a.gender || '',
+                            location: a.location || '',
+                            income: a.income || '',
+                            education: a.education || '',
+                            jobTitle: a.jobTitle || '',
+                            interests: a.interests || [],
+                            painPoints: a.painPoints || [],
+                            goals: a.goals || [],
+                            preferredChannels: a.preferredChannels || [],
+                            buyingBehavior: a.buyingBehavior || '',
+                            decisionProcess: a.decisionProcess || '',
+                            journeyPhase: a.journeyPhase || 'Awareness',
+                            description: a.description || '',
+                            campaignIds: [],
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                        });
+                    }}
+                    onExport={() => {
+                        if (audiences.length > 0) downloadAudienceExport(audiences[0]);
+                    }}
+                    exportDisabled={audiences.length === 0}
+                />
             )}
         </div>
     );

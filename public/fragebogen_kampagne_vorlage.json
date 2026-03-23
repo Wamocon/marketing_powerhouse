@@ -1,0 +1,46 @@
+{
+  "_info": {
+    "title": "Momentum Marketing OS – Kampagnen-Import-Vorlage",
+    "description": "Vorlage zum Import einer einzelnen Kampagne. Füllen Sie die Felder im 'importData'-Block aus und importieren Sie die Datei unter Kampagnen → Import/Export.",
+    "version": "1.0.0"
+  },
+
+  "questionnaire": [
+    { "key": "campaign.name", "question": "Kampagnenname?", "required": true, "value": "" },
+    { "key": "campaign.status", "question": "Status? (active / planned / completed / paused)", "required": true, "value": "planned" },
+    { "key": "campaign.startDate", "question": "Startdatum (YYYY-MM-DD)?", "required": true, "value": "" },
+    { "key": "campaign.endDate", "question": "Enddatum (YYYY-MM-DD)?", "required": true, "value": "" },
+    { "key": "campaign.budget", "question": "Gesamtbudget in EUR?", "required": true, "value": 0 },
+    { "key": "campaign.spent", "question": "Bereits ausgegeben?", "required": false, "value": 0 },
+    { "key": "campaign.channels", "question": "Kanäle? (Array, z.B. [\"Social Media\", \"SEA\"])", "required": false, "value": [] },
+    { "key": "campaign.description", "question": "Kurzbeschreibung der Kampagne?", "required": false, "value": "" },
+    { "key": "campaign.masterPrompt", "question": "KI-Master-Prompt für Content-Generierung?", "required": false, "value": "" },
+    { "key": "campaign.targetAudiences", "question": "Zielgruppen-Namen? (Array)", "required": false, "value": [] },
+    { "key": "campaign.campaignKeywords", "question": "Kampagnen-Keywords? (Array)", "required": false, "value": [] },
+    { "key": "campaign.progress", "question": "Fortschritt in % (0-100)?", "required": false, "value": 0 }
+  ],
+
+  "importData": {
+    "_meta": {
+      "version": "1.0.0",
+      "type": "campaign",
+      "exportedAt": "",
+      "appName": "Momentum Marketing OS"
+    },
+    "campaign": {
+      "name": "",
+      "status": "planned",
+      "startDate": "",
+      "endDate": "",
+      "budget": 0,
+      "spent": 0,
+      "channels": [],
+      "description": "",
+      "masterPrompt": "",
+      "targetAudiences": [],
+      "campaignKeywords": [],
+      "kpis": { "impressions": 0, "clicks": 0, "conversions": 0, "ctr": 0 },
+      "progress": 0
+    }
+  }
+}

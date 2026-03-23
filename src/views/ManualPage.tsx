@@ -4,7 +4,7 @@ import {
     Calendar, CheckSquare, Wallet, Settings, CheckCircle,
     FileText, Lightbulb, UserCheck, Search, Image as ImageIcon,
     MessageSquare, AlertTriangle, Link as LinkIcon, Map,
-    GitBranch, Clock, Users, Zap, Bell
+    GitBranch, Clock, Users, Zap, Bell, FileJson
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PlaceholderImage, SectionTitle, TipBox, AccordionItem, TableOfContents, WorkflowCard } from '../components/ManualComponents';
@@ -27,7 +27,8 @@ export default function ManualPage() {
         'Die Digitale Positionierung pflegen',
         'Systemeinstellungen & Integrationen',
         'Benachrichtigungssystem',
-        'Benutzerverwaltung & Berechtigungen'
+        'Benutzerverwaltung & Berechtigungen',
+        'Import / Export & Projekt-Fragebogen'
     ];
 
     const managerSections = [
@@ -156,6 +157,31 @@ export default function ManualPage() {
                                 </p>
                                 <TipBox title="Sicherheit">
                                     Befördere Nutzer nur zum Admin, wenn sie wirklich globale Systemeinstellungen (wie API-Keys) ändern dürfen. In 90% der Fälle ist die Manager-Rolle für Teamleiter völlig ausreichend.
+                                </TipBox>
+                            </div>
+                        </AccordionItem>
+
+                        <AccordionItem id="section-4" title="Import / Export & Projekt-Fragebogen" icon={FileJson} color="#0ea5e9">
+                            <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                                <p style={{ marginBottom: '16px' }}>Die Import/Export-Funktionen ermöglichen die schnelle Einrichtung neuer Projekte und den Austausch von Marketing-Daten zwischen Momentum-Instanzen.</p>
+                                <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <li><strong>Berechtigung:</strong> Nur <strong>Super-Admin</strong> und <strong>Projekt-Admin</strong> können Import/Export nutzen.</li>
+                                    <li><strong>3 Ebenen:</strong>
+                                        <ul style={{ listStyleType: 'circle', paddingLeft: '20px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <li><strong>Projekt-Import/Export</strong> (Einstellungen → Import/Export): Exportiert/importiert Projektdaten, Positionierung, Keywords und Budget-Kategorien.</li>
+                                            <li><strong>Kampagnen-Import/Export</strong> (Kampagnen-Seite): Importiert eine einzelne Kampagne inkl. Budget, Kanäle, Keywords und Zielgruppen.</li>
+                                            <li><strong>Zielgruppen-Import/Export</strong> (Zielgruppen-Seite): Importiert eine vollständige Persona mit Demographics, Pain Points, Goals etc.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>Validierung:</strong> Jede Import-Datei wird automatisch validiert. Pflichtfelder müssen vorhanden sein, bevor der Import bestätigt werden kann. Warnungen werden für fehlende optionale Felder angezeigt.</li>
+                                    <li><strong>JSON-Vorlagen:</strong> Über den "Vorlage (JSON)"-Button kann eine leere Vorlage heruntergeladen werden. Im <code>/public</code>-Ordner liegen außerdem umfangreiche Fragebogen-Vorlagen (fragebogen_projekt_vorlage.json, fragebogen_kampagne_vorlage.json, fragebogen_zielgruppe_vorlage.json).</li>
+                                    <li><strong>Fragebogen für andere Apps:</strong> Die Projekt-Fragebogen-Vorlage enthält alle Pflicht- und Optionalfragen, die andere Teams/Bots ausfüllen können, um ein Projekt-Import-JSON zu generieren.</li>
+                                </ul>
+                                <TipBox title="Workflow: Neues Projekt per Import einrichten">
+                                    1. Fragebogen-Vorlage herunterladen (fragebogen_projekt_vorlage.json).<br/>
+                                    2. Alle Fragen beantworten und die Werte im "importData"-Block eintragen.<br/>
+                                    3. Das "importData"-Objekt als eigenständige JSON speichern.<br/>
+                                    4. In Momentum: Einstellungen → Import/Export → Projekt importieren.
                                 </TipBox>
                             </div>
                         </AccordionItem>

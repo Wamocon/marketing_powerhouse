@@ -6,6 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import PageHelp from '../components/PageHelp';
 import NewCampaignModal from '../components/NewCampaignModal';
+import ImportExportPanel from '../components/ImportExportPanel';
+import { downloadCampaignExport } from '../lib/importExport';
+import type { CampaignExportData } from '../types/importExport';
 
 const statusConfig = {
     active: { label: { de: 'Aktiv', en: 'Active' }, badge: 'badge-success' },
@@ -17,9 +20,9 @@ const statusConfig = {
 
 export default function CampaignsPage() {
     const router = useProjectRouter();
-    const { can } = useAuth();
+    const { can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { language, locale } = useLanguage();
-    const { campaigns, users } = useData();
+    const { campaigns, users, addCampaign } = useData();
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
@@ -222,6 +225,41 @@ export default function CampaignsPage() {
                     );
                 })}
             </div>
+
+            {/* Import / Export – Campaign Level */}
+            {(isSuperAdmin || activeCompanyRole === 'company_admin') && (
+                <ImportExportPanel
+                    level="campaign"
+                    onImport={async (raw) => {
+                        const data = raw as CampaignExportData;
+                        const c = data.campaign;
+                        await addCampaign({
+                            name: c.name,
+                            status: c.status || 'planned',
+                            startDate: c.startDate || new Date().toISOString().split('T')[0],
+                            endDate: c.endDate || new Date().toISOString().split('T')[0],
+                            budget: c.budget || 0,
+                            spent: c.spent || 0,
+                            channels: c.channels || [],
+                            touchpointIds: [],
+                            description: c.description || '',
+                            masterPrompt: c.masterPrompt || '',
+                            targetAudiences: c.targetAudiences || [],
+                            campaignKeywords: c.campaignKeywords || [],
+                            kpis: c.kpis || { impressions: 0, clicks: 0, conversions: 0, ctr: 0 },
+                            channelKpis: c.channelKpis,
+                            owner: '',
+                            progress: c.progress || 0,
+                            responsibleManagerId: '',
+                            teamMemberIds: [],
+                        });
+                    }}
+                    onExport={() => {
+                        if (campaigns.length > 0) downloadCampaignExport(campaigns[0]);
+                    }}
+                    exportDisabled={campaigns.length === 0}
+                />
+            )}
 
             {showNewCampaignModal && (
                 <NewCampaignModal onClose={() => setShowNewCampaignModal(false)} />
