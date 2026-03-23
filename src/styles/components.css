@@ -278,6 +278,11 @@
   50% { transform: scale(1.15); }
 }
 
+@keyframes subtle-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(193, 41, 46, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(193, 41, 46, 0); }
+}
+
 .notification-panel-anchor {
   position: absolute;
   top: calc(100% + 8px);

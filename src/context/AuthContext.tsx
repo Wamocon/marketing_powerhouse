@@ -94,6 +94,7 @@ interface AuthContextValue {
         phone: string;
         whatsappConsent: boolean;
         companyName?: string;
+        planId?: string;
     }) => Promise<User>;
     logout: () => void;
     can: (permission: PermissionKey) => boolean;
@@ -151,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone: string;
         whatsappConsent: boolean;
         companyName?: string;
+        planId?: string;
     }): Promise<User> => {
         const user = await api.registerUser(input);
         localStorage.setItem(SESSION_KEY, user.id);
