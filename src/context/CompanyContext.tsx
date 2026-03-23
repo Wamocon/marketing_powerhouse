@@ -156,9 +156,20 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     const createCompanyFn = useCallback(async (data: { name: string; description?: string; industry?: string; logo?: string }) => {
         if (!currentUser) throw new Error('Not authenticated');
+        const normalizedName = data.name.trim().toLowerCase();
+        if (!normalizedName) {
+            throw new Error('Bitte gib einen Projektnamen ein.');
+        }
+
+        const scopeCompanies = isSuperAdmin ? await api.fetchCompanies() : userCompanies;
+        const duplicateExists = scopeCompanies.some(c => c.name.trim().toLowerCase() === normalizedName);
+        if (duplicateExists) {
+            throw new Error('Ein Projekt mit diesem Namen existiert bereits.');
+        }
+
         const company = await api.createCompany({
-            name: data.name,
-            slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            name: data.name.trim(),
+            slug: data.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
             description: data.description ?? '',
             industry: data.industry ?? '',
             logo: data.logo ?? '',
@@ -170,7 +181,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         const companies = await api.fetchUserCompanies(currentUser.id);
         setUserCompanies(companies);
         return company;
-    }, [currentUser]);
+    }, [currentUser, isSuperAdmin, userCompanies]);
 
     const updateCompanyFn = useCallback(async (id: string, updates: Partial<Company>) => {
         await api.updateCompany(id, updates);

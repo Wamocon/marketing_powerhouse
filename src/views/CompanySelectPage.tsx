@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Building2, Plus, ArrowRight, Shield, Crown,
@@ -9,6 +9,11 @@ import {
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import type { CompanyRole } from '../types';
+import {
+    readJsonFile,
+    validateProjectImport,
+} from '../lib/importExport';
+import type { ProjectExportData } from '../types/importExport';
 
 export default function CompanySelectPage() {
     const router = useRouter();
@@ -306,11 +311,40 @@ function CreateCompanyModal({
     onClose: () => void;
     onCreate: (data: { name: string; description?: string; industry?: string }) => Promise<unknown>;
 }) {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [industry, setIndustry] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [importInfo, setImportInfo] = useState('');
+
+    const handleImportProjectInfo = async (file: File) => {
+        setError('');
+        setImportInfo('');
+        try {
+            const raw = await readJsonFile(file);
+            const validation = validateProjectImport(raw);
+            if (!validation.valid) {
+                setError(validation.errors[0] ?? 'Import-Datei ist ungültig.');
+                return;
+            }
+
+            const data = raw as ProjectExportData;
+            const importedName = data.project?.name?.trim() ?? '';
+            if (!importedName) {
+                setError('Import fehlgeschlagen: project.name ist ein Pflichtfeld.');
+                return;
+            }
+
+            setName(importedName);
+            setDescription(data.project?.description ?? '');
+            setIndustry(data.project?.industry ?? '');
+            setImportInfo('Projektdaten importiert. Bitte prüfen und erstellen.');
+        } catch {
+            setError('Import fehlgeschlagen. Bitte prüfe die JSON-Datei.');
+        }
+    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -323,8 +357,8 @@ function CreateCompanyModal({
         try {
             await onCreate({ name: name.trim(), description: description.trim(), industry: industry.trim() });
             onClose();
-        } catch {
-            setError('Fehler beim Erstellen. Bitte versuche es erneut.');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Fehler beim Erstellen. Bitte versuche es erneut.');
         } finally {
             setIsSubmitting(false);
         }
@@ -353,6 +387,39 @@ function CreateCompanyModal({
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json,application/json"
+                        style={{ display: 'none' }}
+                        onChange={async e => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                await handleImportProjectInfo(file);
+                            }
+                            e.currentTarget.value = '';
+                        }}
+                    />
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        marginBottom: '14px',
+                    }}>
+                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            Alternativ Projektdaten aus JSON importieren
+                        </span>
+                        <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isSubmitting}
+                        >
+                            Projektdaten importieren
+                        </button>
+                    </div>
+
                     <div className="form-group">
                         <label className="form-label">Projektname *</label>
                         <input
@@ -384,6 +451,16 @@ function CreateCompanyModal({
                             rows={3}
                         />
                     </div>
+
+                    {importInfo && (
+                        <div style={{
+                            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+                            borderRadius: 'var(--radius-sm)', padding: '10px 14px',
+                            fontSize: 'var(--font-size-xs)', color: '#10b981', marginBottom: '16px',
+                        }}>
+                            {importInfo}
+                        </div>
+                    )}
 
                     {error && (
                         <div style={{

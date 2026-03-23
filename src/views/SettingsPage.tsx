@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import {
-    Settings, Users, Plug, Bell, Shield, CreditCard,
+    Settings, Users, Plug, Bell, Shield, CreditCard, FileJson,
     Plus, Check, X, Lock, Trash2,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { useCompany } from '../context/CompanyContext';
+import { useData } from '../context/DataContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import * as api from '../lib/api';
 import PageHelp from '../components/PageHelp';
+import ImportExportPanel from '../components/ImportExportPanel';
 import PricingCards from '../components/PricingCards';
+import { downloadProjectExport } from '../lib/importExport';
+import type { ProjectExportData } from '../types/importExport';
 import { NOTIFICATION_SETTING_TYPE_MAP, type NotificationType } from '../types';
 import { formatPrice } from '../lib/pricing';
 
@@ -115,7 +119,7 @@ const statusDot = (s: 'online' | 'away' | 'offline' | undefined) => ({
 });
 
 export default function SettingsPage() {
-    const { can, currentUser, isSuperAdmin } = useAuth();
+    const { can, currentUser, isSuperAdmin, activeCompanyRole } = useAuth();
     const { language, setLanguage } = useLanguage();
     const {
         activeCompany,
@@ -347,7 +351,10 @@ export default function SettingsPage() {
         { id: 'team', label: language === 'en' ? 'Team overview' : 'Team-Uebersicht', icon: Users },
         { id: 'integrations', label: language === 'en' ? 'Integrations' : 'Integrationen', icon: Plug },
         { id: 'notifications', label: language === 'en' ? 'Notifications' : 'Benachrichtigungen', icon: Bell },
-        ...(can('canManageUsers') ? [{ id: 'admin', label: language === 'en' ? 'User management' : 'Benutzerverwaltung', icon: Shield, adminOnly: true }] : []),
+    ];
+    const adminTabs = [
+        ...((isSuperAdmin || activeCompanyRole === 'company_admin') ? [{ id: 'importexport', label: 'Import / Export', icon: FileJson }] : []),
+        ...(can('canManageUsers') ? [{ id: 'admin', label: language === 'en' ? 'User management' : 'Benutzerverwaltung', icon: Shield }] : []),
     ];
 
     return (
@@ -371,6 +378,12 @@ export default function SettingsPage() {
                         <li>Deaktivierte Kategorien werden automatisch herausgefiltert — die Benachrichtigungen werden trotzdem gespeichert und können später wieder aktiviert werden.</li>
                         <li>Die Einstellungen gelten pro Projekt.</li>
                     </ul>
+                    <p style={{ marginTop: '12px' }}><strong>Import / Export (Admin):</strong></p>
+                    <ul style={{ marginTop: '4px', paddingLeft: '18px' }}>
+                        <li>Im Tab "Import / Export" können SuperAdmin und Projekt-Admin Projektdaten als JSON exportieren oder importieren.</li>
+                        <li>Der Import übernimmt Positionierung, Keywords und Budget-Kategorien.</li>
+                        <li>Eine leere Vorlage kann über den "Vorlage (JSON)"-Button heruntergeladen werden.</li>
+                    </ul>
                 </PageHelp>
             </div>
 
@@ -385,20 +398,43 @@ export default function SettingsPage() {
                                     key={tab.id}
                                     className={`sidebar-link ${activeTab === tab.id ? 'active' : ''}`}
                                     onClick={() => setActiveTab(tab.id)}
-                                    style={tab.adminOnly ? { borderLeft: '2px solid rgba(239,68,68,0.6)' } : {}}
                                 >
                                     <Icon size={18} />
                                     {tab.label}
-                                    {tab.adminOnly && (
-                                        <span style={{
-                                            marginLeft: 'auto', fontSize: '0.58rem', padding: '1px 5px',
-                                            borderRadius: 'var(--radius-full)', background: 'rgba(239,68,68,0.12)',
-                                            color: '#ef4444', fontWeight: 700, textTransform: 'uppercase',
-                                        }}>Admin</span>
-                                    )}
                                 </button>
                             );
                         })}
+
+                        {adminTabs.length > 0 && (
+                            <>
+                                <div style={{
+                                    marginTop: '10px',
+                                    marginBottom: '4px',
+                                    padding: '8px 12px 4px',
+                                    fontSize: '0.68rem',
+                                    fontWeight: 700,
+                                    letterSpacing: '0.06em',
+                                    textTransform: 'uppercase',
+                                    color: 'var(--text-tertiary)',
+                                    borderTop: '1px solid var(--border-color)',
+                                }}>
+                                    Admin
+                                </div>
+                                {adminTabs.map(tab => {
+                                    const Icon = tab.icon;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            className={`sidebar-link ${activeTab === tab.id ? 'active' : ''}`}
+                                            onClick={() => setActiveTab(tab.id)}
+                                        >
+                                            <Icon size={18} />
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -740,7 +776,6 @@ export default function SettingsPage() {
                     {/* ─── Abonnement / Subscription ─── */}
                     {activeTab === 'subscription' && (
                         <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {/* Current plan overview */}
                             <div className="card">
                                 <div className="card-header">
                                     <div className="card-title">{language === 'en' ? 'Your current plan' : 'Dein aktueller Plan'}</div>
@@ -766,7 +801,7 @@ export default function SettingsPage() {
                                                     </div>
                                                 </div>
                                                 <div style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
-                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{language === 'en' ? 'Seats' : 'Plätze'}</div>
+                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{language === 'en' ? 'Seats' : 'Pl\u00e4tze'}</div>
                                                     <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
                                                         {companyMembers.length} / {currentPlan.maxSeats}
                                                     </div>
@@ -780,9 +815,9 @@ export default function SettingsPage() {
                                             </div>
                                             {subscription && (
                                                 <div style={{ marginTop: '12px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                    {language === 'en' ? 'Billing cycle' : 'Abrechnungszyklus'}: {subscription.billingCycle === 'yearly' ? (language === 'en' ? 'Yearly' : 'Jährlich') : (language === 'en' ? 'Monthly' : 'Monatlich')}
+                                                    {language === 'en' ? 'Billing cycle' : 'Abrechnungszyklus'}: {subscription.billingCycle === 'yearly' ? (language === 'en' ? 'Yearly' : 'J\u00e4hrlich') : (language === 'en' ? 'Monthly' : 'Monatlich')}
                                                     {subscription.currentPeriodEnd && (
-                                                        <> · {language === 'en' ? 'Next renewal' : 'Nächste Verlängerung'}: {new Date(subscription.currentPeriodEnd).toLocaleDateString(language === 'en' ? 'en-US' : 'de-DE')}</>
+                                                        <> \u00b7 {language === 'en' ? 'Next renewal' : 'N\u00e4chste Verl\u00e4ngerung'}: {new Date(subscription.currentPeriodEnd).toLocaleDateString(language === 'en' ? 'en-US' : 'de-DE')}</>
                                                     )}
                                                 </div>
                                             )}
@@ -790,15 +825,13 @@ export default function SettingsPage() {
                                     </div>
                                 ) : (
                                     <div style={{ padding: '16px', color: 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)' }}>
-                                        {language === 'en' ? 'No active subscription. Choose a plan below.' : 'Kein aktives Abonnement. Wähle unten einen Plan.'}
+                                        {language === 'en' ? 'No active subscription. Choose a plan below.' : 'Kein aktives Abonnement. W\u00e4hle unten einen Plan.'}
                                     </div>
                                 )}
                             </div>
-
-                            {/* Plan comparison / upgrade */}
                             <div className="card">
                                 <div className="card-header">
-                                    <div className="card-title">{language === 'en' ? 'Available plans' : 'Verfügbare Pläne'}</div>
+                                    <div className="card-title">{language === 'en' ? 'Available plans' : 'Verf\u00fcgbare Pl\u00e4ne'}</div>
                                 </div>
                                 <PricingCards
                                     onSelect={async (plan) => {
@@ -816,12 +849,94 @@ export default function SettingsPage() {
                         </div>
                     )}
 
+                    {/* ─── Import / Export ─── */}
+                    {activeTab === 'importexport' && (isSuperAdmin || activeCompanyRole === 'company_admin') && (
+                        <SettingsImportExport />
+                    )}
+
                     {/* ─── Admin: Benutzerverwaltung ─── */}
                     {activeTab === 'admin' && can('canManageUsers') && (
                         <AdminSettings currentUser={currentUser} statusDot={statusDot} />
                     )}
                 </div>
             </div>
+        </div>
+    );
+}
+
+// ─── Import/Export Sub-Component ───────────────────────────
+
+function SettingsImportExport() {
+    const { language } = useLanguage();
+    const { activeCompany } = useCompany();
+    const { positioning, companyKeywords, budgetData } = useData();
+    const isDE = language === 'de';
+
+    const handleProjectImport = async (raw: unknown) => {
+        if (!activeCompany) return;
+        const data = raw as ProjectExportData;
+
+        // Update company info
+        if (data.project.name || data.project.description || data.project.industry) {
+            await api.updateCompany(activeCompany.id, {
+                name: data.project.name || activeCompany.name,
+                description: data.project.description || activeCompany.description,
+                industry: data.project.industry || activeCompany.industry,
+            });
+        }
+
+        // Import positioning
+        if (data.positioning) {
+            await api.savePositioning({
+                ...data.positioning,
+                lastUpdated: new Date().toISOString().split('T')[0],
+                updatedBy: 'import',
+            }, activeCompany.id);
+        }
+
+        // Import keywords
+        if (data.keywords?.length) {
+            for (const kw of data.keywords) {
+                await api.createKeyword(kw, activeCompany.id);
+            }
+        }
+
+        // Import budget categories
+        if (data.budgetCategories?.length) {
+            for (const cat of data.budgetCategories) {
+                await api.createBudgetCategory(cat, activeCompany.id);
+            }
+        }
+
+        // Reload page to reflect changes
+        window.location.reload();
+    };
+
+    const handleProjectExport = () => {
+        if (!activeCompany) return;
+        downloadProjectExport(
+            { name: activeCompany.name, description: activeCompany.description, industry: activeCompany.industry, logo: activeCompany.logo },
+            positioning,
+            companyKeywords,
+            budgetData?.categories ?? [],
+        );
+    };
+
+    return (
+        <div>
+            <h2 style={{ marginBottom: '4px' }}>{isDE ? 'Import / Export' : 'Import / Export'}</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px', fontSize: '0.9rem' }}>
+                {isDE
+                    ? 'Projekt-Daten exportieren oder aus einer JSON-Datei importieren. Nur für SuperAdmin und Projekt-Admin.'
+                    : 'Export project data or import from a JSON file. Restricted to SuperAdmin and Project Admin.'}
+            </p>
+            <ImportExportPanel
+                level="project"
+                onImport={handleProjectImport}
+                onExport={handleProjectExport}
+                exportDisabled={!activeCompany}
+                entityLabel={activeCompany?.name}
+            />
         </div>
     );
 }

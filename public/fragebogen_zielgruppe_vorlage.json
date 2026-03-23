@@ -1,0 +1,55 @@
+{
+  "_info": {
+    "title": "Momentum Marketing OS – Zielgruppen-Import-Vorlage",
+    "description": "Vorlage zum Import einer Zielgruppe / Persona. Füllen Sie die Felder im 'importData'-Block aus und importieren Sie die Datei unter Zielgruppen → Import/Export.",
+    "version": "1.0.0"
+  },
+
+  "questionnaire": [
+    { "key": "audience.name", "question": "Persona-Name?", "required": true, "value": "", "example": "Marketing-Manager Maria" },
+    { "key": "audience.type", "question": "Typ? (buyer / user)", "required": true, "value": "buyer" },
+    { "key": "audience.segment", "question": "Segment? (B2C / B2B)", "required": true, "value": "B2B" },
+    { "key": "audience.age", "question": "Altersgruppe?", "required": false, "value": "", "example": "30-45" },
+    { "key": "audience.gender", "question": "Geschlecht?", "required": false, "value": "" },
+    { "key": "audience.location", "question": "Standort / Region?", "required": false, "value": "" },
+    { "key": "audience.income", "question": "Einkommensspanne?", "required": false, "value": "" },
+    { "key": "audience.education", "question": "Bildungsgrad?", "required": false, "value": "" },
+    { "key": "audience.jobTitle", "question": "Jobtitel / Position?", "required": false, "value": "" },
+    { "key": "audience.interests", "question": "Interessen? (Array)", "required": false, "value": [] },
+    { "key": "audience.painPoints", "question": "Pain Points / Herausforderungen? (Array)", "required": true, "value": [] },
+    { "key": "audience.goals", "question": "Ziele? (Array)", "required": true, "value": [] },
+    { "key": "audience.preferredChannels", "question": "Bevorzugte Kanäle? (Array)", "required": false, "value": [] },
+    { "key": "audience.buyingBehavior", "question": "Kaufverhalten beschreiben", "required": false, "value": "" },
+    { "key": "audience.decisionProcess", "question": "Entscheidungsprozess beschreiben", "required": false, "value": "" },
+    { "key": "audience.journeyPhase", "question": "Aktuelle Journey-Phase? (Awareness / Consideration / Decision / Retention / Advocacy)", "required": false, "value": "Awareness" },
+    { "key": "audience.description", "question": "Freitext-Beschreibung der Persona", "required": false, "value": "" }
+  ],
+
+  "importData": {
+    "_meta": {
+      "version": "1.0.0",
+      "type": "audience",
+      "exportedAt": "",
+      "appName": "Momentum Marketing OS"
+    },
+    "audience": {
+      "name": "",
+      "type": "buyer",
+      "segment": "B2B",
+      "age": "",
+      "gender": "",
+      "location": "",
+      "income": "",
+      "education": "",
+      "jobTitle": "",
+      "interests": [],
+      "painPoints": [],
+      "goals": [],
+      "preferredChannels": [],
+      "buyingBehavior": "",
+      "decisionProcess": "",
+      "journeyPhase": "Awareness",
+      "description": ""
+    }
+  }
+}
