@@ -5,6 +5,7 @@ import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ContentDetailModal from '../components/ContentDetailModal';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
@@ -28,6 +29,7 @@ export default function ContentCalendarPage() {
     const { contents } = useContents();
     useTasks();
     const { can } = useAuth();
+    const { language, locale } = useLanguage();
     const [currentDate, setCurrentDate] = useState(() => {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -76,25 +78,24 @@ export default function ContentCalendarPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Content-Kalender</h1>
-                    <p className="page-subtitle">Redaktionsplanung über alle Kanäle hinweg ({contents.length} Inhalte)</p>
+                    <h1 className="page-title">{language === 'en' ? 'Content calendar' : 'Content-Kalender'}</h1>
+                    <p className="page-subtitle">{language === 'en' ? 'Editorial planning across all channels' : 'Redaktionsplanung ueber alle Kanaele hinweg'} ({contents.length} {language === 'en' ? 'items' : 'Inhalte'})</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title="Content-Kalender">
-                        <p style={{ marginBottom: '12px' }}>Der Content-Kalender ist dein tägliches Navigationsinstrument für alle anstehenden Veröffentlichungen.</p>
+                    <PageHelp title={language === 'en' ? 'Content calendar' : 'Content-Kalender'}>
+                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'The content calendar is your daily navigation tool for upcoming publications.' : 'Der Content-Kalender ist dein taegliches Navigationsinstrument fuer alle anstehenden Veroeffentlichungen.'}</p>
                         <ul className="help-list">
-                            <li><strong>Die Ansicht:</strong> Zeigt dir alle geplanten Contents des aktuellen Monats. Mit den Buttons oben rechts kannst du auf eine chronologische Listen-Ansicht umschalten.</li>
-                            <li><strong>Rot markiert:</strong> Ein Eintrag leuchtet rot auf und zeigt ein Warndreieck? Das bedeutet, dass es sich nur um eine Content-Idee handelt und <strong>noch keine Aufgabe</strong> zur Umsetzung zugewiesen wurde!</li>
-                            <li><strong>Content planen:</strong> Klicke auf den blauen Button, um direkt neue Beitrage zu terminieren.</li>
+                            <li><strong>{language === 'en' ? 'View' : 'Die Ansicht'}:</strong> {language === 'en' ? 'Shows all planned content for the current month and can switch to list view.' : 'Zeigt dir alle geplanten Contents des aktuellen Monats. Mit den Buttons oben rechts kannst du auf eine chronologische Listen-Ansicht umschalten.'}</li>
+                            <li><strong>{language === 'en' ? 'Red markers' : 'Rot markiert'}:</strong> {language === 'en' ? 'Red cards indicate content without linked tasks yet.' : 'Ein Eintrag leuchtet rot auf und zeigt ein Warndreieck? Das bedeutet, dass es sich nur um eine Content-Idee handelt und noch keine Aufgabe zur Umsetzung zugewiesen wurde.'}</li>
                         </ul>
                     </PageHelp>
                     <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
-                        <button className={`btn btn-sm ${view === 'month' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('month')}>Monat</button>
-                        <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('list')}>Liste</button>
+                        <button className={`btn btn-sm ${view === 'month' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('month')}>{language === 'en' ? 'Month' : 'Monat'}</button>
+                        <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('list')}>{language === 'en' ? 'List' : 'Liste'}</button>
                     </div>
                     {can('canEditContent') && (
                         <button className="btn btn-primary" onClick={() => setShowNewContentModal(true)}>
-                            <Plus size={16} /> Content planen
+                            <Plus size={16} /> {language === 'en' ? 'Plan content' : 'Content planen'}
                         </button>
                     )}
                 </div>
@@ -107,7 +108,9 @@ export default function ContentCalendarPage() {
                     borderRadius: 'var(--radius-md)', color: '#ef4444', fontSize: 'var(--font-size-sm)'
                 }}>
                     <AlertTriangle size={18} />
-                    <span><strong>{noTaskCount} Content(s)</strong> haben noch keine verknüpften Aufgaben und erscheinen <strong>rot</strong> im Kalender.</span>
+                    <span>{language === 'en'
+                        ? <><strong>{noTaskCount} content item(s)</strong> still have no linked tasks and appear in <strong>red</strong>.</>
+                        : <><strong>{noTaskCount} Content(s)</strong> haben noch keine verknuepften Aufgaben und erscheinen <strong>rot</strong> im Kalender.</>}</span>
                 </div>
             )}
 
@@ -116,7 +119,7 @@ export default function ContentCalendarPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <button className="btn btn-ghost btn-icon" onClick={prevMonth}><ChevronLeft size={20} /></button>
                     <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, minWidth: '200px', textAlign: 'center' }}>
-                        {monthNames[month]} {year}
+                        {new Date(year, month, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
                     </h2>
                     <button className="btn btn-ghost btn-icon" onClick={nextMonth}><ChevronRight size={20} /></button>
                 </div>
@@ -127,7 +130,7 @@ export default function ContentCalendarPage() {
                         setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                     }}
                 >
-                    Heute
+                    {language === 'en' ? 'Today' : 'Heute'}
                 </button>
             </div>
 
@@ -167,10 +170,10 @@ export default function ContentCalendarPage() {
                             <thead>
                                 <tr>
                                     <th>Datum</th>
-                                    <th>Titel</th>
-                                    <th>Plattform</th>
-                                    <th>Status</th>
-                                    <th>Aufgaben</th>
+                                    <th>{language === 'en' ? 'Title' : 'Titel'}</th>
+                                    <th>{language === 'en' ? 'Platform' : 'Plattform'}</th>
+                                    <th>{language === 'en' ? 'Status' : 'Status'}</th>
+                                    <th>{language === 'en' ? 'Tasks' : 'Aufgaben'}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -180,7 +183,7 @@ export default function ContentCalendarPage() {
                                     return (
                                         <tr key={cnt.id} onClick={() => setSelectedContent(cnt)} style={{ cursor: 'pointer' }}>
                                             <td style={{ fontSize: 'var(--font-size-xs)' }}>
-                                                {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'short' }) : '–'}
+                                                {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: 'short' }) : '-'}
                                             </td>
                                             <td style={{ fontWeight: 500 }}>{cnt.title}</td>
                                             <td><span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`}>{cnt.platform}</span></td>
@@ -193,7 +196,7 @@ export default function ContentCalendarPage() {
                                                 {hasTasks ? (
                                                     <span style={{ color: 'var(--color-success)', fontSize: 'var(--font-size-xs)' }}>✅ {cnt.taskIds.length}</span>
                                                 ) : (
-                                                    <span style={{ color: '#ef4444', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>⚠ Keine</span>
+                                                    <span style={{ color: '#ef4444', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>{language === 'en' ? '⚠ None' : '⚠ Keine'}</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -211,8 +214,8 @@ export default function ContentCalendarPage() {
                     { color: 'primary', label: 'Social Media' },
                     { color: 'info', label: 'E-Mail' },
                     { color: 'warning', label: 'Ads' },
-                    { color: 'success', label: 'Content / Events' },
-                    { color: 'danger', label: '⚠ Keine Aufgaben' },
+                    { color: 'success', label: language === 'en' ? 'Content / Events' : 'Content / Events' },
+                    { color: 'danger', label: language === 'en' ? '⚠ No tasks' : '⚠ Keine Aufgaben' },
                 ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
                         <div className={`calendar-event ${item.color}`} style={{ margin: 0, width: 12, height: 12, padding: 0, borderRadius: '3px' }} />

@@ -28,6 +28,7 @@ Das Produkt richtet sich an **Marketing-Teams in mittleren bis großen Organisat
 | **Content-Kalender** | Redaktionelle Planung über alle Kanäle | Content Manager, Social Media Manager |
 | **Zielgruppen-Management** | Persona-basierte Segmentierung & Targeting | Audience Manager, Growth Manager |
 | **Budget & Controlling** | ROI-Tracking mit rollenbasierter Einsicht | CFO, Finance Manager, Performance Manager |
+| **Notification-Center (Realtime)** | Sofortige Signale bei Task-, Kampagnen- und Budget-Ereignissen | Manager, Member, Admin |
 | **Rollenbasierte Access Control** | Admin / Manager / Member mit unterschiedlichen Berechtigungen | IT & Governance |
 
 ### Zielgruppen-Persona

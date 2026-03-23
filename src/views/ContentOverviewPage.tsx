@@ -6,6 +6,7 @@ import { useTasks } from '../context/TaskContext';
 import { useData } from '../context/DataContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import ContentDetailModal from '../components/ContentDetailModal';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
@@ -63,6 +64,7 @@ export default function ContentOverviewPage() {
     const { contents } = useContents();
     const { tasks } = useTasks();
     const { can } = useAuth();
+    const { language, locale } = useLanguage();
     const { campaigns, touchpoints } = useData();
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterTaskStatus, setFilterTaskStatus] = useState('all');
@@ -71,8 +73,8 @@ export default function ContentOverviewPage() {
     const [showNewContent, setShowNewContent] = useState(false);
 
     const getCampaignName = (cId) => {
-        if (!cId) return 'Ohne Kampagne';
-        return campaigns.find(c => c.id === cId)?.name || 'Unbekannt';
+        if (!cId) return language === 'en' ? 'No campaign' : 'Ohne Kampagne';
+        return campaigns.find(c => c.id === cId)?.name || (language === 'en' ? 'Unknown' : 'Unbekannt');
     };
 
     const getTouchpointBadge = (tpId) => {
@@ -107,29 +109,28 @@ export default function ContentOverviewPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Content-Übersicht</h1>
-                    <p className="page-subtitle">Alle geplanten und veröffentlichten Inhalte im Überblick</p>
+                    <h1 className="page-title">{language === 'en' ? 'Content overview' : 'Content-Uebersicht'}</h1>
+                    <p className="page-subtitle">{language === 'en' ? 'All planned and published content at a glance' : 'Alle geplanten und veroeffentlichten Inhalte im Ueberblick'}</p>
                 </div>
                 <div className="page-header-actions">
                     <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
                         <button className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('grid')}>
-                            <LayoutGrid size={14} /> Raster
+                            <LayoutGrid size={14} /> {language === 'en' ? 'Grid' : 'Raster'}
                         </button>
                         <button className={`btn btn-sm ${viewMode === 'kanban' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('kanban')}>
                             <GripVertical size={14} /> Kanban
                         </button>
                     </div>
-                    <PageHelp title="Content-Übersicht">
-                        <p style={{ marginBottom: '12px' }}>Hier laufen alle Redaktionsinhalte tabellarisch zusammen, egal auf welcher Plattform sie spielen.</p>
+                    <PageHelp title={language === 'en' ? 'Content overview' : 'Content-Uebersicht'}>
+                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'All editorial content is consolidated here across platforms.' : 'Hier laufen alle Redaktionsinhalte tabellarisch zusammen, egal auf welcher Plattform sie spielen.'}</p>
                         <ul className="help-list">
-                            <li><strong>KPI Board:</strong> Du siehst direkt, welcher Content bereits safe eingeplant ist und wie viele Posts in der Pipeline liegen.</li>
-                            <li><strong>Filtern:</strong> Suche gezielt nach "ohne Aufgaben" (rot markiert), um fehlende Team-Delegation aufzudecken oder filter den Status runter auf fertig produzierte Assets.</li>
-                            <li><strong>Detail-Management:</strong> Mit einem Klick auf eine Inhalts-Kachel kannst du die Meta-Daten des Posts editieren, checken zu welcher Kampagne er gehört oder direkt neue Aufgabenhülsen (zur Umsetzung des Posts) erstellen.</li>
+                            <li><strong>{language === 'en' ? 'KPI board' : 'KPI Board'}:</strong> {language === 'en' ? 'See scheduled content and pipeline volume instantly.' : 'Du siehst direkt, welcher Content bereits safe eingeplant ist und wie viele Posts in der Pipeline liegen.'}</li>
+                            <li><strong>{language === 'en' ? 'Filters' : 'Filtern'}:</strong> {language === 'en' ? 'Find content without tasks or narrow down by status.' : 'Suche gezielt nach ohne Aufgaben oder filter den Status auf fertige Assets.'}</li>
                         </ul>
                     </PageHelp>
                     {can('canEditContent') && (
                         <button className="btn btn-primary" onClick={() => setShowNewContent(true)}>
-                            <Plus size={16} /> Neuer Content
+                            <Plus size={16} /> {language === 'en' ? 'New content' : 'Neuer Content'}
                         </button>
                     )}
                 </div>
@@ -138,10 +139,10 @@ export default function ContentOverviewPage() {
             {/* KPI Stats */}
             <div className="stats-grid" style={{ marginBottom: '24px' }}>
                 {[
-                    { label: 'Gesamt', value: totalContents, icon: <FileText size={20} />, color: 'var(--color-primary)' },
-                    { label: 'Eingeplant', value: scheduledCount, icon: <Calendar size={20} />, color: '#6366f1' },
-                    { label: 'Veröffentlicht', value: publishedCount, icon: <CheckCircle size={20} />, color: '#10b981' },
-                    { label: 'Ohne Aufgaben', value: noTaskCount, icon: <AlertTriangle size={20} />, color: noTaskCount > 0 ? '#ef4444' : '#10b981' },
+                    { label: language === 'en' ? 'Total' : 'Gesamt', value: totalContents, icon: <FileText size={20} />, color: 'var(--color-primary)' },
+                    { label: language === 'en' ? 'Scheduled' : 'Eingeplant', value: scheduledCount, icon: <Calendar size={20} />, color: '#6366f1' },
+                    { label: language === 'en' ? 'Published' : 'Veroeffentlicht', value: publishedCount, icon: <CheckCircle size={20} />, color: '#10b981' },
+                    { label: language === 'en' ? 'No tasks' : 'Ohne Aufgaben', value: noTaskCount, icon: <AlertTriangle size={20} />, color: noTaskCount > 0 ? '#ef4444' : '#10b981' },
                 ].map((stat, i) => (
                     <div key={i} className="stat-card" style={{ borderLeft: `3px solid ${stat.color}` }}>
                         <div className="stat-label">{stat.label}</div>
@@ -153,9 +154,9 @@ export default function ContentOverviewPage() {
             <div className="card" style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
                     <div>
-                        <h3 style={{ marginBottom: '4px' }}>Statusmodell Content</h3>
+                        <h3 style={{ marginBottom: '4px' }}>{language === 'en' ? 'Content status model' : 'Statusmodell Content'}</h3>
                         <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                            Visuelle Reihenfolge mit fachlichen Ein- und Ausgangskriterien je Status.
+                            {language === 'en' ? 'Visual order with entry and exit criteria per status.' : 'Visuelle Reihenfolge mit fachlichen Ein- und Ausgangskriterien je Status.'}
                         </p>
                     </div>
                 </div>
@@ -210,28 +211,28 @@ export default function ContentOverviewPage() {
             {/* Filters */}
             <div className="card" style={{ marginBottom: '20px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>
-                    <Filter size={14} /> Filter:
+                    <Filter size={14} /> {language === 'en' ? 'Filters:' : 'Filter:'}
                 </div>
                 <select className="form-input" style={{ width: 'auto', padding: '4px 10px', fontSize: 'var(--font-size-xs)' }}
                     value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="all">Alle Status</option>
+                    <option value="all">{language === 'en' ? 'All statuses' : 'Alle Status'}</option>
                     {CONTENT_STATUS_ORDER.map(s => (
                         <option key={s} value={s}>{CONTENT_STATUSES[s].icon} {CONTENT_STATUSES[s].label}</option>
                     ))}
                 </select>
                 <select className="form-input" style={{ width: 'auto', padding: '4px 10px', fontSize: 'var(--font-size-xs)' }}
                     value={filterTaskStatus} onChange={e => setFilterTaskStatus(e.target.value)}>
-                    <option value="all">Alle Aufgaben-Status</option>
-                    <option value="with">✅ Mit Aufgaben</option>
-                    <option value="without">⚠️ Ohne Aufgaben</option>
+                    <option value="all">{language === 'en' ? 'All task states' : 'Alle Aufgaben-Status'}</option>
+                    <option value="with">{language === 'en' ? '✅ With tasks' : '✅ Mit Aufgaben'}</option>
+                    <option value="without">{language === 'en' ? '⚠️ Without tasks' : '⚠️ Ohne Aufgaben'}</option>
                 </select>
                 {(filterStatus !== 'all' || filterTaskStatus !== 'all') && (
                     <button className="btn btn-ghost btn-sm" onClick={() => { setFilterStatus('all'); setFilterTaskStatus('all'); }}>
-                        <X size={14} /> Zurücksetzen
+                        <X size={14} /> {language === 'en' ? 'Reset' : 'Zuruecksetzen'}
                     </button>
                 )}
                 <div style={{ marginLeft: 'auto', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                    {filteredContents.length} von {totalContents} Einträgen
+                    {filteredContents.length} {language === 'en' ? 'of' : 'von'} {totalContents} {language === 'en' ? 'entries' : 'Eintraegen'}
                 </div>
             </div>
 
@@ -275,7 +276,7 @@ export default function ContentOverviewPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${isCritical ? 'rgba(255,255,255,0.25)' : 'var(--border-color)'}`, paddingTop: '10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                     <Calendar size={12} />
-                                    {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE') : 'Kein Datum'}
+                                    {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString(locale) : (language === 'en' ? 'No date' : 'Kein Datum')}
                                 </div>
                                 {hasTasks ? (
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', fontWeight: 500 }}>

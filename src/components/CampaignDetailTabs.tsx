@@ -289,7 +289,7 @@ export function CampaignOverviewTab({
                 <div className="card">
                     <div className="card-title" style={{ marginBottom: '12px' }}><Tag size={14} style={{ display: 'inline', marginRight: '6px' }} />Schlüsselbegriffe</div>
                     <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}><Lock size={10} style={{ display: 'inline', marginRight: '4px' }} />Unternehmensweit</div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}><Lock size={10} style={{ display: 'inline', marginRight: '4px' }} />Projektweit</div>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{companyKeywords.map(k => <span key={k.id} className="keyword-tag keyword-tag--company" style={{ fontSize: '0.65rem' }}><Lock size={8} style={{ opacity: .5 }} /> {k.term}</span>)}</div>
                     </div>
                     <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '10px' }}>

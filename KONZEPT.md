@@ -1,8 +1,8 @@
 # 🚀 Momentum — Konzept & Umsetzungsstand
 
-> **Letzte Aktualisierung:** 20.03.2026
-> **Version:** 1.0.0 — Multi-Tenancy + 4-Rollen-System
-> **Status:** Phase 2 — Multi-Tenancy produktiv
+> **Letzte Aktualisierung:** 22.03.2026
+> **Version:** 1.1.0 — Multi-Tenancy + Realtime Notification System
+> **Status:** Phase 2.5 — Notification System produktiv
 > **Produktname:** Momentum | **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
 ---
@@ -22,7 +22,7 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 | **Frontend** | React 19 | ✅ Aktiv |
 | **Styling** | Tailwind CSS v4 + Design System (CSS Custom Properties) | ✅ Aktiv |
 | **Routing** | Next.js App Router (dateibasiert) | ✅ Aktiv |
-| **State / Auth** | React Context (AuthContext, CompanyContext, DataContext, TaskContext, ContentContext) | ✅ Aktiv |
+| **State / Auth** | React Context (AuthContext, CompanyContext, NotificationContext, DataContext, TaskContext, ContentContext) | ✅ Aktiv |
 | **Charts** | Recharts | ✅ Aktiv |
 | **Icons** | Lucide React | ✅ Aktiv |
 | **Typografie** | Google Fonts (Inter) | ✅ Aktiv |
@@ -30,6 +30,7 @@ Eine **SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozes
 | **Linting** | ESLint + @typescript-eslint | ✅ Aktiv |
 | **Backend / DB** | Supabase (PostgreSQL, eu-central-1) | ✅ Aktiv |
 | **API-Schicht** | `src/lib/api.ts` — vollständige CRUD-Funktionen | ✅ Aktiv |
+| **Realtime** | Supabase Realtime (postgres changes auf `notifications`) | ✅ Aktiv |
 | **Auth** | Datenbank-Login (Supabase RLS) | ✅ Aktiv |
 | **Hosting** | Vercel (geplant) | 🔜 Ausstehend |
 
@@ -47,7 +48,8 @@ Marketing_powerhouse/
 ├── KONZEPT.md                        ← Dieses Dokument
 ├── scripts/
 │   ├── migrate.mjs                   ← DB-Schema + Seed-Daten (Initial-Setup)
-│   └── migrate_multi_tenant.mjs      ← Einmaliges Supabase-Upgrade (alle Multi-Tenancy DB-Änderungen)
+│   ├── migrate_multi_tenant.mjs      ← Einmaliges Supabase-Upgrade (alle Multi-Tenancy DB-Änderungen)
+│   └── migrate_notifications.mjs      ← Migration für Notification-System
 ├── app/                              ← Next.js App Router (Seiten-Routing)
 │   ├── layout.tsx                    ← Root-Layout (HTML, Fonts, Providers)
 │   ├── providers.tsx                 ← Client-seitiger Context-Provider-Wrapper
@@ -70,13 +72,16 @@ Marketing_powerhouse/
     ├── index.css                     ← Tailwind CSS v4 + Design System
     ├── lib/
     │   ├── supabase.ts               ← Supabase-Client (Singleton)
-    │   ├── api.ts                    ← Vollständige CRUD-API (~500 Zeilen)
+    │   ├── api.ts                    ← Vollständige CRUD-API (~500+ Zeilen)
+    │   ├── notificationTriggers.ts   ← Notification-Trigger-Helper
     │   └── constants.ts              ← Content-Type-Farben
     ├── types/
     │   ├── index.ts                  ← Zentrale TypeScript-Typdefinitionen
     │   └── dashboard.ts              ← Dashboard-spezifische Typen
     ├── context/
     │   ├── AuthContext.tsx            ← RBAC: Rollen, Permissions, Login via Supabase
+    │   ├── CompanyContext.tsx         ← Aktives Unternehmen / Multi-Tenancy
+    │   ├── NotificationContext.tsx    ← Realtime-Notifications, Badge/Panel State
     │   ├── DataContext.tsx            ← Zentraler Daten-Provider (Supabase CRUD)
     │   ├── ContentContext.tsx         ← Content-State-Management (async)
     │   └── TaskContext.tsx            ← Aufgaben-State-Management (async)
@@ -104,6 +109,9 @@ Marketing_powerhouse/
     │   ├── PositioningComponents.tsx ← SectionHeader, Field, CommsContent
     │   ├── ManualComponents.tsx      ← Handbuch-UI-Bausteine
     │   ├── ManualTabs.tsx            ← ManagerTab, WorkflowsTab
+    │   ├── NotificationBell.tsx       ← Header-Bell mit Badge
+    │   ├── NotificationPanel.tsx      ← Dropdown-Liste mit Gruppierung
+    │   ├── NotificationItem.tsx       ← Einzelne Notification-Zeile
     │   ├── SettingsAdmin.tsx         ← Admin-Einstellungen-Tab
     │   ├── TaskAiAgent.tsx           ← KI-Assistent für Aufgaben
     │   ├── ContentLinkedTasks.tsx    ← Verknüpfte Aufgaben im Content-Modal
@@ -573,13 +581,13 @@ Inhaltsebene (Member arbeitet)
 - [x] Login via Datenbank (`loginUser` + Passworvergleich)
 - [x] CRUD für: Kampagnen, Zielgruppen, Touchpoints, Content, Aufgaben, Positionierung, Keywords, Journeys
 - [ ] Supabase Auth (JWT-basiert, statt Klartext-Passwort)
-- [ ] Echtzeit-Updates (Supabase Realtime subscriptions)
+- [x] Echtzeit-Updates (Supabase Realtime subscriptions) — Notification-System implementiert
 
 ### Phase 2 — Kernfunktionalität
 - [ ] Kampagnen-Workflow (Statusübergänge)
-- [ ] Aufgaben-Zuweisung & Deadlines (E-Mail-Benachrichtigung)
+- [x] Aufgaben-Zuweisung & Deadlines (In-App-Benachrichtigung via Notification-Center)
 - [ ] Budget-Tracking mit echten Eingaben
-- [ ] Echtzeit-Updates (Supabase Realtime)
+- [x] Echtzeit-Updates (Supabase Realtime) — Notification-System implementiert
 
 ### Phase 3 — KI-Integration
 - [ ] Master-Prompt → KI-Content-Generator (OpenAI/Anthropic)

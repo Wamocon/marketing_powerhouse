@@ -125,7 +125,7 @@ export const audiences: Audience[] = [
         buyingBehavior: 'Sucht nach schnellen, flexiblen Online-Kursen. Zahlt ggf. selbst.',
         decisionProcess: 'Vergleicht Preise und Tools. DiTeLe ist ein starkes Argument.',
         journeyPhase: 'Consideration → Purchase',
-        description: 'Bea arbeitet schon in der IT, möchte aber den offiziellen ISTQB Stempel, um in ihrem Unternehmen oder am Markt aufzusteigen.',
+        description: 'Bea arbeitet schon in der IT, möchte aber den offiziellen ISTQB Stempel, um in ihrem Projekt oder am Markt aufzusteigen.',
         campaignIds: ['2', '3'],
         createdAt: '2026-02-10',
         updatedAt: '2026-03-08',

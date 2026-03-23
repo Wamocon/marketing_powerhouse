@@ -1,7 +1,7 @@
 import {
     Target, Users2, Megaphone, Calendar, CheckSquare, Wallet,
     Map, GitBranch, Users, Zap, LayoutDashboard, FileText,
-    LinkIcon, Settings
+    LinkIcon, Settings, Bell
 } from 'lucide-react';
 import { PlaceholderImage, TipBox, AccordionItem, TableOfContents, WorkflowCard } from './ManualComponents';
 interface TabProps {
@@ -115,6 +115,7 @@ export function ManagerTab({ sections }: TabProps) {
                                     <li>Öffne das Aufgaben-DetailModal. Weise die Aufgabe über das Dropdown "Zugewiesen an:" einem Member zu.</li>
                                     <li>Befülle die <strong>Beschreibung</strong> mit einem genauen Briefing. (Was für Bilder? Welcher Text? Welche Deadline?).</li>
                                     <li>Sobald die Aufgabe den Status "Draft" (Entwurf) verlässt und auf "To Do" springt, sieht das Member die Aufgabe auf seinem Dashboard.</li>
+                                    <li><strong>Notification-Center nutzen:</strong> Neue Zuweisungen und Statuswechsel erscheinen in Echtzeit über das Glocken-Symbol oben rechts. So bleiben Manager und Member synchron, ohne manuelles Refresh.</li>
                                 </ul>
                             </div>
                         </AccordionItem>
@@ -127,6 +128,7 @@ export function ManagerTab({ sections }: TabProps) {
                                     <li>Dort siehst du den Forecast ("Plan") vs. die tatsächlichen "Ist"-Kosten.</li>
                                     <li><strong>Transparenz:</strong> Klicke auf "Ausgabe erfassen", um Tools (Abo-Kosten) oder Freelancer-Rechnungen manuell zum System hinzuzufügen, falls es keine direkte API-Anbindung gibt.</li>
                                     <li>Das System warnt dich, wenn eine Kampagne zu nah an das veranschlagte Budget-Limit gerät.</li>
+                                    <li>Ab kritischen Schwellwerten erhältst du zusätzlich <strong>Budget-Alerts</strong> im Notification-Center (&gt;=80% Warnung, &gt;=100% dringender Alert).</li>
                                 </ul>
                                 <TipBox title="Members und Budgets">
                                     Keine Sorge um sensible Daten: Accounts mit der Rolle "Member" haben keinerlei Zugriff auf die Navigation "Budget & Controlling".
@@ -137,6 +139,19 @@ export function ManagerTab({ sections }: TabProps) {
                                 />
                             </div>
                         </AccordionItem>
+                        <AccordionItem title="8. Notification-Center (Glocke)" icon={Bell} color="#ef4444">
+                            <div style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                                <p style={{ marginBottom: '16px' }}><strong>Navigation:</strong> Header oben rechts → Glocke</p>
+                                <p style={{ marginBottom: '16px' }}>Das Notification-Center zeigt dir alle wichtigen Ereignisse in Echtzeit und reduziert Abstimmungsaufwand im Team.</p>
+                                <ul style={{ listStyleType: 'disc', paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <li><strong>Badge:</strong> Zahl auf der Glocke zeigt ungelesene Benachrichtigungen.</li>
+                                    <li><strong>Filter durch Settings:</strong> Sichtbarkeit folgt den Einstellungen in <strong>Einstellungen → Benachrichtigungen</strong>.</li>
+                                    <li><strong>Direktnavigation:</strong> Klick auf einen Eintrag führt zur relevanten Seite (Aufgabe, Kampagne, Budget, Content).</li>
+                                    <li><strong>Pflege:</strong> Einzelne Einträge können archiviert werden (X), alle auf einmal als gelesen via "Alle gelesen".</li>
+                                </ul>
+                            </div>
+                        </AccordionItem>
+
                     </div>
     );
 }
@@ -185,7 +200,8 @@ export function WorkflowsTab() {
                                 { title: 'Kampagne erstellen', description: 'Kampagne mit Budget, Master-Prompt, Keywords anlegen' },
                                 { title: 'Content planen', description: '4-12 Wochen Content im Kalender eintragen (mit Aufgabenhüllen!)' },
                                 { title: 'Tasks delegieren', description: 'Detaillierte Briefs schreiben, Members assign, Deadlines setzen' },
-                                { title: 'Budget setup', description: 'Budgets pro Kanal/Kampagne festlegen, Tracking aktivieren' }
+                                { title: 'Budget setup', description: 'Budgets pro Kanal/Kampagne festlegen, Tracking aktivieren' },
+                                { title: 'Notifications steuern', description: 'Notification-Settings prüfen und Echtzeit-Alerts aktiv für kritische Signale nutzen' }
                             ]}
                         />
 

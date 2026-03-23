@@ -4,7 +4,9 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 import type { Audience, Touchpoint, CustomerJourney, User, Campaign } from '../types';
 import type { CompanyPositioning, CompanyKeyword, BudgetData, TeamMember, ActivityItem, ChartDataPoint, ChannelPerformanceItem } from '../types/dashboard';
 import { useCompany } from './CompanyContext';
+import { useAuth } from './AuthContext';
 import * as api from '../lib/api';
+import { notifyCampaignCreated, notifyCampaignStatusChanged, notifyBudgetAlert } from '../lib/notificationTriggers';
 
 interface DataContextValue {
     // Read-only data
@@ -53,7 +55,9 @@ const emptyPositioning: CompanyPositioning = {
 
 export function DataProvider({ children }: { children: ReactNode }) {
     const { activeCompany } = useCompany();
+    const { currentUser } = useAuth();
     const companyId = activeCompany?.id ?? null;
+    const currentUserId = currentUser?.id ?? null;
     const prevCompanyId = useRef<string | null>(null);
     const initialized = useRef(false);
 
@@ -143,16 +147,65 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Campaign CRUD ──
     const addCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createCampaign(campaign, companyId);
         setCampaigns(prev => [...prev, created]);
+
+        // Notify team members about new campaign
+        const recipients = [...(created.teamMemberIds ?? [])];
+        if (created.responsibleManagerId) recipients.push(created.responsibleManagerId);
+        if (recipients.length > 0) {
+            notifyCampaignCreated({
+                companyId,
+                triggeredByUserId: currentUserId ?? undefined,
+                recipientUserIds: recipients,
+                campaignId: created.id,
+                campaignName: created.name,
+            });
+        }
+
         return created;
-    }, [companyId]);
+    }, [companyId, currentUserId]);
 
     const updateCampaignFn = useCallback(async (id: string, updates: Partial<Campaign>) => {
+        const oldCampaign = campaigns.find(c => c.id === id);
         await api.updateCampaign(id, updates);
         setCampaigns(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    }, []);
+
+        // Notify on status change
+        if (updates.status && oldCampaign && updates.status !== oldCampaign.status && companyId) {
+            const recipients = [...(oldCampaign.teamMemberIds ?? [])];
+            if (oldCampaign.responsibleManagerId) recipients.push(oldCampaign.responsibleManagerId);
+            notifyCampaignStatusChanged({
+                companyId,
+                triggeredByUserId: currentUserId ?? undefined,
+                recipientUserIds: recipients,
+                campaignId: id,
+                campaignName: oldCampaign.name,
+                newStatus: updates.status,
+            });
+        }
+
+        // Check budget alert
+        if (companyId && oldCampaign) {
+            const spent = updates.spent ?? oldCampaign.spent;
+            const budget = updates.budget ?? oldCampaign.budget;
+            if (budget > 0) {
+                const pct = Math.round((spent / budget) * 100);
+                if (pct >= 80) {
+                    const recipients = [...(oldCampaign.teamMemberIds ?? [])];
+                    if (oldCampaign.responsibleManagerId) recipients.push(oldCampaign.responsibleManagerId);
+                    notifyBudgetAlert({
+                        companyId,
+                        recipientUserIds: recipients,
+                        campaignId: id,
+                        campaignName: oldCampaign.name,
+                        percentUsed: pct,
+                    });
+                }
+            }
+        }
+    }, [campaigns, companyId, currentUserId]);
 
     const deleteCampaignFn = useCallback(async (id: string) => {
         await api.deleteCampaign(id);
@@ -161,7 +214,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Touchpoint CRUD ──
     const addTouchpoint = useCallback(async (tp: Omit<Touchpoint, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createTouchpoint(tp, companyId);
         setTouchpoints(prev => [...prev, created]);
         return created;
@@ -198,7 +251,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     // ── Journey CRUD ──
     const addJourney = useCallback(async (journey: Omit<CustomerJourney, 'id'>) => {
-        if (!companyId) throw new Error('Kein Unternehmen ausgewählt');
+        if (!companyId) throw new Error('Kein Projekt ausgewählt');
         const created = await api.createJourney(journey, companyId);
         setCustomerJourneys(prev => [...prev, created]);
         return created;

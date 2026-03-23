@@ -44,12 +44,12 @@ export const ROLE_CONFIG: Record<CompanyRole, RoleConfig> & { super_admin: RoleC
     super_admin: {
         label: 'Super-Administrator', shortLabel: 'Super-Admin',
         color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.12)',
-        description: 'Globale Verwaltung aller Unternehmen und Benutzer',
+        description: 'Globale Verwaltung aller Projekt und Benutzer',
     },
     company_admin: {
-        label: 'Unternehmens-Admin', shortLabel: 'Admin',
+        label: 'Projekt-Admin', shortLabel: 'Admin',
         color: '#c1292e', bgColor: 'rgba(193, 41, 46, 0.12)',
-        description: 'Vollständige Kontrolle über das Unternehmen, User-Management',
+        description: 'Vollständige Kontrolle über das Projekt, User-Management',
     },
     manager: {
         label: 'Marketing Manager', shortLabel: 'Manager',
@@ -87,6 +87,14 @@ interface AuthContextValue {
     isSuperAdmin: boolean;
     login: (user: User) => void;
     loginWithCredentials: (email: string, password: string) => Promise<User | null>;
+    registerWithCredentials: (input: {
+        name: string;
+        email: string;
+        password: string;
+        phone: string;
+        whatsappConsent: boolean;
+        companyName?: string;
+    }) => Promise<User>;
     logout: () => void;
     can: (permission: PermissionKey) => boolean;
     isRole: (role: Role) => boolean;
@@ -136,6 +144,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return user;
     }, []);
 
+    const registerWithCredentials = useCallback(async (input: {
+        name: string;
+        email: string;
+        password: string;
+        phone: string;
+        whatsappConsent: boolean;
+        companyName?: string;
+    }): Promise<User> => {
+        const user = await api.registerUser(input);
+        localStorage.setItem(SESSION_KEY, user.id);
+        setCurrentUser(user);
+        api.updateUserStatus(user.id, 'online').catch(console.error);
+        return user;
+    }, []);
+
     const logout = useCallback(() => {
         if (currentUser) {
             api.updateUserStatus(currentUser.id, 'offline').catch(console.error);
@@ -156,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <AuthContext.Provider value={{
             currentUser, sessionLoading, activeCompanyRole, setActiveCompanyRole,
-            isSuperAdmin, login, loginWithCredentials, logout, can, isRole, ROLE_CONFIG,
+            isSuperAdmin, login, loginWithCredentials, registerWithCredentials, logout, can, isRole, ROLE_CONFIG,
         }}>
             {children}
         </AuthContext.Provider>

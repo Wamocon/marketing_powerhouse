@@ -37,7 +37,7 @@ export default function CompanySelectPage() {
     const handleCreateCompany = async (data: { name: string; description?: string; industry?: string }) => {
         const createdCompany = await createCompany(data);
         await selectCompany(createdCompany.id);
-        router.push('/setup?new=1');
+        router.push(`/project/${createdCompany.id}/setup?new=1`);
         return createdCompany;
     };
 
@@ -137,10 +137,10 @@ export default function CompanySelectPage() {
                             fontSize: '1.75rem', fontWeight: 800,
                             color: 'var(--text-primary)', marginBottom: '8px',
                         }}>
-                            Unternehmen auswählen
+                            Projekt auswählen
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-base)' }}>
-                            Wähle ein Unternehmen aus, um mit der Arbeit zu beginnen.
+                            Wähle ein Projekt aus, um mit der Arbeit zu beginnen.
                         </p>
                     </div>
 
@@ -156,7 +156,7 @@ export default function CompanySelectPage() {
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Unternehmen suchen..."
+                                placeholder="Projekt suchen..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 style={{ paddingLeft: '36px' }}
@@ -180,7 +180,7 @@ export default function CompanySelectPage() {
                                 className="btn btn-primary"
                                 onClick={() => setShowCreateModal(true)}
                             >
-                                <Plus size={16} /> Neues Unternehmen
+                                <Plus size={16} /> Neues Projekt
                             </button>
                         )}
                     </div>
@@ -194,16 +194,16 @@ export default function CompanySelectPage() {
                         }}>
                             <Building2 size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
                             <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                                {searchQuery ? 'Keine Ergebnisse' : 'Noch keine Unternehmen'}
+                                {searchQuery ? 'Keine Ergebnisse' : 'Noch keine Projekte'}
                             </h3>
                             <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)', marginBottom: '24px' }}>
                                 {searchQuery
                                     ? 'Versuche einen anderen Suchbegriff.'
-                                    : 'Erstelle dein erstes Unternehmen, um loszulegen.'}
+                                    : 'Erstelle dein erstes Projekt, um loszulegen.'}
                             </p>
                             {!searchQuery && (isSuperAdmin || userCompanies.some(c => c.role === 'company_admin')) && (
                                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                                    <Plus size={16} /> Unternehmen erstellen
+                                    <Plus size={16} /> Projekt erstellen
                                 </button>
                             )}
                         </div>
@@ -217,7 +217,10 @@ export default function CompanySelectPage() {
                                 return (
                                     <button
                                         key={company.id}
-                                        onClick={() => selectCompany(company.id)}
+                                        onClick={async () => {
+                                            await selectCompany(company.id);
+                                            router.push(`/project/${company.id}`);
+                                        }}
                                         style={{
                                             background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
                                             borderRadius: 'var(--radius-lg)', padding: '20px',
@@ -312,7 +315,7 @@ function CreateCompanyModal({
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!name.trim()) {
-            setError('Bitte gib einen Unternehmensnamen ein.');
+            setError('Bitte gib einen Projektnamen ein.');
             return;
         }
         setIsSubmitting(true);
@@ -339,7 +342,7 @@ function CreateCompanyModal({
             }} className="animate-in">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        Neues Unternehmen erstellen
+                        Neues Projekt erstellen
                     </h2>
                     <button onClick={onClose} style={{
                         background: 'none', border: 'none', cursor: 'pointer',
@@ -351,7 +354,7 @@ function CreateCompanyModal({
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Unternehmensname *</label>
+                        <label className="form-label">Projektname *</label>
                         <input
                             type="text"
                             className="form-input"
@@ -375,7 +378,7 @@ function CreateCompanyModal({
                         <label className="form-label">Beschreibung</label>
                         <textarea
                             className="form-input form-textarea"
-                            placeholder="Kurze Beschreibung des Unternehmens..."
+                            placeholder="Kurze Beschreibung des Projekt..."
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             rows={3}
@@ -397,7 +400,7 @@ function CreateCompanyModal({
                             Abbrechen
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                            {isSubmitting ? 'Wird erstellt...' : 'Unternehmen erstellen'}
+                            {isSubmitting ? 'Wird erstellt...' : 'Projekt erstellen'}
                         </button>
                     </div>
                 </form>

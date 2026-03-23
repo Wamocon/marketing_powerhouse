@@ -26,6 +26,20 @@ vi.mock('@/context/CompanyContext', () => ({
   }),
 }));
 
+// ─── Mock AuthContext so DataProvider can call useAuth ─────────────────────────
+vi.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({
+    currentUser: { id: 'user-1', name: 'Test User' },
+  }),
+}));
+
+// ─── Mock notification triggers to prevent real API calls in tests ─────────────
+vi.mock('@/lib/notificationTriggers', () => ({
+  notifyCampaignCreated: vi.fn(),
+  notifyCampaignStatusChanged: vi.fn(),
+  notifyBudgetAlert: vi.fn(),
+}));
+
 // ─── Mock the api module ──────────────────────────────────────────────────────
 vi.mock('@/lib/api', async () => {
   const emptyPositioning = {

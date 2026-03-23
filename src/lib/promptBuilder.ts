@@ -73,7 +73,7 @@ Du erstellst hochrelevante Vorschläge für die Aufgabe im Rahmen einer Multi-Ch
 Arbeite präzise, markenkonform und zielgruppenfokussiert.
 
 PRIORITÄTEN (in genau dieser Reihenfolge):
-1) Unternehmensidentität und Werte
+1) Projektidentität und Werte
 2) Kampagnenziel und Kampagnen-Master-Prompt
 3) Zielgruppe und Journey-Phase
 4) Kanal/Touchpoint-Spezifik
@@ -91,7 +91,7 @@ UNTERNEHMEN:
 - Keywords: ${kwStr}
 - Märkte: ${marketsStr}
 - Zielindustrien: ${industriesStr}
-- Zielunternehmensgröße: ${p.targetCompanySize || 'Nicht definiert'}
+- Zielprojektgröße: ${p.targetCompanySize || 'Nicht definiert'}
 - Branche: ${p.industry || 'Nicht angegeben'}
 - Standort: ${p.headquarters || 'Nicht angegeben'}
 ${campaignBlock}

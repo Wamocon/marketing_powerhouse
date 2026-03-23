@@ -1,7 +1,8 @@
 # 📋 Marketing Powerhouse — Typische Workflows & Anwendungsbeispiele
 
 > **Erstellt:** 10.03.2026  
-> **Für:** Marketing Powerhouse v0.6.1  
+> **Aktualisiert:** 22.03.2026  
+> **Für:** Momentum v1.1.0  
 > **Kontext:** WAMOCON Academy (Test-IT Academy)
 
 ---
@@ -750,7 +751,50 @@ Manager Campaign Planning (Tag 3-7)
 
 ---
 
+## 🔔 Benachrichtigungs-Workflow (Realtime)
+
+Das Notification-System arbeitet ereignisbasiert und informiert Rollen in Echtzeit:
+
+1. **Auslöser (Trigger):**
+   - Task wird zugewiesen
+   - Task-Status ändert sich
+   - KI-Generierung ist abgeschlossen oder fehlerhaft
+   - Kampagnenstatus ändert sich
+   - Budget erreicht kritische Schwellwerte (>=80% / >=100%)
+   - Content-Status ändert sich (z. B. ready, published)
+
+2. **Erzeugung:**
+   - Trigger erzeugt Eintrag in `notifications`
+   - Notification enthält `type`, `priority`, `entity_id`, `action_url`, `recipient_user_id`
+
+3. **Auslieferung:**
+   - Supabase Realtime pusht Ereignis in aktive Clients
+   - Bell-Badge im Header aktualisiert sich ohne Seiten-Refresh
+
+4. **Nutzung im Alltag:**
+   - Manager sehen sofort neue Team-Updates
+   - Member bekommen direkte Hinweise bei Zuweisung und AI-Ergebnissen
+   - Admins erhalten frühe Budget-Warnungen
+
+### Beispiel-Szenario: Task-Delegation in Echtzeit
+
+1. Anna (Manager) weist Lisa eine neue Aufgabe zu.
+2. System erzeugt `task_assigned`-Notification für Lisa.
+3. Lisa sieht sofort einen Badge an der Glocke.
+4. Klick auf Notification öffnet direkt die Aufgabenansicht.
+5. Nach Bearbeitung setzt Lisa den Status auf Review.
+6. Anna erhält in Echtzeit `task_status_changed`.
+
+### Beispiel-Szenario: Budget-Warnung
+
+1. Kampagnenausgaben steigen auf 82%.
+2. System erzeugt `budget_alert` mit Priority `high`.
+3. Manager/Admin sehen orange markierte Warnung im Notification-Panel.
+4. Bei 100%+ folgt eine `urgent`-Notification (rot hervorgehoben).
+
+---
+
 > **Hinweis:** Dieses Dokument zeigt ein ideales Szenario. Echte Kampagnen-Realities sind oft chaotischer — Deadlines verschieben sich, Budget ändert sich, Prioritäten rotieren. Das System ist aber so designt, dass auch Improvisation und Anpassung schnell im System abgebildet werden können.
 
-**Letzte Aktualisierung:** 10.03.2026  
-**Für:** Marketing Powerhouse v0.6.1
+**Letzte Aktualisierung:** 22.03.2026  
+**Für:** Momentum v1.1.0

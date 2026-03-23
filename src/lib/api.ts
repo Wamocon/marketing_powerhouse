@@ -6,6 +6,7 @@ import type {
   Plan, Subscription, ConnectedAccount, SocialPlatform,
   ScheduledPost, EngagementMetric, EngagementGroup,
   KnowledgeDocument, AiGenerationLog,
+  AppNotification, NotificationType, NotificationPriority, NotificationPreference,
 } from '../types';
 import type {
   CompanyPositioning, CompanyKeyword, BudgetData, BudgetCategory,
@@ -17,6 +18,37 @@ import type {
 
 function generateId(): string {
   return crypto.randomUUID();
+}
+
+function generateSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function generateAvatarInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part.charAt(0).toUpperCase())
+    .join('') || 'U';
+}
+
+function normalizePhone(phone: string): string {
+  return phone.trim().replace(/\s+/g, ' ');
+}
+
+function isPhoneValid(phone: string): boolean {
+  return /^\+?[0-9][0-9\s\-()]{6,20}$/.test(phone);
+}
+
+function isMissingColumnError(error: unknown): boolean {
+  const message = String((error as { message?: string } | undefined)?.message ?? '').toLowerCase();
+  return message.includes('column') && message.includes('does not exist');
 }
 
 function parseJourneyPhases(raw: unknown): string[] {
@@ -56,6 +88,8 @@ function toCamelUser(r: Record<string, unknown>): User {
     status: r.status as User['status'],
     department: r.department as string,
     phone: r.phone as string,
+    whatsappConsent: (r.whatsapp_consent as boolean | undefined) ?? false,
+    whatsappConsentAt: (r.whatsapp_consent_at as string | undefined) ?? undefined,
     joinedAt: r.joined_at as string,
   };
 }
@@ -1027,7 +1061,7 @@ export async function fetchUserCompanies(userId: string): Promise<(Company & { r
 
 export async function createCompany(company: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
   const id = generateId();
-  const slug = company.slug || company.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug = company.slug || generateSlug(company.name);
   const { data, error } = await supabase.from('companies').insert({
     id,
     name: company.name,
@@ -1121,7 +1155,7 @@ export async function updateUserSuperAdmin(userId: string, isSuperAdmin: boolean
 
 export async function createUser(user: Omit<User, 'id'>): Promise<User> {
   const id = generateId();
-  const { data, error } = await supabase.from('users').insert({
+  const baseInsert = {
     id,
     name: user.name,
     email: user.email,
@@ -1134,9 +1168,87 @@ export async function createUser(user: Omit<User, 'id'>): Promise<User> {
     department: user.department,
     phone: user.phone,
     joined_at: user.joinedAt,
-  }).select().single();
-  if (error) throw error;
-  return toCamelUser(data);
+  };
+
+  const insertWithConsent = {
+    ...baseInsert,
+    whatsapp_consent: user.whatsappConsent ?? false,
+    whatsapp_consent_at: user.whatsappConsent ? (user.whatsappConsentAt ?? new Date().toISOString()) : null,
+  };
+
+  const withConsentResult = await supabase.from('users').insert(insertWithConsent).select().single();
+  if (!withConsentResult.error && withConsentResult.data) {
+    return toCamelUser(withConsentResult.data);
+  }
+
+  if (!isMissingColumnError(withConsentResult.error)) {
+    throw withConsentResult.error;
+  }
+
+  const fallbackResult = await supabase.from('users').insert(baseInsert).select().single();
+  if (fallbackResult.error || !fallbackResult.data) throw fallbackResult.error;
+  return toCamelUser(fallbackResult.data);
+}
+
+export interface RegisterUserInput {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  whatsappConsent: boolean;
+  companyName?: string;
+}
+
+export async function registerUser(input: RegisterUserInput): Promise<User> {
+  const name = input.name.trim();
+  const email = input.email.trim().toLowerCase();
+  const password = input.password;
+  const phone = normalizePhone(input.phone);
+  const companyName = (input.companyName ?? '').trim();
+
+  if (!name) throw new Error('Bitte Name angeben.');
+  if (!email) throw new Error('Bitte E-Mail-Adresse angeben.');
+  if (!password || password.trim().length < 8) throw new Error('Das Passwort muss mindestens 8 Zeichen lang sein.');
+  if (!phone) throw new Error('Bitte Telefonnummer angeben.');
+  if (!isPhoneValid(phone)) throw new Error('Bitte eine gueltige Telefonnummer angeben.');
+  if (!input.whatsappConsent) {
+    throw new Error('Bitte bestaetige die Einwilligung fuer WhatsApp-Verifikationsnachrichten.');
+  }
+
+  const existingUser = await fetchUserByEmail(email);
+  if (existingUser) {
+    throw new Error('Diese E-Mail-Adresse ist bereits registriert.');
+  }
+
+  const nowIso = new Date().toISOString();
+  const user = await createUser({
+    name,
+    email,
+    password,
+    role: 'company_admin',
+    isSuperAdmin: false,
+    jobTitle: 'Inhaber',
+    avatar: generateAvatarInitials(name),
+    status: 'offline',
+    department: 'Management',
+    phone,
+    whatsappConsent: true,
+    whatsappConsentAt: nowIso,
+    joinedAt: nowIso,
+  });
+
+  const workspaceName = companyName || `${name.split(' ')[0]} Workspace`;
+  const company = await createCompany({
+    name: workspaceName,
+    slug: `${generateSlug(workspaceName)}-${generateId().slice(0, 6)}`,
+    description: 'Automatisch bei der Registrierung erstellt.',
+    industry: '',
+    logo: workspaceName.charAt(0).toUpperCase(),
+    createdBy: user.id,
+  });
+  await addCompanyMember(company.id, user.id, 'company_admin');
+
+  return user;
 }
 
 export async function deleteUser(userId: string): Promise<void> {
@@ -1532,5 +1644,185 @@ export async function createEngagementGroup(group: Omit<EngagementGroup, 'id' | 
 
 export async function deleteEngagementGroup(id: string): Promise<void> {
   const { error } = await supabase.from('engagement_groups').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ─── Notifications ─────────────────────────────────────────
+
+function toCamelNotification(r: Record<string, unknown>): AppNotification {
+  return {
+    id: r.id as string,
+    companyId: r.company_id as string,
+    recipientUserId: r.recipient_user_id as string,
+    type: r.type as AppNotification['type'],
+    priority: (r.priority as AppNotification['priority']) ?? 'normal',
+    title: r.title as string,
+    body: (r.body as string) ?? '',
+    entityType: r.entity_type as string | undefined,
+    entityId: r.entity_id as string | undefined,
+    actionUrl: r.action_url as string | undefined,
+    triggeredByUserId: r.triggered_by_user_id as string | undefined,
+    metadata: (r.metadata as Record<string, unknown>) ?? {},
+    isRead: (r.is_read as boolean) ?? false,
+    readAt: r.read_at as string | undefined,
+    isArchived: (r.is_archived as boolean) ?? false,
+    createdAt: r.created_at as string,
+  };
+}
+
+function toCamelNotificationPreference(r: Record<string, unknown>): NotificationPreference {
+  return {
+    id: r.id as string,
+    userId: r.user_id as string,
+    companyId: r.company_id as string,
+    type: r.type as NotificationType,
+    enabled: (r.enabled as boolean) ?? true,
+  };
+}
+
+export async function fetchNotifications(userId: string, companyId: string): Promise<AppNotification[]> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('recipient_user_id', userId)
+    .eq('company_id', companyId)
+    .eq('is_archived', false)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) {
+    if (isMissingColumnError(error) || error.message?.includes('does not exist')) return [];
+    throw error;
+  }
+  return (data ?? []).map(r => toCamelNotification(r as Record<string, unknown>));
+}
+
+export async function fetchNotificationPreferences(userId: string, companyId: string): Promise<NotificationPreference[]> {
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .select('id, user_id, company_id, type, enabled')
+    .eq('user_id', userId)
+    .eq('company_id', companyId);
+  if (error) {
+    if (isMissingColumnError(error) || error.message?.includes('does not exist')) return [];
+    throw error;
+  }
+  return (data ?? []).map(row => toCamelNotificationPreference(row as Record<string, unknown>));
+}
+
+export async function upsertNotificationPreferences(
+  userId: string,
+  companyId: string,
+  enabledByType: Partial<Record<NotificationType, boolean>>,
+): Promise<void> {
+  const entries = Object.entries(enabledByType) as Array<[NotificationType, boolean]>;
+  if (entries.length === 0) return;
+
+  const existing = await fetchNotificationPreferences(userId, companyId);
+  const existingByType = new Map(existing.map(pref => [pref.type, pref.id]));
+
+  const rows = entries.map(([type, enabled]) => ({
+    id: existingByType.get(type) ?? generateId(),
+    user_id: userId,
+    company_id: companyId,
+    type,
+    enabled,
+  }));
+
+  const { error } = await supabase
+    .from('notification_preferences')
+    .upsert(rows, { onConflict: 'user_id,company_id,type' });
+
+  if (error) {
+    if (isMissingColumnError(error) || error.message?.includes('does not exist')) return;
+    throw error;
+  }
+}
+
+export async function fetchUnreadCount(userId: string, companyId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('recipient_user_id', userId)
+    .eq('company_id', companyId)
+    .eq('is_read', false)
+    .eq('is_archived', false);
+  if (error) {
+    if (isMissingColumnError(error) || error.message?.includes('does not exist')) return 0;
+    throw error;
+  }
+  return count ?? 0;
+}
+
+export async function markNotificationRead(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead(userId: string, companyId: string): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('recipient_user_id', userId)
+    .eq('company_id', companyId)
+    .eq('is_read', false);
+  if (error) throw error;
+}
+
+export async function archiveNotification(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_archived: true })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export interface CreateNotificationInput {
+  companyId: string;
+  recipientUserId: string;
+  type: NotificationType;
+  priority?: NotificationPriority;
+  title: string;
+  body?: string;
+  entityType?: string;
+  entityId?: string;
+  actionUrl?: string;
+  triggeredByUserId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function createNotification(input: CreateNotificationInput): Promise<AppNotification> {
+  const id = generateId();
+  const row = {
+    id,
+    company_id: input.companyId,
+    recipient_user_id: input.recipientUserId,
+    type: input.type,
+    priority: input.priority ?? 'normal',
+    title: input.title,
+    body: input.body ?? '',
+    entity_type: input.entityType ?? null,
+    entity_id: input.entityId ?? null,
+    action_url: input.actionUrl ?? null,
+    triggered_by_user_id: input.triggeredByUserId ?? null,
+    metadata: input.metadata ?? {},
+    is_read: false,
+    is_archived: false,
+  };
+  const { data, error } = await supabase.from('notifications').insert(row).select().single();
+  if (error) throw error;
+  return toCamelNotification(data as Record<string, unknown>);
+}
+
+export async function deleteOldNotifications(companyId: string, olderThanDays: number = 90): Promise<void> {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - olderThanDays);
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('company_id', companyId)
+    .lt('created_at', cutoff.toISOString());
   if (error) throw error;
 }

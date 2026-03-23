@@ -381,37 +381,74 @@
 
 ---
 
-## BLOCK T13 — Querschnittliche Tests & Fehlerfälle
+## BLOCK T13 — Benachrichtigungen (Realtime)
 
-### T13.1 Navigation und Routing
-
-| ID | Schritt | Erwartet | Ergebnis | Status |
-|---|---|---|---|---|
-| T13.1.1 | Sidebar-Links nacheinander klicken (alle Rollen) | Alle Seiten laden ohne 404 | | 🔲 |
-| T13.1.2 | Browser-Zurück nach mehreren Navigationen | Korrekte Seite, kein White Screen | | 🔲 |
-| T13.1.3 | Seite, die nur Admin sehen darf, als Manager aufrufen | Redirect oder Fehlerseite | | 🔲 |
-
-### T13.2 Formular-Validierung
+### T13.1 Notification-Center (Header Glocke)
 
 | ID | Schritt | Erwartet | Ergebnis | Status |
 |---|---|---|---|---|
-| T13.2.1 | Neues Formular öffnen, leer absenden | Pflichtfeld-Validierungsfehler ohne Crash | | 🔲 |
-| T13.2.2 | XSS-Test: `<script>alert(1)</script>` in Textfeld | Eingabe wird als Text gespeichert, kein Script-Execution | | 🔲 |
+| T13.1.1 | Als Manager einloggen, Glocke im Header prüfen | Bell-Icon sichtbar, Badge zeigt ungelesene Anzahl (falls vorhanden) | | 🔲 |
+| T13.1.2 | Glocke anklicken | Notification-Panel öffnet sich als Dropdown | | 🔲 |
+| T13.1.3 | Leerer Zustand provozieren (alles gelesen/archiviert) | Leere-State-Message „Keine Benachrichtigungen“ sichtbar | | 🔲 |
 
-### T13.3 Gleichzeitige Aktionen
-
-| ID | Schritt | Erwartet | Ergebnis | Status |
-|---|---|---|---|---|
-| T13.3.1 | Modal öffnen, Speichern-Button doppelt schnell klicken | Kein doppelter DB-Eintrag (Button deaktiviert während Load) | | 🔲 |
-| T13.3.2 | Als Admin: Item erstellen, sofort refreshen | Item erscheint nach Refresh (Session-Persistenz) | | 🔲 |
-
-### T13.4 Rollen-Wechsel-Test
+### T13.2 Realtime-Ereignisse
 
 | ID | Schritt | Erwartet | Ergebnis | Status |
 |---|---|---|---|---|
-| T13.4.1 | Als Admin einloggen → Logout → Als Manager einloggen | Frischer State, Admin-Buttons weg | | 🔲 |
-| T13.4.2 | Als Manager einloggen → Logout → Als Member einloggen | Budget-Seite nicht mehr sichtbar | | 🔲 |
-| T13.4.3 | Selben Browser — verschiedene Tabs mit verschiedenen Sessions | Nicht unterstützt — jeder Tab hat dieselbe localStorage-Session | | 🔲 |
+| T13.2.1 | In Tab A als Manager Task an Member zuweisen, in Tab B als Member eingeloggt | Member erhält ohne Refresh neue Benachrichtigung `task_assigned` | | 🔲 |
+| T13.2.2 | Task-Status ändern (z. B. Draft → Review) | Author/Assignee erhalten `task_status_changed` | | 🔲 |
+| T13.2.3 | Kampagnen-Status ändern (planned → active) | Relevante Teammitglieder erhalten `campaign_update` | | 🔲 |
+| T13.2.4 | Budget auf >=80% auslasten | `budget_alert` erscheint mit hoher Priorität | | 🔲 |
+
+### T13.3 Bedienfunktionen im Panel
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T13.3.1 | Einzelne ungelesene Notification anklicken | Eintrag wird als gelesen markiert + Navigation zur Zielseite | | 🔲 |
+| T13.3.2 | Button „Alle gelesen“ klicken | Alle sichtbaren Notifications wechseln auf gelesen, Badge = 0 | | 🔲 |
+| T13.3.3 | X-Button auf Notification nutzen | Notification wird archiviert und aus Liste entfernt | | 🔲 |
+
+### T13.4 Notification-Settings
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T13.4.1 | Einstellungen → Benachrichtigungen öffnen | Alle Kategorien mit Toggle sichtbar | | 🔲 |
+| T13.4.2 | Kategorie deaktivieren (z. B. Team-Aktivitäten), speichern | Entsprechende Notifications werden im Panel herausgefiltert | | 🔲 |
+| T13.4.3 | Kategorie reaktivieren | Neue/alte passende Notifications wieder sichtbar | | 🔲 |
+
+---
+
+## BLOCK T14 — Querschnittliche Tests & Fehlerfälle
+
+### T14.1 Navigation und Routing
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T14.1.1 | Sidebar-Links nacheinander klicken (alle Rollen) | Alle Seiten laden ohne 404 | | 🔲 |
+| T14.1.2 | Browser-Zurück nach mehreren Navigationen | Korrekte Seite, kein White Screen | | 🔲 |
+| T14.1.3 | Seite, die nur Admin sehen darf, als Manager aufrufen | Redirect oder Fehlerseite | | 🔲 |
+
+### T14.2 Formular-Validierung
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T14.2.1 | Neues Formular öffnen, leer absenden | Pflichtfeld-Validierungsfehler ohne Crash | | 🔲 |
+| T14.2.2 | XSS-Test: `<script>alert(1)</script>` in Textfeld | Eingabe wird als Text gespeichert, kein Script-Execution | | 🔲 |
+
+### T14.3 Gleichzeitige Aktionen
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T14.3.1 | Modal öffnen, Speichern-Button doppelt schnell klicken | Kein doppelter DB-Eintrag (Button deaktiviert während Load) | | 🔲 |
+| T14.3.2 | Als Admin: Item erstellen, sofort refreshen | Item erscheint nach Refresh (Session-Persistenz) | | 🔲 |
+
+### T14.4 Rollen-Wechsel-Test
+
+| ID | Schritt | Erwartet | Ergebnis | Status |
+|---|---|---|---|---|
+| T14.4.1 | Als Admin einloggen → Logout → Als Manager einloggen | Frischer State, Admin-Buttons weg | | 🔲 |
+| T14.4.2 | Als Manager einloggen → Logout → Als Member einloggen | Budget-Seite nicht mehr sichtbar | | 🔲 |
+| T14.4.3 | Selben Browser — verschiedene Tabs mit verschiedenen Sessions | Nicht unterstützt — jeder Tab hat dieselbe localStorage-Session | | 🔲 |
 
 ---
 
@@ -439,6 +476,8 @@ Die folgende Matrix fasst alle sichtbaren UI-Elemente und deren Erwartung je Rol
 | Einstellungen öffnen | ✅ | ✅ | ✅ |
 | User-Management | ✅ | ❌ | ❌ |
 | System-Einstellungen | ✅ | ❌ | ❌ |
+| Notification-Center (Glocke) sichtbar | ✅ | ✅ | ✅ |
+| Notification-Settings bearbeiten | ✅ | ❌ | ❌ |
 | Journey erstellen | ✅ | ✅ | ❌ |
 | Anleitung lesen | ✅ | ✅ | ✅ |
 
@@ -460,7 +499,8 @@ Die folgende Matrix fasst alle sichtbaren UI-Elemente und deren Erwartung je Rol
 | T10 Positionierung | | | / | / | / | |
 | T11 Einstellungen | | | / | / | / | |
 | T12 Anleitung | | | — | — | — | |
-| T13 Querschnitt | | | / | / | / | |
+| T13 Notifications | | | / | / | / | |
+| T14 Querschnitt | | | / | / | / | |
 
 **Abnahmeentscheidung:** ☐ freigegeben &nbsp;&nbsp; ☐ bedingt freigegeben &nbsp;&nbsp; ☐ abgelehnt
 

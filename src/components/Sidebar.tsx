@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
@@ -12,6 +12,7 @@ import { useCompany } from '../context/CompanyContext';
 import { useData } from '../context/DataContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents } from '../context/ContentContext';
+import { useLanguage } from '../context/LanguageContext';
 import type { PermissionKey, CompanyRole } from '../types';
 
 type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'touchpoints' | 'tasks' | 'contents';
@@ -19,7 +20,7 @@ type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'touchpoints' | 'tasks'
 interface NavItem {
     path: string;
     icon: LucideIcon;
-    label: string;
+    label: { de: string; en: string };
     badge?: string | number;
     badgeKey?: BadgeKey;
     requiredPermission?: PermissionKey | null;
@@ -27,48 +28,48 @@ interface NavItem {
 }
 
 interface NavSection {
-    section: string;
+    section: { de: string; en: string };
     items: NavItem[];
 }
 
 const NAV: NavSection[] = [
     {
-        section: 'Übersicht',
+        section: { de: 'Uebersicht', en: 'Overview' },
         items: [
-            { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+            { path: '/', icon: LayoutDashboard, label: { de: 'Dashboard', en: 'Dashboard' } },
         ],
     },
     {
-        section: 'Marketing',
+        section: { de: 'Marketing', en: 'Marketing' },
         items: [
-            { path: '/campaigns', icon: Megaphone, label: 'Kampagnen', badgeKey: 'campaigns' as const, requiredPermission: null },
-            { path: '/audiences', icon: Users2, label: 'Zielgruppen', badgeKey: 'audiences' as const },
-            { path: '/journeys', icon: Map, label: 'Customer Journey', badgeKey: 'journeys' as const },
-            { path: '/touchpoints', icon: Radio, label: 'Kanäle & Touchpoints', badgeKey: 'touchpoints' as const },
-            { path: '/content-overview', icon: FileText, label: 'Content-Übersicht', badgeKey: 'contents' as const },
-            { path: '/content', icon: Calendar, label: 'Content-Kalender' },
-            { path: '/budget', icon: Wallet, label: 'Budget & Controlling', requiredPermission: 'canSeeBudget' },
+            { path: '/campaigns', icon: Megaphone, label: { de: 'Kampagnen', en: 'Campaigns' }, badgeKey: 'campaigns' as const, requiredPermission: null },
+            { path: '/audiences', icon: Users2, label: { de: 'Zielgruppen', en: 'Audiences' }, badgeKey: 'audiences' as const },
+            { path: '/journeys', icon: Map, label: { de: 'Customer Journey', en: 'Customer journey' }, badgeKey: 'journeys' as const },
+            { path: '/touchpoints', icon: Radio, label: { de: 'Kanaele & Touchpoints', en: 'Channels & touchpoints' }, badgeKey: 'touchpoints' as const },
+            { path: '/content-overview', icon: FileText, label: { de: 'Content-Uebersicht', en: 'Content overview' }, badgeKey: 'contents' as const },
+            { path: '/content', icon: Calendar, label: { de: 'Content-Kalender', en: 'Content calendar' } },
+            { path: '/budget', icon: Wallet, label: { de: 'Budget & Controlling', en: 'Budget & controlling' }, requiredPermission: 'canSeeBudget' },
         ],
     },
     {
-        section: 'Team',
+        section: { de: 'Team', en: 'Team' },
         items: [
-            { path: '/tasks', icon: CheckSquare, label: 'Aufgaben', badgeKey: 'tasks' as const },
-            { path: '/analytics', icon: BarChart3, label: 'Berichte', comingSoon: true },
+            { path: '/tasks', icon: CheckSquare, label: { de: 'Aufgaben', en: 'Tasks' }, badgeKey: 'tasks' as const },
+            { path: '/analytics', icon: BarChart3, label: { de: 'Berichte', en: 'Reports' }, comingSoon: true },
         ],
     },
     {
-        section: 'Unternehmen',
+        section: { de: 'Projekt', en: 'Project' },
         items: [
-            { path: '/positioning', icon: Target, label: 'Digitale Positionierung' },
+            { path: '/positioning', icon: Target, label: { de: 'Digitale Positionierung', en: 'Digital positioning' } },
         ],
     },
     {
-        section: 'System',
+        section: { de: 'System', en: 'System' },
         items: [
-            { path: '/setup', icon: Compass, label: 'Projekt-Setup' },
-            { path: '/manual', icon: HelpCircle, label: 'Anleitung' },
-            { path: '/settings', icon: Settings, label: 'Einstellungen' },
+            { path: '/setup', icon: Compass, label: { de: 'Projekt-Setup', en: 'Project setup' } },
+            { path: '/manual', icon: HelpCircle, label: { de: 'Anleitung', en: 'Manual' } },
+            { path: '/settings', icon: Settings, label: { de: 'Einstellungen', en: 'Settings' } },
         ],
     },
 ];
@@ -83,7 +84,11 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     const { campaigns, audiences, touchpoints, customerJourneys } = useData();
     const { tasks } = useTasks();
     const { contents } = useContents();
+    const { language } = useLanguage();
     const pathname = usePathname();
+    const router = useRouter();
+
+    const companyBase = activeCompany ? `/project/${activeCompany.id}` : '';
 
     const badgeCounts: Record<BadgeKey, number> = {
         campaigns: campaigns.length,
@@ -95,9 +100,21 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     };
     const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
 
+    /** Resolve nav item path with company prefix */
+    const resolveHref = (itemPath: string) => {
+        if (itemPath === '/') return companyBase || '/';
+        return `${companyBase}${itemPath}`;
+    };
+
     const isActivePath = (itemPath: string) => {
-        if (itemPath === '/') return pathname === '/';
-        return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+        const resolved = resolveHref(itemPath);
+        if (itemPath === '/') return pathname === resolved;
+        return pathname === resolved || pathname.startsWith(`${resolved}/`);
+    };
+
+    const handleSwitchCompany = () => {
+        deselectCompany();
+        router.push('/');
     };
 
     // Filtert Einträge nach Rolle
@@ -109,8 +126,8 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
     return (
         <aside className="sidebar">
-            {/* Company Header */}
-            <div className="sidebar-header">
+            {/* Company Header — clickable logo navigates home */}
+            <Link href="/" className="sidebar-header" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="sidebar-logo" style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -125,7 +142,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                     <div className="sidebar-brand-name">Momentum</div>
                     <div className="sidebar-brand-sub">Marketing OS</div>
                 </div>
-            </div>
+            </Link>
 
             {/* Active Company Indicator */}
             {activeCompany && (
@@ -146,7 +163,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                         </span>
                     </div>
                     <button
-                        onClick={deselectCompany}
+                        onClick={handleSwitchCompany}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '4px',
                             fontSize: '0.6rem', color: 'var(--text-tertiary)',
@@ -154,7 +171,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                             padding: 0, fontWeight: 600,
                         }}
                     >
-                        <ArrowLeftRight size={10} /> Unternehmen wechseln
+                        <ArrowLeftRight size={10} /> {language === 'en' ? 'Switch project' : 'Projekt wechseln'}
                     </button>
                 </div>
             )}
@@ -183,31 +200,31 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                     const visible = getVisibleItems(items);
                     if (visible.length === 0) return null;
                     return (
-                        <div key={section} className="sidebar-section">
-                            <div className="sidebar-section-label">{section}</div>
+                        <div key={section.de} className="sidebar-section">
+                            <div className="sidebar-section-label">{section[language]}</div>
                             {visible.map(item => {
                                 const Icon = item.icon;
                                 if (item.comingSoon) {
                                     return (
                                         <div key={item.path} className="sidebar-link" style={{ opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' }}>
                                             <Icon size={18} />
-                                            <span>{item.label}</span>
+                                            <span>{item.label[language]}</span>
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: '0.6rem', padding: '1px 5px',
                                                 borderRadius: 'var(--radius-full)', background: 'var(--bg-hover)',
                                                 color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase',
-                                            }}>bald</span>
+                                            }}>{language === 'en' ? 'soon' : 'bald'}</span>
                                         </div>
                                     );
                                 }
                                 return (
                                     <Link
                                         key={item.path}
-                                        href={item.path}
+                                        href={resolveHref(item.path)}
                                         className={`sidebar-link${isActivePath(item.path) ? ' active' : ''}`}
                                     >
                                         <Icon size={18} />
-                                        <span>{item.label}</span>
+                                        <span>{item.label[language]}</span>
                                         {(item.badge !== undefined || item.badgeKey !== undefined) && (
                                             <span style={{
                                                 marginLeft: 'auto', fontSize: 'var(--font-size-xs)',
@@ -259,7 +276,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                 )}
                 <button className="sidebar-link" style={{ color: 'var(--color-danger)', width: '100%' }} onClick={onLogout}>
                     <LogOut size={18} />
-                    <span>Abmelden</span>
+                    <span>{language === 'en' ? 'Log out' : 'Abmelden'}</span>
                 </button>
             </div>
         </aside>

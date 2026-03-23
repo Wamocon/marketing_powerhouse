@@ -280,7 +280,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                     Kampagnenspezifische Keywords
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px', lineHeight: 1.5 }}>
-                                    Ergänze Keywords, die spezifisch für diese Kampagne sind. Unternehmensweite Keywords werden automatisch hinzugefügt.
+                                    Ergänze Keywords, die spezifisch für diese Kampagne sind. Projektweite Keywords werden automatisch hinzugefügt.
                                 </p>
                                 <input
                                     type="text"
@@ -298,7 +298,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                 )}
                                 <div style={{ marginTop: '20px' }}>
                                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        🔒 Unternehmensweite Keywords (werden automatisch eingebunden)
+                                        🔒 Projektweite Keywords (werden automatisch eingebunden)
                                     </div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                         {companyKeywords.length > 0 ? (
@@ -307,7 +307,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                             ))
                                         ) : (
                                             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                Keine unternehmensweiten Keywords vorhanden.
+                                                Keine projektweiten Keywords vorhanden.
                                             </span>
                                         )}
                                     </div>

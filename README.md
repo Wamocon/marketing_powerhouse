@@ -1,6 +1,6 @@
 # 🚀 Momentum
 
-Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Momentum vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung — mit Unterstützung für **mehrere Unternehmen pro Benutzer**.
+Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von Marketingprozessen**. Momentum vereint Kampagnen-Management, Content-Planung, Budget-Kontrolle und Team-Zusammenarbeit in einer DSGVO-konformen, europäischen Lösung — mit Unterstützung für **mehrere Projekt pro Benutzer**.
 
 > **Tagline:** Deine Marketing-Kampagnen mit Momentum
 
@@ -12,13 +12,13 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 
 ## 🎯 Features
 
-✅ **Multi-Tenancy** — Mehrere Unternehmen pro Benutzer, Unternehmens-Auswahl nach Login  
-✅ **4-Rollen-System** — Super-Admin, Unternehmens-Admin, Manager, Member mit granularen Berechtigungen  
-✅ **Super-Admin Panel** — Globale Verwaltung aller Unternehmen und Benutzer  
-✅ **Unternehmens-Verwaltung** — Unternehmen erstellen, bearbeiten, Mitglieder verwalten  
-✅ **Projekt-Zuweisung & Rollenwechsel** — Super-Admin weist bestehende Benutzer Unternehmen zu und ändert Rollen pro Unternehmen  
-✅ **Admin-Einladung per E-Mail** — Unternehmens-Admins weisen bestehende Benutzer per E-Mail zu (Default-Rolle: Member)  
-✅ **Benachrichtigungs-Einstellungen** — Schaltbare Benachrichtigungs-Typen pro Unternehmen, im Browser gespeichert  
+✅ **Multi-Tenancy** — Mehrere Projekt pro Benutzer, Projekt-Auswahl nach Login  
+✅ **4-Rollen-System** — Super-Admin, Projekt-Admin, Manager, Member mit granularen Berechtigungen  
+✅ **Super-Admin Panel** — Globale Verwaltung aller Projekt und Benutzer  
+✅ **Projekt-Verwaltung** — Projekt erstellen, bearbeiten, Mitglieder verwalten  
+✅ **Projekt-Zuweisung & Rollenwechsel** — Super-Admin weist bestehende Benutzer Projekt zu und ändert Rollen pro Projekt  
+✅ **Admin-Einladung per E-Mail** — Projekt-Admins weisen bestehende Benutzer per E-Mail zu (Default-Rolle: Member)  
+✅ **Benachrichtigungssystem** — Echtzeit-Notifications via Supabase Realtime, Notification-Center mit Glocken-Symbol, rollenbasierte Benachrichtigungen für Kampagnen, Tasks, Budget, Content und Team-Events, steuerbar über Notification-Settings pro Projekt  
 ✅ **Kampagnen-Management** — Multi-Channel-Kampagnen mit 3-Schritt-Erstellung, Master-Prompt, Zielgruppen und Keywords  
 ✅ **Creative-Workflow (10 Stufen)** — Entwurf → KI-Vorschlag → Review → Freigabe → Posting → KI-Analyse  
 ✅ **Customer Journey (5-Phasen)** — Awareness bis Advocacy mit Content-Deep-Links und Touchpoint-Integration  
@@ -26,7 +26,7 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 ✅ **Content-System** — Kalender- und Kartenansicht, 6-stufiger Status-Workflow, bidirektionale Aufgaben-Verknüpfung  
 ✅ **Zielgruppen-Management** — Persona-Avatare, B2B/B2C-Filter, Journey-Integration, CRUD via Supabase  
 ✅ **Budget & Controlling** — Plan/Ist-Vergleich, Kategorie-Pie, CSV-Export, rollenbasierter Zugriff  
-✅ **Digitale Positionierung** — Unternehmens-DNA, Vision/Mission/Werte, Kommunikations-DNA, Keywords, Zielmarkt  
+✅ **Digitale Positionierung** — Projekt-DNA, Vision/Mission/Werte, Kommunikations-DNA, Keywords, Zielmarkt  
 ✅ **Aufgaben (Kanban + Liste)** — 5 Kanban-Spalten, Zuweisung, OneDrive-Links, Content-Verknüpfung  
 ✅ **Supabase Backend** — 19 Tabellen (inkl. `companies`, `company_members`), vollständige CRUD-API, RLS aktiviert  
 ✅ **Dark Theme** — Modulares CSS Design-System mit Tailwind CSS v4 und CSS Custom Properties  
@@ -59,12 +59,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://<dein-projekt>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<dein-anon-key>
 ```
 
-### Supabase Upgrade (ein Skript)
+### Supabase Upgrade (Migrationen)
 
 Für bestehende Datenbanken sind **alle Multi-Tenancy-DB-Änderungen** in einem Skript gebündelt:
 
 ```bash
 node scripts/migrate_multi_tenant.mjs
+```
+
+Für das neue Benachrichtigungssystem zusätzlich ausführen:
+
+```bash
+node scripts/migrate_notifications.mjs
 ```
 
 Das Skript enthält:
@@ -73,6 +79,11 @@ Das Skript enthält:
 - Rollen-Constraint-Umstellung auf `company_admin|manager|member`
 - `company_id`-Spalten + Indizes für alle relevanten Datentabellen
 - Seed/Mapping für **WAMOCON Academy** inkl. Rollenzuweisung aller bestehenden Benutzer
+
+Das Notification-Skript enthält:
+- Tabellen `notifications` und `notification_preferences`
+- Indizes für `recipient_user_id`, `company_id`, `is_read`
+- Typisierte Notification-Kategorien (Task, Campaign, Budget, Content, Team, System)
 
 ### Starten
 
@@ -90,45 +101,45 @@ Dev-Server läuft unter: **http://localhost:3000**
 
 | Rolle | Name | E-Mail | Passwort | Abteilung | Super-Admin |
 |---|---|---|---|---|---|
-| 🟡 **Super-Admin + Unternehmens-Admin** | Daniel Moretz | `daniel@test-it-academy.de` | `admin123` | Geschäftsführung & Training | ✅ |
-| 🔴 **Unternehmens-Admin** | Waleri Moretz | `waleri@test-it-academy.de` | `manager123` | Training & Qualität | ❌ |
+| 🟡 **Super-Admin + Projekt-Admin** | Daniel Moretz | `daniel@test-it-academy.de` | `admin123` | Geschäftsführung & Training | ✅ |
+| 🔴 **Projekt-Admin** | Waleri Moretz | `waleri@test-it-academy.de` | `manager123` | Training & Qualität | ❌ |
 | 🟣 **Manager** | Anna Schmidt | `anna@test-it-academy.de` | `manager123` | Marketing | ❌ |
 | 🟢 **Member** | Lisa Bauer | `lisa@test-it-academy.de` | `member123` | Marketing | ❌ |
 | 🟢 **Member** | Tom Weber | `tom@test-it-academy.de` | `member123` | Performance Marketing | ❌ |
 | 🟢 **Member** | Jana Klein | `jana@test-it-academy.de` | `member123` | Kundenservice | ❌ |
 
-### Demo-Unternehmen
+### Demo-Projekt
 
-| Unternehmen | Branche | Mitglieder |
+| Projekt | Branche | Mitglieder |
 |---|---|---|
 | **WAMOCON Academy** | IT & Training | Daniel (Super-Admin + U-Admin), Waleri (U-Admin), Anna (Manager), Lisa/Tom/Jana (Member) |
 
 ### Was jede Rolle sieht
 
 **Als Super-Admin (`daniel@test-it-academy.de`)**
-- Nach Login: Unternehmens-Auswahl + Link zum **Super-Admin Panel**
-- Super-Admin Panel: Alle Unternehmen verwalten, Benutzer verwalten, Super-Admin-Status vergeben
-- Unternehmen-Tab: Bestehende Benutzer einem Unternehmen zuweisen und deren Rolle pro Unternehmen direkt ändern
-- In jedem Unternehmen: Vollständige Kontrolle (wie Unternehmens-Admin)
+- Nach Login: Projekt-Auswahl + Link zum **Super-Admin Panel**
+- Super-Admin Panel: Alle Projekt verwalten, Benutzer verwalten, Super-Admin-Status vergeben
+- Projekt-Tab: Bestehende Benutzer einem Projekt zuweisen und deren Rolle pro Projekt direkt ändern
+- In jedem Projekt: Vollständige Kontrolle (wie Projekt-Admin)
 
-**Als Unternehmens-Admin (Rolle: `company_admin`)**
-- Nach Login: Unternehmens-Auswahl, Unternehmen erstellen
-- Im Unternehmen: Vollständige Navigation inkl. Budget & Einstellungen
+**Als Projekt-Admin (Rolle: `company_admin`)**
+- Nach Login: Projekt-Auswahl, Projekt erstellen
+- Im Projekt: Vollständige Navigation inkl. Budget & Einstellungen
 - In Einstellungen: Team-Zuweisung per E-Mail für bestehende Benutzer (bei Erfolg Default-Rolle Member)
 - In Einstellungen: Tab „Benutzerverwaltung" mit Rollen-Dropdown pro User
 - Digitale Positionierung: **inline editierbar** (alle 5 Blöcke)
 - „Neue Kampagne"-Button: **sichtbar**
 
 **Als Manager (`anna@test-it-academy.de`)**
-- Nach Login: Unternehmens-Auswahl (nur zugewiesene Unternehmen)
-- Im Unternehmen: Vollständige Navigation inkl. Budget
+- Nach Login: Projekt-Auswahl (nur zugewiesene Projekt)
+- Im Projekt: Vollständige Navigation inkl. Budget
 - In Einstellungen: kein Benutzerverwaltungs-Tab, Felder read-only
 - Digitale Positionierung: **read-only**
 - „Neue Kampagne"-Button: **sichtbar**
 
 **Als Member (`lisa@test-it-academy.de`, `tom@test-it-academy.de` oder `jana@test-it-academy.de`)**
-- Nach Login: Unternehmens-Auswahl (nur zugewiesene Unternehmen)
-- Im Unternehmen: Navigation: **Budget ausgeblendet**
+- Nach Login: Projekt-Auswahl (nur zugewiesene Projekt)
+- Im Projekt: Navigation: **Budget ausgeblendet**
 - Budget-Seite: „Kein Zugriff"-Sperrseite
 - Einstellungen: alle Felder deaktiviert, kein Admin-Tab
 - Digitale Positionierung: **read-only**
@@ -170,17 +181,19 @@ marketing_powerhouse/
     ├── index.css                     ← Tailwind CSS v4 + Design System
     ├── lib/
     │   ├── supabase.ts               ← Supabase-Client (Singleton)
-    │   ├── api.ts                    ← Vollständige CRUD-API (~700 Zeilen, inkl. Company-API)
+    │   ├── api.ts                    ← Vollständige CRUD-API (inkl. Company-API, Notifications)
+    │   ├── notificationTriggers.ts   ← Notification-Erzeugungs-Helper für alle Entitäten
     │   └── constants.ts              ← Content-Type-Farben
     ├── types/
     │   ├── index.ts                  ← Zentrale TypeScript-Typdefinitionen (User, Company, etc.)
     │   └── dashboard.ts              ← Dashboard-spezifische Typen
     ├── context/
     │   ├── AuthContext.tsx            ← RBAC: 4 Rollen, Permissions, Login via Supabase
-    │   ├── CompanyContext.tsx         ← NEU: Multi-Tenancy, Unternehmens-Auswahl/-Verwaltung
+    │   ├── CompanyContext.tsx         ← NEU: Multi-Tenancy, Projekt-Auswahl/-Verwaltung
     │   ├── DataContext.tsx            ← Zentraler Daten-Provider (Supabase CRUD)
     │   ├── ContentContext.tsx         ← Content-State-Management (async)
-    │   └── TaskContext.tsx            ← Aufgaben-State-Management (async)
+    │   ├── TaskContext.tsx            ← Aufgaben-State-Management (async)
+    │   └── NotificationContext.tsx    ← Benachrichtigungs-Provider mit Supabase Realtime
     ├── components/                    ← Wiederverwendbare UI-Komponenten
     │   ├── Layout.tsx / Sidebar.tsx / Header.tsx
     │   ├── DashboardViews.tsx / DashboardComponents.tsx
@@ -190,6 +203,7 @@ marketing_powerhouse/
     │   ├── AudienceDetailModal.tsx / ContentDetailModal.tsx
     │   ├── TaskDetailModal.tsx / TouchpointDetailModal.tsx
     │   ├── TaskAiAgent.tsx
+    │   ├── NotificationBell.tsx / NotificationPanel.tsx / NotificationItem.tsx
     │   ├── PositioningComponents.tsx / ManualComponents.tsx
     │   ├── SettingsAdmin.tsx / PageHelp.tsx
     │   └── ui/
@@ -199,7 +213,7 @@ marketing_powerhouse/
     │   └── pages.css / pages-extra.css
     └── views/                         ← Seiten-Komponenten (von app/ importiert)
         ├── DashboardPage.tsx / LoginPage.tsx
-        ├── CompanySelectPage.tsx       ← NEU: Unternehmens-Auswahl nach Login
+        ├── CompanySelectPage.tsx       ← NEU: Projekt-Auswahl nach Login
         ├── SuperAdminPage.tsx          ← NEU: Super-Admin Panel
         ├── CampaignsPage.tsx / CampaignDetailPage.tsx
         ├── AudiencesPage.tsx / CustomerJourneyPage.tsx
@@ -218,31 +232,31 @@ marketing_powerhouse/
 
 ```
 Super-Admin (globale Ebene)
-  └── Kann alle Unternehmen und Benutzer verwalten
-       └── Hat in jedem Unternehmen automatisch Unternehmens-Admin-Rechte
+  └── Kann alle Projekt und Benutzer verwalten
+       └── Hat in jedem Projekt automatisch Projekt-Admin-Rechte
 
-Unternehmens-Admin (pro Unternehmen)
-  └── Vollständige Kontrolle über ein Unternehmen
+Projekt-Admin (pro Projekt)
+  └── Vollständige Kontrolle über ein Projekt
   └── Kann bestehende Benutzer per E-Mail zuweisen und Rollen verwalten
 
-Manager (pro Unternehmen)
+Manager (pro Projekt)
   └── Kampagnen, Content, Budget, Touchpoints verwalten
 
-Member (pro Unternehmen)
+Member (pro Projekt)
   └── Eigene Aufgaben bearbeiten, Kampagnendaten einsehen
 ```
 
 ### Berechtigungsmatrix
 
-| Berechtigung | Super-Admin | Unternehmens-Admin | Manager | Member |
+| Berechtigung | Super-Admin | Projekt-Admin | Manager | Member |
 |---|:---:|:---:|:---:|:---:|
-| **Unternehmen verwalten (global)** | ✅ | ❌ | ❌ | ❌ |
+| **Projekt verwalten (global)** | ✅ | ❌ | ❌ | ❌ |
 | **Benutzer verwalten (global)** | ✅ | ❌ | ❌ | ❌ |
 | **Super-Admin-Rechte vergeben** | ✅ | ❌ | ❌ | ❌ |
-| **Unternehmen erstellen** | ✅ | ✅ | ❌ | ❌ |
+| **Projekt erstellen** | ✅ | ✅ | ❌ | ❌ |
 | **Positionierung bearbeiten** | ✅ | ✅ | ❌ | ❌ |
-| **Keywords (unternehmensw.) bearbeiten** | ✅ | ✅ | ❌ | ❌ |
-| **Mitglieder im Unternehmen verwalten** | ✅ | ✅ | ❌ | ❌ |
+| **Keywords (projektw.) bearbeiten** | ✅ | ✅ | ❌ | ❌ |
+| **Mitglieder im Projekt verwalten** | ✅ | ✅ | ❌ | ❌ |
 | **Einstellungen bearbeiten** | ✅ | ✅ | ❌ | ❌ |
 | **Kampagne erstellen / bearbeiten** | ✅ | ✅ | ✅ | ❌ |
 | **Zielgruppen bearbeiten** | ✅ | ✅ | ✅ | ❌ |
@@ -267,22 +281,22 @@ const { can, isRole, isSuperAdmin, activeCompanyRole } = useAuth();
 ### App-Flow
 
 ```
-Login → Unternehmens-Auswahl → Dashboard (unternehmensgebunden)
+Login → Projekt-Auswahl → Dashboard (projektgebunden)
                 │
                 ├── Super-Admin → /admin (globale Verwaltung)
-                └── Unternehmen wechseln (jederzeit via Sidebar)
+                └── Projekt wechseln (jederzeit via Sidebar)
 ```
 
 Die Sidebar ist nach Bereichen gegliedert:
 
 | Bereich | Seiten |
 |---|---|
-| **Unternehmens-Kontext** | Aktives Unternehmen + Wechsel-Button |
+| **Projekt-Kontext** | Aktives Projekt + Wechsel-Button |
 | **Super-Admin** | Super-Admin Panel (nur für Super-Admins) |
 | **Übersicht** | Dashboard |
 | **Marketing** | Kampagnen, Zielgruppen, Customer Journey, Kanäle & Touchpoints, Content-Übersicht, Content-Kalender, Budget & Controlling |
 | **Team** | Aufgaben |
-| **Unternehmen** | Digitale Positionierung |
+| **Projekt** | Digitale Positionierung |
 | **System** | Handbuch, Einstellungen |
 
 ---
@@ -329,15 +343,15 @@ npm run test:coverage  # Test-Coverage-Report
 | Tabelle | Beschreibung |
 |---|---|
 | `users` | Benutzer mit Rollen + `is_super_admin`-Flag |
-| `companies` | **NEU** — Unternehmen/Tenants |
-| `company_members` | **NEU** — Benutzer↔Unternehmen-Zuordnung mit Rolle |
+| `companies` | **NEU** — Projekt/Tenants |
+| `company_members` | **NEU** — Benutzer↔Projekt-Zuordnung mit Rolle |
 | `campaigns` | Kampagnen-Daten (mit `company_id`) |
 | `audiences` | Zielgruppen/Personas (mit `company_id`) |
 | `touchpoints` | Kanäle & Touchpoints (mit `company_id`) |
 | `tasks` | Aufgaben/Creatives (mit `company_id`) |
 | `contents` | Content-Einträge (mit `company_id`) |
-| `company_positioning` | Unternehmenspositionierung (mit `company_id`) |
-| `company_keywords` | Unternehmensweite Keywords (mit `company_id`) |
+| `company_positioning` | Projektpositionierung (mit `company_id`) |
+| `company_keywords` | Projektweite Keywords (mit `company_id`) |
 | `budget_overview` | Budget-Gesamtübersicht (mit `company_id`) |
 | `budget_categories` | Budget-Kategorien (mit `company_id`) |
 | `monthly_trends` | Monatliche Budget-Trends (mit `company_id`) |
@@ -347,6 +361,8 @@ npm run test:coverage  # Test-Coverage-Report
 | `channel_performance` | Kanal-Performance-Daten (mit `company_id`) |
 | `journeys` | Customer Journeys (mit `company_id`) |
 | `journey_stages` | Journey-Phasen/Stages |
+| `notifications` | **NEU** — Benachrichtigungen pro Benutzer (mit `company_id`, Realtime) |
+| `notification_preferences` | **NEU** — Individuelle Notification-Einstellungen pro Benutzer/Projekt |
 
 Alle Datentabellen verwenden `company_id` als Foreign Key zur `companies`-Tabelle für Multi-Tenancy-Isolation.
 
@@ -356,18 +372,18 @@ Alle Datentabellen verwenden `company_id` als Foreign Key zur `companies`-Tabell
 
 ```
 Globale Ebene (Super-Admin)
-├── Alle Unternehmen einsehen und verwalten
+├── Alle Projekt einsehen und verwalten
 ├── Benutzer global verwalten + Super-Admin-Status vergeben
-└── In jedes Unternehmen eintreten mit vollen Rechten
+└── In jedes Projekt eintreten mit vollen Rechten
 
-Unternehmensebene (Unternehmens-Admin)
-├── Unternehmen erstellen und konfigurieren
+Projektebene (Projekt-Admin)
+├── Projekt erstellen und konfigurieren
 ├── Mitglieder einladen und Rollen zuweisen
-├── Unternehmens-Einstellungen (Währung, Zeitzone, Sprache)
+├── Projekt-Einstellungen (Währung, Zeitzone, Sprache)
 
-Systemebene (Unternehmens-Admin schreibt, alle lesen)
+Systemebene (Projekt-Admin schreibt, alle lesen)
 ├── Digitale Positionierung (Vision, Mission, Werte, Tone-of-Voice)
-├── Unternehmensweite Keywords (global, read-only in Kampagnen)
+├── Projektweite Keywords (global, read-only in Kampagnen)
 └── Zielgruppen-Bibliothek (Personas, company-wide)
       │
       ↓ Zuweisung
@@ -403,13 +419,13 @@ Inhaltsebene (Member arbeitet)
 - Login via Datenbank (`loginUser`)
 
 ### Phase 2 — Multi-Tenancy ✅ Abgeschlossen
-- 4-Rollen-System: Super-Admin, Unternehmens-Admin, Manager, Member
-- Multi-Unternehmen pro Benutzer
+- 4-Rollen-System: Super-Admin, Projekt-Admin, Manager, Member
+- Multi-Projekt pro Benutzer
 - `companies` + `company_members` Tabellen
 - `company_id` FK auf allen Datentabellen
 - Super-Admin Panel (/admin)
-- Unternehmens-Auswahl nach Login
-- CompanyContext für Unternehmens-Verwaltung
+- Projekt-Auswahl nach Login
+- CompanyContext für Projekt-Verwaltung
 - DB-Migration-Skript (`migrate_multi_tenant.mjs`)
 
 ### Phase 3 — Kernfunktionalität

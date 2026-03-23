@@ -81,6 +81,11 @@ Die Vorlagen passen zu eurer aktuellen Objektstruktur in:
 4. Task Execution Layer
 - Aufgabentyp, Formatregeln, Output-Struktur, CTA-Logik.
 
+5. Notification Handoff Layer
+- Nach Abschluss einer KI-Generierung wird eine `ai_generation_complete` Notification erzeugt.
+- Bei Task-Zuweisung/Statuswechsel werden entsprechende `task_assigned` bzw. `task_status_changed` Notifications ausgelöst.
+- Ziel: Nutzer müssen Ergebnisse nicht mehr manuell pollen, sondern werden in Echtzeit informiert.
+
 ### 2.2 Empfohlene Prompt-Pipeline
 1. `Context Builder`
 - Sammle Daten aus Positioning, Keywords, Campaign, Audience, Journey, Touchpoint, Task.

@@ -18,6 +18,10 @@ export interface User {
   status: 'online' | 'away' | 'offline';
   department: string;
   phone: string;
+  /** User explicitly agreed to receive WhatsApp verification messages. */
+  whatsappConsent?: boolean;
+  /** ISO timestamp of consent capture for auditability. */
+  whatsappConsentAt?: string;
   joinedAt: string;
 }
 
@@ -448,5 +452,69 @@ export interface UsageRecord {
   periodEnd: string;
   recordedAt: string;
 }
+
+// ─── Notification Types ────────────────────────────────────
+
+export type NotificationType =
+  | 'campaign_update'
+  | 'budget_alert'
+  | 'task_reminder'
+  | 'task_assigned'
+  | 'task_status_changed'
+  | 'ai_generation_complete'
+  | 'content_review'
+  | 'content_approved'
+  | 'content_published'
+  | 'team_activity'
+  | 'kpi_anomaly'
+  | 'weekly_report'
+  | 'system_alert';
+
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface AppNotification {
+  id: string;
+  companyId: string;
+  recipientUserId: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  title: string;
+  body: string;
+  entityType?: string;
+  entityId?: string;
+  actionUrl?: string;
+  triggeredByUserId?: string;
+  metadata?: Record<string, unknown>;
+  isRead: boolean;
+  readAt?: string;
+  isArchived: boolean;
+  createdAt: string;
+}
+
+export interface NotificationPreference {
+  id: string;
+  userId: string;
+  companyId: string;
+  type: NotificationType;
+  enabled: boolean;
+}
+
+/** Maps the 6 user-facing setting keys to the granular notification types they control */
+export type NotificationSettingKey =
+  | 'campaignUpdates'
+  | 'budgetAlerts'
+  | 'taskReminders'
+  | 'teamActivities'
+  | 'weeklyReport'
+  | 'kpiAnomalies';
+
+export const NOTIFICATION_SETTING_TYPE_MAP: Record<NotificationSettingKey, NotificationType[]> = {
+  campaignUpdates: ['campaign_update'],
+  budgetAlerts: ['budget_alert'],
+  taskReminders: ['task_reminder', 'task_assigned', 'task_status_changed', 'ai_generation_complete'],
+  teamActivities: ['team_activity'],
+  weeklyReport: ['weekly_report'],
+  kpiAnomalies: ['kpi_anomaly'],
+};
 
 export * from './dashboard';

@@ -62,6 +62,14 @@
 
 ### 4. ✅ UI-Komponenten Aktualisierung
 
+#### Notification UI (neu)
+- ✅ Notification-Center (Glocke im Header) integriert
+- ✅ Prioritätsbasierte Farbcodierung konsistent mit Design-System:
+  - Normal: Standard-Surface
+  - High: Warnakzent (Amber/Orange)
+  - Urgent: Fehlerakzent (Brand Red)
+- ✅ Badge-Design im Header an bestehende Radius-, Shadow- und Farbvariablen angepasst
+
 #### [src/components/Header.jsx](src/components/Header.jsx)
 - ✅ Breadcrumb-Label: "WAMOCON Academy" → "Momentum"
 

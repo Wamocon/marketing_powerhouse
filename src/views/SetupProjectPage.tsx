@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useProjectRouter, useProjectPath } from '../hooks/useProjectRouter';
 import {
   ArrowRight,
   Building2,
@@ -63,7 +64,7 @@ const STEP_ORDER: SetupStep[] = ['company', 'audience', 'journey', 'review'];
 const STEP_META: Record<SetupStep, { label: string; title: string; description: string; icon: typeof Building2 }> = {
   company: {
     label: '01',
-    title: 'Unternehmensbasis',
+    title: 'Projektbasis',
     description: 'Digitale Positionierung, Keywords und Zielmarkt sauber anlegen.',
     icon: Building2,
   },
@@ -126,7 +127,8 @@ function toJourneyFormState(audience?: Audience | null, stages?: JourneyStage[],
 }
 
 export default function SetupProjectPage() {
-  const router = useRouter();
+  const router = useProjectRouter();
+  const companyPath = useProjectPath();
   const searchParams = useSearchParams();
   const { currentUser } = useAuth();
   const { activeCompany } = useCompany();
@@ -240,7 +242,7 @@ export default function SetupProjectPage() {
 
   const saveCompanyStep = async () => {
     if (!activeCompany) {
-      setMessage({ type: 'error', text: 'Es ist aktuell kein Unternehmen aktiv.' });
+      setMessage({ type: 'error', text: 'Es ist aktuell kein Projekt aktiv.' });
       return;
     }
 
@@ -272,7 +274,7 @@ export default function SetupProjectPage() {
         }
       }
 
-      setMessage({ type: 'success', text: 'Unternehmensbasis und Positionierung wurden gespeichert.' });
+      setMessage({ type: 'success', text: 'Projektbasis und Positionierung wurden gespeichert.' });
       setCurrentStep('audience');
     } catch (error) {
       console.error(error);
@@ -362,14 +364,14 @@ export default function SetupProjectPage() {
       <section className="card" style={{ padding: '24px' }}>
         <div className="card-header" style={{ marginBottom: '18px' }}>
           <div>
-            <div className="card-title">Unternehmens-DNA</div>
+            <div className="card-title">Projekt-DNA</div>
             <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
               Diese Angaben bilden die Grundlage für Texte, Kampagnen, Briefings und spätere KI-Assistenz.
             </p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-          <FormField label="Unternehmensname" hint="Wird als Primärbezug in Positionierung, Journey und Reporting verwendet.">
+          <FormField label="Projektname" hint="Wird als Primärbezug in Positionierung, Journey und Reporting verwendet.">
             <input className="form-input" value={positioningDraft.name} onChange={event => setPositioningDraft(prev => ({ ...prev, name: event.target.value }))} />
           </FormField>
           <FormField label="Tagline" hint="Kurzform des Leistungsversprechens in einem Satz.">
@@ -381,7 +383,7 @@ export default function SetupProjectPage() {
           <FormField label="Website" hint="Dient als zentrale Referenz für Marke, Angebot und Corporate Wording.">
             <input className="form-input" value={positioningDraft.website} onChange={event => setPositioningDraft(prev => ({ ...prev, website: event.target.value }))} placeholder="https://..." />
           </FormField>
-          <FormField label="Gründungsjahr" hint="Optional, aber hilfreich für Glaubwürdigkeit und Unternehmenskontext.">
+          <FormField label="Gründungsjahr" hint="Optional, aber hilfreich für Glaubwürdigkeit und Projektkontext.">
             <input className="form-input" value={positioningDraft.founded} onChange={event => setPositioningDraft(prev => ({ ...prev, founded: event.target.value }))} />
           </FormField>
           <FormField label="Hauptsitz" hint="Wichtig für Marktbezug, Regionen und Lokalisierung.">
@@ -463,7 +465,7 @@ export default function SetupProjectPage() {
             <FormField label="Primärmarkt" hint="Euer zentraler Startmarkt. Daran richtet sich der erste Setup-Fokus aus.">
               <input className="form-input" value={positioningDraft.primaryMarket} onChange={event => setPositioningDraft(prev => ({ ...prev, primaryMarket: event.target.value }))} />
             </FormField>
-            <FormField label="Zielunternehmensgröße" hint="Vor allem für B2B wichtig. Bei B2C kannst du hier Segmentgrößen definieren.">
+            <FormField label="Zielprojektgröße" hint="Vor allem für B2B wichtig. Bei B2C kannst du hier Segmentgrößen definieren.">
               <input className="form-input" value={positioningDraft.targetCompanySize} onChange={event => setPositioningDraft(prev => ({ ...prev, targetCompanySize: event.target.value }))} />
             </FormField>
           </div>
@@ -703,10 +705,10 @@ export default function SetupProjectPage() {
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-          <NextStepCard href="/touchpoints" icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen später sauber befüllt werden können." />
-          <NextStepCard href="/positioning" icon={Target} title="Positionierung verfeinern" description="Werte, Sprachregeln und Keywords mit dem Team scharfziehen, bevor die ersten Inhalte entstehen." />
-          <NextStepCard href="/audiences" icon={Users2} title="Weitere Personas ergänzen" description="Sobald das Kernprojekt steht, können weitere Segmente oder Buying Center aufgenommen werden." />
-          <NextStepCard href="/journeys" icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und später Aufgaben stufenweise pro Phase an die Hülle andocken." />
+          <NextStepCard href={companyPath('/touchpoints')} icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen später sauber befüllt werden können." />
+          <NextStepCard href={companyPath('/positioning')} icon={Target} title="Positionierung verfeinern" description="Werte, Sprachregeln und Keywords mit dem Team scharfziehen, bevor die ersten Inhalte entstehen." />
+          <NextStepCard href={companyPath('/audiences')} icon={Users2} title="Weitere Personas ergänzen" description="Sobald das Kernprojekt steht, können weitere Segmente oder Buying Center aufgenommen werden." />
+          <NextStepCard href={companyPath('/journeys')} icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und später Aufgaben stufenweise pro Phase an die Hülle andocken." />
         </div>
       </section>
 
@@ -820,7 +822,7 @@ export default function SetupProjectPage() {
               )}
               {currentStep === 'company' && (
                 <button className="btn btn-primary" onClick={saveCompanyStep} disabled={busyStep === 'company'}>
-                  {busyStep === 'company' ? 'Speichere...' : 'Unternehmensbasis speichern'}
+                  {busyStep === 'company' ? 'Speichere...' : 'Projektbasis speichern'}
                 </button>
               )}
               {currentStep === 'audience' && (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Task, ContentItem } from '../types';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useProjectRouter } from '../hooks/useProjectRouter';
 import {
     ArrowLeft, Calendar, Users, Edit, MoreVertical, Bot, Tag, Lock, Plus, X,
     ChevronLeft, ChevronRight, Instagram, Youtube, Linkedin, Facebook, Globe,
@@ -10,6 +11,7 @@ import {
 import { useData } from '../context/DataContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
 import TaskDetailModal from '../components/TaskDetailModal';
@@ -26,8 +28,11 @@ import { CampaignOverviewTab, NewCreativeModal } from '../components/CampaignDet
 export default function CampaignDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const router = useRouter();
+    const router = useProjectRouter();
     const { can } = useAuth();
+    const { language } = useLanguage();
+    const isGerman = language === 'de';
+    const locale = isGerman ? 'de-DE' : 'en-US';
     const { campaigns, audiences, users: testUsers, touchpoints, deleteCampaign, loading } = useData();
     const canDelete = can('canDeleteItems');
     const campaign = campaigns.find(c => c.id === id);
@@ -98,7 +103,7 @@ export default function CampaignDetailPage() {
             <div className="animate-in">
                 <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
                     <div className="empty-state-icon">⏳</div>
-                    <div className="empty-state-title">Kampagne wird geladen…</div>
+                    <div className="empty-state-title">{isGerman ? 'Kampagne wird geladen...' : 'Loading campaign...'}</div>
                 </div>
             </div>
         );
@@ -108,12 +113,12 @@ export default function CampaignDetailPage() {
         return (
             <div className="animate-in">
                 <button className="btn btn-ghost" onClick={() => router.push('/campaigns')} style={{ marginBottom: '16px' }}>
-                    <ArrowLeft size={16} /> Zurück zu Kampagnen
+                    <ArrowLeft size={16} /> {isGerman ? 'Zurueck zu Kampagnen' : 'Back to Campaigns'}
                 </button>
                 <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
                     <div className="empty-state-icon">🔍</div>
-                    <div className="empty-state-title">Kampagne nicht gefunden</div>
-                    <div className="empty-state-text">Die Kampagne mit der ID „{id}" existiert nicht.</div>
+                    <div className="empty-state-title">{isGerman ? 'Kampagne nicht gefunden' : 'Campaign Not Found'}</div>
+                    <div className="empty-state-text">{isGerman ? `Die Kampagne mit der ID "${id}" existiert nicht.` : `The campaign with ID "${id}" does not exist.`}</div>
                 </div>
             </div>
         );
@@ -124,7 +129,7 @@ export default function CampaignDetailPage() {
             {/* Back + Title */}
             <div style={{ marginBottom: '24px' }}>
                 <button className="btn btn-ghost" onClick={() => router.push('/campaigns')} style={{ marginBottom: '16px' }}>
-                    <ArrowLeft size={16} /> Zurück zu Kampagnen
+                    <ArrowLeft size={16} /> {isGerman ? 'Zurueck zu Kampagnen' : 'Back to Campaigns'}
                 </button>
                 <div className="page-header" style={{ marginBottom: 0 }}>
                     <div className="page-header-left">
@@ -135,27 +140,27 @@ export default function CampaignDetailPage() {
                         <p className="page-subtitle">{campaign.description}</p>
                     </div>
                     <div className="page-header-actions">
-                        <PageHelp title="Kampagnen-Details">
-                            <p style={{ marginBottom: '12px' }}>Die Detailansicht einer Kampagne bündelt alle relevanten Workstreams zu diesem Projekt.</p>
+                        <PageHelp title={isGerman ? 'Kampagnen-Details' : 'Campaign Details'}>
+                            <p style={{ marginBottom: '12px' }}>{isGerman ? 'Die Detailansicht einer Kampagne buendelt alle relevanten Workstreams zu diesem Projekt.' : 'The campaign detail view bundles all relevant workstreams for this project.'}</p>
                             <ul className="help-list">
-                                <li><strong>Übersicht:</strong> Eine Zusammenfassung der zugehörigen Zielgruppen, SEO-Keywords, sowie des Timings und der Zielsetzung der Kampagne.</li>
-                                <li><strong>Manager & Team:</strong> Jede Kampagne zeigt den verantwortlichen Manager und die eingeplanten Team-Mitglieder. So ist auf einen Blick klar, wer die Kampagne leitet und wer daran arbeitet.</li>
-                                <li><strong>Creatives & Aufgaben (Workflow):</strong> Hier siehst du das Mini-Kanban Board exklusiv für diese Kampagne. Ideal für Manager, um die Design-Realisierung zu überwachen.</li>
-                                <li><strong>Content (Redaktion):</strong> Hier siehst du alle geplanten Beiträge (Social Media, Blog, E-Mail) für diese Kampagne. Verknüpfe direkt Content mit den dazugehörigen Aufgaben.</li>
-                                <li><strong>Performance:</strong> Analytics und Spendings-Tracking speziell heruntergebrochen auf die laufende Kampagne. Die <strong>Kanal-KPIs</strong> zeigen Impressionen, Clicks, CTR, Conversions, Spend, CPC und CPA pro verknüpftem Touchpoint/Kanal – so siehst du auf einen Blick, welcher Kanal am besten performt.</li>
+                                <li><strong>{isGerman ? 'Uebersicht:' : 'Overview:'}</strong> {isGerman ? 'Zusammenfassung von Zielgruppen, Keywords, Timing und Kampagnenzielen.' : 'Summary of linked audiences, keywords, timing, and campaign goals.'}</li>
+                                <li><strong>{isGerman ? 'Manager & Team:' : 'Manager & Team:'}</strong> {isGerman ? 'Zeigt verantwortlichen Manager und beteiligte Team-Mitglieder.' : 'Shows responsible manager and planned team members.'}</li>
+                                <li><strong>{isGerman ? 'Creatives & Aufgaben:' : 'Creatives & Tasks:'}</strong> {isGerman ? 'Mini-Kanban fuer kreative Umsetzung und Produktionsfortschritt.' : 'Mini kanban for creative execution and production progress.'}</li>
+                                <li><strong>{isGerman ? 'Content:' : 'Content:'}</strong> {isGerman ? 'Alle geplanten Beitraege fuer diese Kampagne mit Aufgaben-Verknuepfung.' : 'All planned content for this campaign with task linkage.'}</li>
+                                <li><strong>{isGerman ? 'Performance:' : 'Performance:'}</strong> {isGerman ? 'Kanal-KPIs mit Impressionen, Klicks, CTR, Conversions und Spend.' : 'Channel KPIs for impressions, clicks, CTR, conversions, and spend.'}</li>
                             </ul>
                         </PageHelp>
                         {canDelete && (
                             <button className="btn btn-ghost" style={{ color: '#ef4444' }} onClick={async () => {
-                                if (window.confirm('Möchtest du diese Kampagne wirklich löschen?')) {
+                                if (window.confirm(isGerman ? 'Moechtest du diese Kampagne wirklich loeschen?' : 'Do you really want to delete this campaign?')) {
                                     await deleteCampaign(campaign.id);
                                     router.push('/campaigns');
                                 }
                             }}>
-                                <Trash2 size={16} /> Löschen
+                                <Trash2 size={16} /> {isGerman ? 'Loeschen' : 'Delete'}
                             </button>
                         )}
-                        <button className="btn btn-secondary"><Edit size={16} /> Bearbeiten</button>
+                        <button className="btn btn-secondary"><Edit size={16} /> {isGerman ? 'Bearbeiten' : 'Edit'}</button>
                         <button className="btn btn-ghost btn-icon"><MoreVertical size={16} /></button>
                     </div>
                 </div>
@@ -163,7 +168,7 @@ export default function CampaignDetailPage() {
 
             {/* Status Pipeline */}
             <div className="card" style={{ marginBottom: '24px' }}>
-                <div className="card-title" style={{ marginBottom: '16px' }}>Kampagnen-Status</div>
+                <div className="card-title" style={{ marginBottom: '16px' }}>{isGerman ? 'Kampagnen-Status' : 'Campaign Status'}</div>
                 <div style={{ display: 'flex', gap: '4px' }}>
                     {statusSteps.map((step, idx) => (
                         <div key={step} style={{ flex: 1, textAlign: 'center' }}>
@@ -176,7 +181,7 @@ export default function CampaignDetailPage() {
 
             {/* Tabs */}
             <div className="tabs" style={{ marginBottom: '24px' }}>
-                {[{ id: 'overview', label: 'Übersicht' }, { id: 'creatives', label: `Creatives & Aufgaben (${creatives.length})` }, { id: 'content', label: `Content (${campaignContents.length})` }, { id: 'performance', label: 'Performance' }].map(t => (
+                {[{ id: 'overview', label: isGerman ? 'Uebersicht' : 'Overview' }, { id: 'creatives', label: isGerman ? `Creatives & Aufgaben (${creatives.length})` : `Creatives & Tasks (${creatives.length})` }, { id: 'content', label: `Content (${campaignContents.length})` }, { id: 'performance', label: 'Performance' }].map(t => (
                     <button key={t.id} className={`tab ${activeTab === t.id ? 'active' : ''}`} onClick={() => setActiveTab(t.id)}>{t.label}</button>
                 ))}
             </div>
@@ -208,9 +213,9 @@ export default function CampaignDetailPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div>
                             <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>Creatives & Aufgaben</h2>
-                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>Erstelle, reviewe und veröffentliche Inhalte für diese Kampagne</p>
+                            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? 'Erstelle, reviewe und veroeffentliche Inhalte fuer diese Kampagne' : 'Create, review, and publish assets for this campaign'}</p>
                         </div>
-                        {can('canCreateCampaignTasks') && <button className="btn btn-primary" onClick={() => setShowNewCreativeModal(true)}><Plus size={16} /> Neues Creative</button>}
+                        {can('canCreateCampaignTasks') && <button className="btn btn-primary" onClick={() => setShowNewCreativeModal(true)}><Plus size={16} /> {isGerman ? 'Neues Creative' : 'New Creative'}</button>}
                     </div>
 
                     {/* Workflow Legend */}
@@ -229,7 +234,7 @@ export default function CampaignDetailPage() {
                     {/* All-Platform Creatives */}
                     {allPlatformCreatives.length > 0 && (
                         <div style={{ marginBottom: '24px' }}>
-                            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><Globe size={14} /> Übergreifende Aufgaben (alle Plattformen)</div>
+                            <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><Globe size={14} /> {isGerman ? 'Uebergreifende Aufgaben (alle Plattformen)' : 'Cross-platform tasks (all platforms)'}</div>
                             <div style={{ display: 'grid', gap: '12px' }}>
                                 {allPlatformCreatives.map(c => <CreativeCard key={c.id} creative={c} onStatusChange={handleStatusChange} onAnalyze={handleAnalyze} onClick={() => setSelectedTask(c)} />)}
                             </div>
@@ -252,7 +257,7 @@ export default function CampaignDetailPage() {
                     })}
 
                     {creatives.length === 0 && (
-                        <div className="card"><div className="empty-state"><div className="empty-state-icon">🎨</div><div className="empty-state-title">Noch keine Creatives</div><div className="empty-state-text">Erstelle dein erstes Creative, um den KI-gestützten Workflow zu starten.</div></div></div>
+                        <div className="card"><div className="empty-state"><div className="empty-state-icon">🎨</div><div className="empty-state-title">{isGerman ? 'Noch keine Creatives' : 'No Creatives Yet'}</div><div className="empty-state-text">{isGerman ? 'Erstelle dein erstes Creative, um den KI-gestuetzten Workflow zu starten.' : 'Create your first creative to start the AI-supported workflow.'}</div></div></div>
                     )}
                 </>
             )}
@@ -261,17 +266,17 @@ export default function CampaignDetailPage() {
             {activeTab === 'content' && (
                 <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 600 }}>Kampagnen-Content ({campaignContents.length})</h3>
+                        <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 600 }}>{isGerman ? `Kampagnen-Content (${campaignContents.length})` : `Campaign Content (${campaignContents.length})`}</h3>
                         <button className="btn btn-primary btn-sm" onClick={() => setShowNewCampaignContent(true)}>
-                            <Plus size={14} /> Content hinzufügen
+                            <Plus size={14} /> {isGerman ? 'Content hinzufuegen' : 'Add Content'}
                         </button>
                     </div>
                     {campaignContents.length === 0 ? (
                         <div className="card">
                             <div className="empty-state">
                                 <div className="empty-state-icon">📄</div>
-                                <div className="empty-state-title">Noch kein Content</div>
-                                <div className="empty-state-text">Erstelle Content-Einträge für diese Kampagne, um die Redaktionsplanung zu starten.</div>
+                                <div className="empty-state-title">{isGerman ? 'Noch kein Content' : 'No Content Yet'}</div>
+                                <div className="empty-state-text">{isGerman ? 'Erstelle Content-Eintraege fuer diese Kampagne, um die Redaktionsplanung zu starten.' : 'Create content items for this campaign to start editorial planning.'}</div>
                             </div>
                         </div>
                     ) : (
@@ -301,9 +306,9 @@ export default function CampaignDetailPage() {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
                                             <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.6rem' }}>{cnt.platform}</span>
                                             {hasTasks ? (
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)' }}>✅ {cnt.taskIds.length} Aufgabe(n)</span>
+                                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)' }}>✅ {cnt.taskIds.length} {isGerman ? 'Aufgabe(n)' : 'task(s)'}</span>
                                             ) : (
-                                                <span style={{ fontSize: 'var(--font-size-xs)', color: '#ef4444', fontWeight: 600 }}>⚠ Keine Aufgaben</span>
+                                                <span style={{ fontSize: 'var(--font-size-xs)', color: '#ef4444', fontWeight: 600 }}>⚠ {isGerman ? 'Keine Aufgaben' : 'No Tasks'}</span>
                                             )}
                                         </div>
                                     </div>
@@ -325,9 +330,9 @@ export default function CampaignDetailPage() {
                 <>
                     {/* Aggregate KPIs */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-                        <div className="stat-card success"><span className="stat-card-label">Impressionen</span><span className="stat-card-value">{campaign.kpis.impressions.toLocaleString('de-DE')}</span></div>
-                        <div className="stat-card info"><span className="stat-card-label">Clicks</span><span className="stat-card-value">{campaign.kpis.clicks.toLocaleString('de-DE')}</span></div>
-                        <div className="stat-card warning"><span className="stat-card-label">Conversions</span><span className="stat-card-value">{campaign.kpis.conversions.toLocaleString('de-DE')}</span></div>
+                        <div className="stat-card success"><span className="stat-card-label">{isGerman ? 'Impressionen' : 'Impressions'}</span><span className="stat-card-value">{campaign.kpis.impressions.toLocaleString(locale)}</span></div>
+                        <div className="stat-card info"><span className="stat-card-label">{isGerman ? 'Klicks' : 'Clicks'}</span><span className="stat-card-value">{campaign.kpis.clicks.toLocaleString(locale)}</span></div>
+                        <div className="stat-card warning"><span className="stat-card-label">{isGerman ? 'Conversions' : 'Conversions'}</span><span className="stat-card-value">{campaign.kpis.conversions.toLocaleString(locale)}</span></div>
                         <div className="stat-card primary"><span className="stat-card-label">CTR</span><span className="stat-card-value">{campaign.kpis.ctr}%</span></div>
                     </div>
 
@@ -337,15 +342,15 @@ export default function CampaignDetailPage() {
                             <ChannelKpiSection
                                 channelKpis={campaign.channelKpis}
                                 touchpoints={touchpoints}
-                                title="Performance nach Kanal / Touchpoint"
+                                title={isGerman ? 'Performance nach Kanal / Touchpoint' : 'Performance by Channel / Touchpoint'}
                             />
                         </div>
                     ) : (
                         <div className="card">
                             <div className="empty-state">
                                 <div className="empty-state-icon">📊</div>
-                                <div className="empty-state-title">Keine Kanal-KPIs</div>
-                                <div className="empty-state-text">Für diese Kampagne liegen noch keine kanalspezifischen Performance-Daten vor.</div>
+                                <div className="empty-state-title">{isGerman ? 'Keine Kanal-KPIs' : 'No Channel KPIs'}</div>
+                                <div className="empty-state-text">{isGerman ? 'Fuer diese Kampagne liegen noch keine kanalspezifischen Performance-Daten vor.' : 'No channel-specific performance data is available for this campaign yet.'}</div>
                             </div>
                         </div>
                     )}
