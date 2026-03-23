@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useRouter } from 'next/navigation';
+import { useCompanyRouter } from '../hooks/useCompanyRouter';
 import {
   Megaphone, DollarSign, Clock, UserPlus, ArrowRightLeft,
   Sparkles, FileCheck, ThumbsUp, Globe, Users, TrendingUp,
@@ -52,7 +52,7 @@ function timeAgo(dateStr: string, language: 'de' | 'en'): string {
 }
 
 export default function NotificationItem({ notification, onMarkRead, onArchive, onNavigate }: Props) {
-  const router = useRouter();
+  const router = useCompanyRouter();
   const { language } = useLanguage();
   const { icon: Icon, color } = ICON_MAP[notification.type] ?? ICON_MAP.system_alert;
   const priorityClass = PRIORITY_CLASSES[notification.priority] ?? '';

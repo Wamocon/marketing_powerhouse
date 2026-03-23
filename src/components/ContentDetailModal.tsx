@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useCompanyPath } from '../hooks/useCompanyRouter';
 import { Calendar, FileText, CheckCircle, Plus, Clock, User, Edit2, Save, X, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
@@ -23,6 +24,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const { updateContent, deleteContent } = useContents();
     const { tasks, addTask } = useTasks();
     const { campaigns, touchpoints } = useData();
+    const companyPath = useCompanyPath();
     const [isEditing, setIsEditing] = useState(false);
     const [edited, setEdited] = useState({ ...content });
     const [showNewTask, setShowNewTask] = useState(false);
@@ -285,9 +287,9 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                 ) : (
                     <>
                         {content.campaignId && (
-                            <Link href={`/campaigns/${content.campaignId}`} className="btn btn-primary">Zur Kampagne →</Link>
+                            <Link href={companyPath(`/campaigns/${content.campaignId}`)} className="btn btn-primary">Zur Kampagne →</Link>
                         )}
-                        <Link href="/content" className="btn btn-secondary">Zum Kalender →</Link>
+                        <Link href={companyPath('/content')} className="btn btn-secondary">Zum Kalender →</Link>
                     </>
                 )}
             </div>

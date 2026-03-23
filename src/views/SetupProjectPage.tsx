@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useCompanyRouter, useCompanyPath } from '../hooks/useCompanyRouter';
 import {
   ArrowRight,
   Building2,
@@ -126,7 +127,8 @@ function toJourneyFormState(audience?: Audience | null, stages?: JourneyStage[],
 }
 
 export default function SetupProjectPage() {
-  const router = useRouter();
+  const router = useCompanyRouter();
+  const companyPath = useCompanyPath();
   const searchParams = useSearchParams();
   const { currentUser } = useAuth();
   const { activeCompany } = useCompany();
@@ -703,10 +705,10 @@ export default function SetupProjectPage() {
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
-          <NextStepCard href="/touchpoints" icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen später sauber befüllt werden können." />
-          <NextStepCard href="/positioning" icon={Target} title="Positionierung verfeinern" description="Werte, Sprachregeln und Keywords mit dem Team scharfziehen, bevor die ersten Inhalte entstehen." />
-          <NextStepCard href="/audiences" icon={Users2} title="Weitere Personas ergänzen" description="Sobald das Kernprojekt steht, können weitere Segmente oder Buying Center aufgenommen werden." />
-          <NextStepCard href="/journeys" icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und später Aufgaben stufenweise pro Phase an die Hülle andocken." />
+          <NextStepCard href={companyPath('/touchpoints')} icon={Radio} title="Erste Touchpoints anlegen" description="Mindestens einen Hauptkanal pro Persona festlegen, damit Journey-Phasen später sauber befüllt werden können." />
+          <NextStepCard href={companyPath('/positioning')} icon={Target} title="Positionierung verfeinern" description="Werte, Sprachregeln und Keywords mit dem Team scharfziehen, bevor die ersten Inhalte entstehen." />
+          <NextStepCard href={companyPath('/audiences')} icon={Users2} title="Weitere Personas ergänzen" description="Sobald das Kernprojekt steht, können weitere Segmente oder Buying Center aufgenommen werden." />
+          <NextStepCard href={companyPath('/journeys')} icon={Map} title="Journey weiter ausbauen" description="Touchpoints, Inhalte und später Aufgaben stufenweise pro Phase an die Hülle andocken." />
         </div>
       </section>
 

@@ -1,7 +1,7 @@
 'use client';
 
-import DashboardPage from '@/views/DashboardPage';
+import CompanySelectPage from '@/views/CompanySelectPage';
 
 export default function Page() {
-    return <DashboardPage />;
+    return <CompanySelectPage />;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCompanyRouter } from '../hooks/useCompanyRouter';
 import {
     Building2, Target, Megaphone, Globe,
     Lock, Plus, X,
@@ -11,7 +11,7 @@ import { SectionHeader, Field, CommsContent } from '../components/PositioningCom
 
 export default function PositioningPage() {
     const { can } = useAuth();
-    const router = useRouter();
+    const router = useCompanyRouter();
     const { positioning, companyKeywords, savePositioning, addKeyword, deleteKeyword } = useData();
     const [pos, setPos] = useState(positioning);
     const [editSection, setEditSection] = useState<string | null>(null);

@@ -37,7 +37,7 @@ export default function CompanySelectPage() {
     const handleCreateCompany = async (data: { name: string; description?: string; industry?: string }) => {
         const createdCompany = await createCompany(data);
         await selectCompany(createdCompany.id);
-        router.push('/setup?new=1');
+        router.push(`/company/${createdCompany.id}/setup?new=1`);
         return createdCompany;
     };
 
@@ -217,7 +217,10 @@ export default function CompanySelectPage() {
                                 return (
                                     <button
                                         key={company.id}
-                                        onClick={() => selectCompany(company.id)}
+                                        onClick={async () => {
+                                            await selectCompany(company.id);
+                                            router.push(`/company/${company.id}`);
+                                        }}
                                         style={{
                                             background: 'var(--bg-surface)', border: '1px solid var(--border-color)',
                                             borderRadius: 'var(--radius-lg)', padding: '20px',

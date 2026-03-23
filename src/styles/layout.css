@@ -204,8 +204,20 @@
   color: var(--text-secondary);
 }
 
+.header-breadcrumb-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.header-breadcrumb-link:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
 .header-breadcrumb-separator {
   color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
 .header-breadcrumb-current {

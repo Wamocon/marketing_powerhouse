@@ -1,48 +1,89 @@
-import { usePathname, useRouter } from 'next/navigation';
-import { HelpCircle } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { HelpCircle, ChevronRight } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
+import { useCompany } from '../context/CompanyContext';
+import { useCompanyRouter } from '../hooks/useCompanyRouter';
 
-const routeTitles: Record<string, { breadcrumb: { de: string; en: string }; title: { de: string; en: string } }> = {
-    '/': { breadcrumb: { de: 'Dashboard', en: 'Dashboard' }, title: { de: 'Uebersicht', en: 'Overview' } },
-    '/campaigns': { breadcrumb: { de: 'Kampagnen', en: 'Campaigns' }, title: { de: 'Kampagnen-Management', en: 'Campaign management' } },
-    '/audiences': { breadcrumb: { de: 'Zielgruppen', en: 'Audiences' }, title: { de: 'Zielgruppen & Personas', en: 'Audiences & personas' } },
-    '/journeys': { breadcrumb: { de: 'Journey', en: 'Journey' }, title: { de: 'Customer Journey Map', en: 'Customer journey map' } },
-    '/touchpoints': { breadcrumb: { de: 'Touchpoints', en: 'Touchpoints' }, title: { de: 'Kanaele & Touchpoints', en: 'Channels & touchpoints' } },
-    '/content': { breadcrumb: { de: 'Content-Kalender', en: 'Content calendar' }, title: { de: 'Redaktionsplanung', en: 'Editorial planning' } },
-    '/budget': { breadcrumb: { de: 'Budget', en: 'Budget' }, title: { de: 'Budget & Controlling', en: 'Budget & controlling' } },
-    '/tasks': { breadcrumb: { de: 'Aufgaben', en: 'Tasks' }, title: { de: 'Aufgabenverwaltung', en: 'Task management' } },
-    '/positioning': { breadcrumb: { de: 'Positionierung', en: 'Positioning' }, title: { de: 'Digitale Positionierung', en: 'Digital positioning' } },
-    '/setup': { breadcrumb: { de: 'Projekt-Setup', en: 'Project setup' }, title: { de: 'Gefuehrtes Projekt-Setup', en: 'Guided project setup' } },
-    '/settings': { breadcrumb: { de: 'Einstellungen', en: 'Settings' }, title: { de: 'Workspace-Einstellungen', en: 'Workspace settings' } },
+const sectionTitles: Record<string, { de: string; en: string }> = {
+    'campaigns': { de: 'Kampagnen', en: 'Campaigns' },
+    'audiences': { de: 'Zielgruppen', en: 'Audiences' },
+    'journeys': { de: 'Journey', en: 'Journey' },
+    'touchpoints': { de: 'Touchpoints', en: 'Touchpoints' },
+    'content': { de: 'Content-Kalender', en: 'Content calendar' },
+    'content-overview': { de: 'Content-Uebersicht', en: 'Content overview' },
+    'budget': { de: 'Budget', en: 'Budget' },
+    'tasks': { de: 'Aufgaben', en: 'Tasks' },
+    'positioning': { de: 'Positionierung', en: 'Positioning' },
+    'setup': { de: 'Projekt-Setup', en: 'Project setup' },
+    'settings': { de: 'Einstellungen', en: 'Settings' },
+    'manual': { de: 'Anleitung', en: 'Manual' },
 };
 
 export default function Header() {
     const pathname = usePathname();
-    const router = useRouter();
+    const router = useCompanyRouter();
     const { language, setLanguage } = useLanguage();
-    const currentRoute = routeTitles[pathname] || {
-        breadcrumb: { de: 'Seite', en: 'Page' },
-        title: { de: '', en: '' },
-    };
-    const isCampaignDetail = pathname.startsWith('/campaigns/') && pathname !== '/campaigns';
+    const { activeCompany } = useCompany();
+
+    // Parse breadcrumb segments from /company/[id]/section/[detailId]
+    const companyBase = activeCompany ? `/company/${activeCompany.id}` : '/';
+    const pathAfterCompany = pathname.startsWith('/company/')
+        ? pathname.replace(/^\/company\/[^/]+/, '')
+        : pathname;
+    const segments = pathAfterCompany.split('/').filter(Boolean);
+    // segments e.g. [] for dashboard, ['campaigns'] for list, ['campaigns', 'abc'] for detail
+
+    const section = segments[0] || null;
+    const hasDetail = segments.length > 1;
+    const sectionTitle = section ? (sectionTitles[section]?.[language] ?? section) : null;
 
     return (
         <header className="header">
             <div className="header-left">
-                <div className="header-breadcrumb">
-                    <span>Momentum</span>
-                    <span className="header-breadcrumb-separator">/</span>
-                    {isCampaignDetail ? (
+                <nav className="header-breadcrumb" aria-label="Breadcrumb">
+                    {/* Level 1: Unternehmensübersicht */}
+                    <Link href="/" className="header-breadcrumb-link">
+                        {language === 'en' ? 'Company overview' : 'Unternehmensübersicht'}
+                    </Link>
+
+                    {/* Level 2: Company name (= Dashboard) */}
+                    {activeCompany && (
                         <>
-                            <span>{language === 'en' ? 'Campaigns' : 'Kampagnen'}</span>
-                            <span className="header-breadcrumb-separator">/</span>
-                            <span className="header-breadcrumb-current">{language === 'en' ? 'Detail' : 'Detail'}</span>
+                            <ChevronRight size={14} className="header-breadcrumb-separator" />
+                            {section ? (
+                                <Link href={companyBase} className="header-breadcrumb-link">
+                                    {activeCompany.name}
+                                </Link>
+                            ) : (
+                                <span className="header-breadcrumb-current">{activeCompany.name}</span>
+                            )}
                         </>
-                    ) : (
-                        <span className="header-breadcrumb-current">{currentRoute.breadcrumb[language]}</span>
                     )}
-                </div>
+
+                    {/* Level 3: Section (Kampagnen, Aufgaben, etc.) */}
+                    {sectionTitle && (
+                        <>
+                            <ChevronRight size={14} className="header-breadcrumb-separator" />
+                            {hasDetail ? (
+                                <Link href={`${companyBase}/${section}`} className="header-breadcrumb-link">
+                                    {sectionTitle}
+                                </Link>
+                            ) : (
+                                <span className="header-breadcrumb-current">{sectionTitle}</span>
+                            )}
+                        </>
+                    )}
+
+                    {/* Level 4: Detail */}
+                    {hasDetail && (
+                        <>
+                            <ChevronRight size={14} className="header-breadcrumb-separator" />
+                            <span className="header-breadcrumb-current">Detail</span>
+                        </>
+                    )}
+                </nav>
             </div>
 
             <div className="header-right">

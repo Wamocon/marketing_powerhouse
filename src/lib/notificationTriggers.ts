@@ -35,7 +35,7 @@ export async function notifyTaskAssigned(
       body: 'Dir wurde eine neue Aufgabe zugewiesen.',
       entityType: 'task',
       entityId: opts.taskId,
-      actionUrl: '/tasks',
+      actionUrl: `/company/${opts.companyId}/tasks`,
       triggeredByUserId: opts.triggeredByUserId,
     });
   } catch (err) {
@@ -70,7 +70,7 @@ export async function notifyTaskStatusChanged(
         body: `Status geändert von ${statusLabels[opts.oldStatus] ?? opts.oldStatus} zu ${label}.`,
         entityType: 'task',
         entityId: opts.taskId,
-        actionUrl: '/tasks',
+        actionUrl: `/company/${opts.companyId}/tasks`,
         triggeredByUserId: opts.triggeredByUserId,
       });
     } catch (err) {
@@ -100,7 +100,7 @@ export async function notifyAiGenerationComplete(
         : 'Bei der KI-Generierung ist ein Fehler aufgetreten.',
       entityType: 'task',
       entityId: opts.taskId,
-      actionUrl: '/tasks',
+      actionUrl: `/company/${opts.companyId}/tasks`,
       priority: opts.success ? 'normal' : 'high',
     });
   } catch (err) {
@@ -133,7 +133,7 @@ export async function notifyCampaignStatusChanged(
         title: `Kampagne „${opts.campaignName}" → ${label}`,
         entityType: 'campaign',
         entityId: opts.campaignId,
-        actionUrl: `/campaigns/${opts.campaignId}`,
+        actionUrl: `/company/${opts.companyId}/campaigns/${opts.campaignId}`,
         triggeredByUserId: opts.triggeredByUserId,
       });
     } catch (err) {
@@ -160,7 +160,7 @@ export async function notifyCampaignCreated(
         body: 'Eine neue Kampagne wurde angelegt.',
         entityType: 'campaign',
         entityId: opts.campaignId,
-        actionUrl: `/campaigns/${opts.campaignId}`,
+        actionUrl: `/company/${opts.companyId}/campaigns/${opts.campaignId}`,
         triggeredByUserId: opts.triggeredByUserId,
       });
     } catch (err) {
@@ -197,7 +197,7 @@ export async function notifyBudgetAlert(
           : 'Das Budget nähert sich dem Limit. Bitte kontrolliere die Ausgaben.',
         entityType: 'campaign',
         entityId: opts.campaignId,
-        actionUrl: '/budget',
+        actionUrl: `/company/${opts.companyId}/budget`,
       });
     } catch (err) {
       console.warn('[notifyBudgetAlert] failed:', err);
@@ -236,7 +236,7 @@ export async function notifyContentStatusChanged(
         title: `Content „${opts.contentTitle}" → ${statusLabels[opts.newStatus] ?? opts.newStatus}`,
         entityType: 'content',
         entityId: opts.contentId,
-        actionUrl: '/content',
+        actionUrl: `/company/${opts.companyId}/content`,
         triggeredByUserId: opts.triggeredByUserId,
       });
     } catch (err) {
@@ -262,7 +262,7 @@ export async function notifyTeamMemberAdded(
         type: 'team_activity',
         title: `Neues Team-Mitglied: ${opts.newMemberName}`,
         body: `${opts.newMemberName} wurde dem Team hinzugefügt.`,
-        actionUrl: '/settings',
+        actionUrl: `/company/${opts.companyId}/settings`,
         triggeredByUserId: opts.triggeredByUserId,
       });
     } catch (err) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useCompanyPath } from '../hooks/useCompanyRouter';
 import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
@@ -23,6 +24,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
     const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
+    const companyPath = useCompanyPath();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
     const [aiFeedbackText, setAiFeedbackText] = useState('');
@@ -331,7 +333,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                             <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Speichern</button>
                         </>
                     ) : (
-                        <Link href={`/campaigns/${task.campaignId}`} className="btn btn-primary w-full" style={{ justifyContent: 'center' }}>
+                        <Link href={companyPath(`/campaigns/${task.campaignId}`)} className="btn btn-primary w-full" style={{ justifyContent: 'center' }}>
                             Zur Kampagne navigieren <ArrowRight size={16} />
                         </Link>
                     )}

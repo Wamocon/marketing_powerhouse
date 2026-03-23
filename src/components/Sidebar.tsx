@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
@@ -86,6 +86,9 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     const { contents } = useContents();
     const { language } = useLanguage();
     const pathname = usePathname();
+    const router = useRouter();
+
+    const companyBase = activeCompany ? `/company/${activeCompany.id}` : '';
 
     const badgeCounts: Record<BadgeKey, number> = {
         campaigns: campaigns.length,
@@ -97,9 +100,21 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     };
     const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
 
+    /** Resolve nav item path with company prefix */
+    const resolveHref = (itemPath: string) => {
+        if (itemPath === '/') return companyBase || '/';
+        return `${companyBase}${itemPath}`;
+    };
+
     const isActivePath = (itemPath: string) => {
-        if (itemPath === '/') return pathname === '/';
-        return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+        const resolved = resolveHref(itemPath);
+        if (itemPath === '/') return pathname === resolved;
+        return pathname === resolved || pathname.startsWith(`${resolved}/`);
+    };
+
+    const handleSwitchCompany = () => {
+        deselectCompany();
+        router.push('/');
     };
 
     // Filtert Einträge nach Rolle
@@ -111,8 +126,8 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
     return (
         <aside className="sidebar">
-            {/* Company Header */}
-            <div className="sidebar-header">
+            {/* Company Header — clickable logo navigates home */}
+            <Link href="/" className="sidebar-header" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="sidebar-logo" style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -127,7 +142,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                     <div className="sidebar-brand-name">Momentum</div>
                     <div className="sidebar-brand-sub">Marketing OS</div>
                 </div>
-            </div>
+            </Link>
 
             {/* Active Company Indicator */}
             {activeCompany && (
@@ -148,7 +163,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                         </span>
                     </div>
                     <button
-                        onClick={deselectCompany}
+                        onClick={handleSwitchCompany}
                         style={{
                             display: 'flex', alignItems: 'center', gap: '4px',
                             fontSize: '0.6rem', color: 'var(--text-tertiary)',
@@ -205,7 +220,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                 return (
                                     <Link
                                         key={item.path}
-                                        href={item.path}
+                                        href={resolveHref(item.path)}
                                         className={`sidebar-link${isActivePath(item.path) ? ' active' : ''}`}
                                     >
                                         <Icon size={18} />

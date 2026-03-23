@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Task, ContentItem } from '../types';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useCompanyRouter } from '../hooks/useCompanyRouter';
 import {
     ArrowLeft, Calendar, Users, Edit, MoreVertical, Bot, Tag, Lock, Plus, X,
     ChevronLeft, ChevronRight, Instagram, Youtube, Linkedin, Facebook, Globe,
@@ -27,7 +28,7 @@ import { CampaignOverviewTab, NewCreativeModal } from '../components/CampaignDet
 export default function CampaignDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const router = useRouter();
+    const router = useCompanyRouter();
     const { can } = useAuth();
     const { language } = useLanguage();
     const isGerman = language === 'de';

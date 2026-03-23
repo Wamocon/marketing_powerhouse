@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCompanyRouter } from '../hooks/useCompanyRouter';
 import { Plus, Search, Calendar, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,7 @@ const statusConfig = {
 };
 
 export default function CampaignsPage() {
-    const router = useRouter();
+    const router = useCompanyRouter();
     const { can } = useAuth();
     const { language, locale } = useLanguage();
     const { campaigns, users } = useData();
