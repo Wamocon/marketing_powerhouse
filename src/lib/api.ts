@@ -1197,6 +1197,8 @@ export interface RegisterUserInput {
   phone: string;
   whatsappConsent: boolean;
   companyName?: string;
+  /** Optional plan ID to create subscription at registration. Defaults to starter plan. */
+  planId?: string;
 }
 
 export async function registerUser(input: RegisterUserInput): Promise<User> {
@@ -1248,6 +1250,11 @@ export async function registerUser(input: RegisterUserInput): Promise<User> {
   });
   await addCompanyMember(company.id, user.id, 'company_admin');
 
+  // Create subscription for the new company (defaults to starter if no planId given)
+  if (input.planId) {
+    await createSubscription(company.id, input.planId);
+  }
+
   return user;
 }
 
@@ -1269,15 +1276,25 @@ export async function fetchPlans(): Promise<Plan[]> {
 }
 
 export async function fetchSubscription(companyId: string): Promise<Subscription | null> {
+  // Fetch subscription (without FK join — PostgREST may not see the relationship)
   const { data, error } = await supabase
     .from('subscriptions')
-    .select('*, plans(*)')
+    .select('*')
     .eq('company_id', companyId)
     .single();
   if (error && error.code !== 'PGRST116') throw error; // PGRST116 = not found
   if (!data) return null;
   const sub = toCamelSubscription(data);
-  if (data.plans) sub.plan = toCamelPlan(data.plans as Record<string, unknown>);
+
+  // Manually fetch the associated plan
+  if (sub.planId) {
+    const { data: planData } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('id', sub.planId)
+      .single();
+    if (planData) sub.plan = toCamelPlan(planData as Record<string, unknown>);
+  }
   return sub;
 }
 

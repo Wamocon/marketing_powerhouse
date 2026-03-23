@@ -190,9 +190,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
         try {
             const previousSuggestion = task.aiSuggestion || '';
-            const feedbackPrompt = promptCtx
-                ? buildTaskPrompt({ ...promptCtx, task }) + `\n\nVORHERIGER ENTWURF:\n${previousSuggestion}\n\nFEEDBACK DES NUTZERS:\n${feedback}\n\nBitte überarbeite den Entwurf basierend auf dem Feedback.`
-                : `Überarbeite folgenden Entwurf:\n${previousSuggestion}\n\nFeedback: ${feedback}`;
+            // Rebuild full context prompt and append revision instructions
+            const basePrompt = promptCtx
+                ? buildTaskPrompt({ ...promptCtx, task })
+                : '';
+            const feedbackPrompt = basePrompt
+                ? `${basePrompt}\n\n---\n\n## REVISION ANGEFORDERT\n\nDer vorherige Entwurf wurde erstellt und muss überarbeitet werden.\n\n### VORHERIGER ENTWURF:\n${previousSuggestion}\n\n### FEEDBACK DES NUTZERS:\n${feedback}\n\n### ANWEISUNG:\nÜberarbeite den Entwurf BASIEREND auf dem Feedback. Behalte alles bei, was nicht kritisiert wurde. Ändere gezielt die angesprochenen Punkte. Halte dich weiterhin an alle Markenrichtlinien, die Wissensbasis und die Qualitätsstandards aus dem Original-Briefing. Liefere den vollständig überarbeiteten Output.`
+                : `Überarbeite folgenden Entwurf:\n${previousSuggestion}\n\nFeedback: ${feedback}\n\nLiefere den vollständig überarbeiteten Output.`;
 
             const result = await generateContent(feedbackPrompt);
 

@@ -1,10 +1,12 @@
 'use client';
-import { useState, type FormEvent } from 'react';
-import { Megaphone, BarChart3, Calendar, Wallet, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Megaphone, BarChart3, Calendar, Wallet, Eye, EyeOff, Check, Zap, Crown, Rocket } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import type { User } from '../types';
+import * as api from '../lib/api';
+import { formatPrice, getPlanHighlights, PLAN_SLUGS, type PlanSlug } from '../lib/pricing';
+import type { User, Plan } from '../types';
 
 const featureMap = {
     de: [
@@ -43,6 +45,20 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+
+    // Fetch plans for registration plan picker
+    useEffect(() => {
+        api.fetchPlans()
+            .then(p => {
+                setPlans(p.sort((a, b) => a.sortOrder - b.sortOrder));
+                // Default to Pro plan
+                const proPlan = p.find(pl => pl.slug === PLAN_SLUGS.PRO);
+                if (proPlan) setSelectedPlanId(proPlan.id);
+            })
+            .catch(() => {/* plans unavailable - registration proceeds without plan */});
+    }, []);
 
     const isEn = language === 'en';
     const text = isEn
@@ -190,6 +206,7 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                     password,
                     phone: phone.trim(),
                     whatsappConsent,
+                    planId: selectedPlanId || undefined,
                 });
                 setSuccessMessage(text.registrationSuccess);
             }
@@ -363,6 +380,59 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                                         disabled={isLoading}
                                     />
                                 </div>
+
+                                {/* ─── Plan Picker ─── */}
+                                {plans.length > 0 && (
+                                    <div style={{
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        padding: '12px',
+                                        background: 'var(--bg-surface)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px',
+                                    }}>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {isEn ? 'Choose your plan' : 'Wähle deinen Plan'}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            {plans.map(plan => {
+                                                const PlanIcon = plan.slug === 'ultimate' ? Rocket : plan.slug === 'pro' ? Crown : Zap;
+                                                const isSelected = selectedPlanId === plan.id;
+                                                const accent = plan.slug === 'ultimate' ? 'var(--color-accent)' : plan.slug === 'pro' ? 'var(--color-primary)' : 'var(--color-neutral)';
+                                                return (
+                                                    <button
+                                                        key={plan.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedPlanId(plan.id)}
+                                                        disabled={isLoading}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '8px 6px',
+                                                            borderRadius: 'var(--radius-md)',
+                                                            border: isSelected ? `2px solid ${accent}` : '1px solid var(--border-color)',
+                                                            background: isSelected ? `${accent}08` : 'transparent',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            transition: 'border-color 0.15s',
+                                                        }}
+                                                    >
+                                                        <PlanIcon size={14} style={{ color: accent }} />
+                                                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-primary)' }}>{plan.name}</span>
+                                                        <span style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>{formatPrice(plan.priceMonthly)}/{isEn ? 'mo' : 'Mo'}</span>
+                                                        {isSelected && <Check size={12} style={{ color: accent }} />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                                            {isEn ? 'You can change your plan anytime in settings.' : 'Du kannst deinen Plan jederzeit in den Einstellungen ändern.'}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div style={{
                                     border: '1px solid var(--border-color)',

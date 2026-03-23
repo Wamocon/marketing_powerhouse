@@ -3,6 +3,7 @@
 import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { CompanyProvider } from '@/context/CompanyContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { ContentProvider } from '@/context/ContentContext';
 import { TaskProvider } from '@/context/TaskContext';
 import { DataProvider } from '@/context/DataContext';
@@ -15,17 +16,19 @@ export default function Providers({ children }: { children: ReactNode }) {
         <AuthProvider>
             <LanguageProvider>
                 <CompanyProvider>
-                    <NotificationProvider>
-                        <DataProvider>
-                            <ContentProvider>
-                                <TaskProvider>
-                                    <PublishingProvider>
-                                        {children}
-                                    </PublishingProvider>
-                                </TaskProvider>
-                            </ContentProvider>
-                        </DataProvider>
-                    </NotificationProvider>
+                    <SubscriptionProvider>
+                        <NotificationProvider>
+                            <DataProvider>
+                                <ContentProvider>
+                                    <TaskProvider>
+                                        <PublishingProvider>
+                                            {children}
+                                        </PublishingProvider>
+                                    </TaskProvider>
+                                </ContentProvider>
+                            </DataProvider>
+                        </NotificationProvider>
+                    </SubscriptionProvider>
                 </CompanyProvider>
             </LanguageProvider>
         </AuthProvider>
