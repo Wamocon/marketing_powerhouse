@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Providers from './providers';
 import ClientShell from './client-shell';
 import '@/index.css';
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Providers>
                     <ClientShell>{children}</ClientShell>
                 </Providers>
+                <SpeedInsights />
             </body>
         </html>
     );
