@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
-    Settings, Users, Plug, Bell, Shield,
+    Settings, Users, Plug, Bell, Shield, CreditCard,
     Plus, Check, X, Lock, Trash2,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { useCompany } from '../context/CompanyContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import * as api from '../lib/api';
 import PageHelp from '../components/PageHelp';
+import PricingCards from '../components/PricingCards';
 import { NOTIFICATION_SETTING_TYPE_MAP, type NotificationType } from '../types';
+import { formatPrice } from '../lib/pricing';
 
 import { AdminSettings } from '../components/SettingsAdmin';
 
@@ -122,7 +125,15 @@ export default function SettingsPage() {
         updateMemberRole,
         removeMember,
     } = useCompany();
-    const [activeTab, setActiveTab] = useState('general');
+    const { subscription, currentPlan, plans, changePlan, loading: subLoading, currentPlanSlug } = useSubscription();
+    const [activeTab, setActiveTab] = useState(() => {
+        // Check URL for ?tab=subscription
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('tab') || 'general';
+        }
+        return 'general';
+    });
     const [wsName, setWsName] = useState('');
     const [wsDesc, setWsDesc] = useState('');
     const [savedMsg, setSavedMsg] = useState('');
@@ -332,6 +343,7 @@ export default function SettingsPage() {
 
     const tabs = [
         { id: 'general', label: language === 'en' ? 'General' : 'Allgemein', icon: Settings },
+        { id: 'subscription', label: language === 'en' ? 'Subscription' : 'Abonnement', icon: CreditCard },
         { id: 'team', label: language === 'en' ? 'Team overview' : 'Team-Uebersicht', icon: Users },
         { id: 'integrations', label: language === 'en' ? 'Integrations' : 'Integrationen', icon: Plug },
         { id: 'notifications', label: language === 'en' ? 'Notifications' : 'Benachrichtigungen', icon: Bell },
@@ -724,6 +736,85 @@ export default function SettingsPage() {
                         </div>
                     )}
 
+
+                    {/* ─── Abonnement / Subscription ─── */}
+                    {activeTab === 'subscription' && (
+                        <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {/* Current plan overview */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <div className="card-title">{language === 'en' ? 'Your current plan' : 'Dein aktueller Plan'}</div>
+                                </div>
+                                {subLoading ? (
+                                    <div style={{ padding: '16px', color: 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)' }}>
+                                        {language === 'en' ? 'Loading...' : 'Wird geladen...'}
+                                    </div>
+                                ) : currentPlan ? (
+                                    <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                                        <div style={{ flex: '1 1 200px' }}>
+                                            <div style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                                                {currentPlan.name}
+                                            </div>
+                                            <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+                                                {currentPlan.description}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                                                <div style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{language === 'en' ? 'Price' : 'Preis'}</div>
+                                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
+                                                        {formatPrice(currentPlan.priceMonthly)}<span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>/{language === 'en' ? 'month' : 'Monat'}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{language === 'en' ? 'Seats' : 'Plätze'}</div>
+                                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
+                                                        {companyMembers.length} / {currentPlan.maxSeats}
+                                                    </div>
+                                                </div>
+                                                <div style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-md)', padding: '10px 14px' }}>
+                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{language === 'en' ? 'Projects' : 'Projekte'}</div>
+                                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>
+                                                        {subscription?.currentProjects ?? 1} / {currentPlan.maxProjects}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {subscription && (
+                                                <div style={{ marginTop: '12px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                                    {language === 'en' ? 'Billing cycle' : 'Abrechnungszyklus'}: {subscription.billingCycle === 'yearly' ? (language === 'en' ? 'Yearly' : 'Jährlich') : (language === 'en' ? 'Monthly' : 'Monatlich')}
+                                                    {subscription.currentPeriodEnd && (
+                                                        <> · {language === 'en' ? 'Next renewal' : 'Nächste Verlängerung'}: {new Date(subscription.currentPeriodEnd).toLocaleDateString(language === 'en' ? 'en-US' : 'de-DE')}</>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ padding: '16px', color: 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)' }}>
+                                        {language === 'en' ? 'No active subscription. Choose a plan below.' : 'Kein aktives Abonnement. Wähle unten einen Plan.'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Plan comparison / upgrade */}
+                            <div className="card">
+                                <div className="card-header">
+                                    <div className="card-title">{language === 'en' ? 'Available plans' : 'Verfügbare Pläne'}</div>
+                                </div>
+                                <PricingCards
+                                    onSelect={async (plan) => {
+                                        try {
+                                            setErrorMsg('');
+                                            await changePlan(plan.id);
+                                            setSavedMsg(language === 'en' ? 'Plan changed successfully.' : 'Plan erfolgreich gewechselt.');
+                                            setTimeout(() => setSavedMsg(''), 3000);
+                                        } catch {
+                                            setErrorMsg(language === 'en' ? 'Failed to change plan. Please try again.' : 'Planwechsel fehlgeschlagen. Bitte erneut versuchen.');
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* ─── Admin: Benutzerverwaltung ─── */}
                     {activeTab === 'admin' && can('canManageUsers') && (

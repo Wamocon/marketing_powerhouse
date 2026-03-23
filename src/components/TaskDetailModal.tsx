@@ -5,8 +5,11 @@ import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Ed
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TaskContext';
 import { TaskAiAgent } from './TaskAiAgent';
+import FeatureGate from './FeatureGate';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
 import { useData } from '../context/DataContext';
+import { usePublishing } from '../context/PublishingContext';
+import { useLanguage } from '../context/LanguageContext';
 import type { Task } from '../types';
 
 const UI_STATE_LABELS: Record<string, string> = {
@@ -24,6 +27,8 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
     const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
+    const { knowledgeDocuments } = usePublishing();
+    const { language } = useLanguage();
     const companyPath = useProjectPath();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
@@ -75,8 +80,10 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
             journey: journey ?? null,
             journeyStage: journeyStage ?? null,
             touchpoint: touchpoint ?? null,
+            knowledgeDocs: knowledgeDocuments.filter(d => d.isActive !== false),
+            language: language === 'en' ? 'en' : 'de',
         });
-    }, [task, campaigns, audiences, touchpoints, positioning, companyKeywords, customerJourneys, setPromptContext]);
+    }, [task, campaigns, audiences, touchpoints, positioning, companyKeywords, customerJourneys, knowledgeDocuments, language, setPromptContext]);
 
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
@@ -252,15 +259,17 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                     </div>
 
                     {/* ─── KI-Agent Pipeline ─── */}
-                    <TaskAiAgent
-                        task={task}
-                        aiFeedbackText={aiFeedbackText}
-                        setAiFeedbackText={setAiFeedbackText}
-                        updateTask={updateTask}
-                        executeAiAgent={executeAiAgent}
-                        sendAiFeedback={sendAiFeedback}
-                        getCampaignName={getCampaignName}
-                    />
+                    <FeatureGate feature="ai_pro" dimmed>
+                        <TaskAiAgent
+                            task={task}
+                            aiFeedbackText={aiFeedbackText}
+                            setAiFeedbackText={setAiFeedbackText}
+                            updateTask={updateTask}
+                            executeAiAgent={executeAiAgent}
+                            sendAiFeedback={sendAiFeedback}
+                            getCampaignName={getCampaignName}
+                        />
+                    </FeatureGate>
 
                     {/* ─── Linked Content Reference ─── */}
                     {linkedContents.length > 0 && (
