@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}{{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<section class="hero-shell">
+    <div class="hero-kicker">Project dashboard</div>
+    <h1 class="hero-title">{{ project_name }}</h1>
+    <p class="hero-copy">
+        {% if company.industry %}Industry: {{ company.industry }}.{% endif %}
+        Manage social media posts, campaigns, and AI-powered content generation for this project.
+    </p>
+    <div class="hero-actions">
+        <a href="{{ sh_url('/project/' ~ project_id ~ '/generate') }}" class="btn btn-primary">Generate Post</a>
+        <a href="{{ sh_url('/project/' ~ project_id ~ '/settings') }}" class="btn btn-outline">Project Settings</a>
+    </div>
+    <div class="hero-meta">
+        <span class="chip chip-ready">{{ accounts|length }} Connected Account{{ 's' if accounts|length != 1 else '' }}</span>
+        {% if sh_settings.ai_language %}
+        <span class="chip chip-ready">Language: {{ sh_settings.ai_language }}</span>
+        {% endif %}
+        {% if sh_settings.ai_tone %}
+        <span class="chip chip-ready">Tone: {{ sh_settings.ai_tone }}</span>
+        {% endif %}
+    </div>
+</section>
+
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-number">{{ total_posts }}</div>
+        <div class="stat-label">Total Posts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ draft_posts }}</div>
+        <div class="stat-label">Drafts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ published_posts }}</div>
+        <div class="stat-label">Published</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ accounts|length }}</div>
+        <div class="stat-label">Accounts</div>
+    </div>
+</div>
+
+<div class="insight-grid">
+    <!-- Recent Posts -->
+    <div class="card">
+        <div class="flex-between mb-1">
+            <h3>Recent Posts</h3>
+            <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        {% if posts %}
+        <div class="readiness-list">
+            {% for post in posts[:10] %}
+            <div class="readiness-item state-{% if post.status == 'published' %}ok{% elif post.status == 'draft' %}warn{% elif post.status == 'failed' %}issue{% else %}ok{% endif %}" style="cursor:default;">
+                <span class="readiness-dot"></span>
+                <div style="flex:1;min-width:0;">
+                    <h4 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ (post.content or 'Untitled')[:60] }}{% if (post.content or '')|length > 60 %}...{% endif %}
+                    </h4>
+                    <p>{{ post.platform or 'unknown' }} &middot; {{ post.status }} &middot; {{ post.created_at.strftime('%d.%m.%Y') if post.created_at else '' }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-light" style="font-size:0.85rem;">No posts yet. Generate your first post!</p>
+        {% endif %}
+    </div>
+
+    <!-- Connected Accounts + Quick Links -->
+    <div class="stack-grid">
+        <div class="metric-panel">
+            <h3>Connected Accounts</h3>
+            {% if accounts %}
+            {% for acct in accounts %}
+            <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;">
+                <span class="platform-badge platform-{{ acct.platform }}">{{ acct.platform }}</span>
+                <span style="font-size:0.85rem;">{{ acct.account_name or acct.platform_user_id }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-light" style="font-size:0.85rem;margin-top:0.5rem;">No connected accounts for this project.</p>
+            {% endif %}
+        </div>
+        <div class="metric-panel">
+            <h3>Quick Links</h3>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.75rem;">
+                <a href="{{ sh_url('/project/' ~ project_id ~ '/campaigns') }}" class="btn btn-outline btn-sm" style="text-align:left;">Campaigns</a>
+                <a href="{{ sh_url('/project/' ~ project_id ~ '/analytics') }}" class="btn btn-outline btn-sm" style="text-align:left;">Analytics</a>
+                <a href="{{ sh_url('/project/' ~ project_id ~ '/settings') }}" class="btn btn-outline btn-sm" style="text-align:left;">Project Settings</a>
+                <a href="{{ sh_url('/projects') }}" class="btn btn-ghost btn-sm" style="text-align:left;">&larr; All Projects</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

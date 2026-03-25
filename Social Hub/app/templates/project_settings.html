@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% set active = "project_settings" %}
+{% block title %}Settings &mdash; {{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<section class="hero-shell">
+    <div class="hero-kicker">Project configuration</div>
+    <h1 class="hero-title">Settings for {{ project_name }}</h1>
+    <p class="hero-copy">
+        Configure AI generation, publishing cadence, content pillars, and platform preferences
+        for this project. These settings shape how Social Hub generates and schedules posts.
+    </p>
+    <div class="hero-meta">
+        <span class="chip chip-ready">{{ accounts|length }} Connected Account{{ 's' if accounts|length != 1 else '' }}</span>
+        <span class="chip chip-ready">Language: {{ sh_settings.ai_language or 'de' }}</span>
+    </div>
+</section>
+
+<div class="card card-accent">
+    <h3>AI &amp; Content Settings</h3>
+    <form method="POST" action="{{ sh_url('/project/' ~ project_id ~ '/settings/save') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="insight-grid" style="gap:1.5rem;">
+            <div>
+                <label>AI Language</label>
+                <select name="ai_language">
+                    <option value="de" {% if sh_settings.ai_language == 'de' %}selected{% endif %}>German (de)</option>
+                    <option value="en" {% if sh_settings.ai_language == 'en' %}selected{% endif %}>English (en)</option>
+                    <option value="fr" {% if sh_settings.ai_language == 'fr' %}selected{% endif %}>French (fr)</option>
+                    <option value="es" {% if sh_settings.ai_language == 'es' %}selected{% endif %}>Spanish (es)</option>
+                </select>
+
+                <label>AI Tone</label>
+                <select name="ai_tone">
+                    <option value="professional" {% if sh_settings.ai_tone == 'professional' %}selected{% endif %}>Professional</option>
+                    <option value="casual" {% if sh_settings.ai_tone == 'casual' %}selected{% endif %}>Casual</option>
+                    <option value="inspirational" {% if sh_settings.ai_tone == 'inspirational' %}selected{% endif %}>Inspirational</option>
+                    <option value="educational" {% if sh_settings.ai_tone == 'educational' %}selected{% endif %}>Educational</option>
+                    <option value="humorous" {% if sh_settings.ai_tone == 'humorous' %}selected{% endif %}>Humorous</option>
+                    <option value="bold" {% if sh_settings.ai_tone == 'bold' %}selected{% endif %}>Bold</option>
+                </select>
+
+                <label>AI Persona</label>
+                <input type="text" name="ai_persona" value="{{ sh_settings.ai_persona or '' }}"
+                       placeholder="e.g. Senior tech advisor, friendly CEO">
+                <p class="form-hint">Describe the voice/character the AI should adopt.</p>
+
+                <label>Hashtag Strategy</label>
+                <select name="hashtag_strategy">
+                    <option value="none" {% if sh_settings.hashtag_strategy == 'none' %}selected{% endif %}>None</option>
+                    <option value="minimal" {% if sh_settings.hashtag_strategy == 'minimal' %}selected{% endif %}>Minimal (1-3)</option>
+                    <option value="moderate" {% if sh_settings.hashtag_strategy == 'moderate' %}selected{% endif %}>Moderate (3-5)</option>
+                    <option value="aggressive" {% if sh_settings.hashtag_strategy == 'aggressive' %}selected{% endif %}>Aggressive (5+)</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Default Platform</label>
+                <select name="default_platform">
+                    <option value="linkedin" {% if sh_settings.default_platform == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+                    <option value="instagram" {% if sh_settings.default_platform == 'instagram' %}selected{% endif %}>Instagram</option>
+                </select>
+
+                <label>Publishing Cadence</label>
+                <select name="publishing_cadence">
+                    <option value="daily" {% if sh_settings.publishing_cadence == 'daily' %}selected{% endif %}>Daily</option>
+                    <option value="3x_week" {% if sh_settings.publishing_cadence == '3x_week' %}selected{% endif %}>3x per week</option>
+                    <option value="weekly" {% if sh_settings.publishing_cadence == 'weekly' %}selected{% endif %}>Weekly</option>
+                    <option value="biweekly" {% if sh_settings.publishing_cadence == 'biweekly' %}selected{% endif %}>Biweekly</option>
+                </select>
+
+                <label>Timezone</label>
+                <select name="timezone">
+                    <option value="Europe/Berlin" {% if sh_settings.timezone == 'Europe/Berlin' %}selected{% endif %}>Europe/Berlin</option>
+                    <option value="Europe/London" {% if sh_settings.timezone == 'Europe/London' %}selected{% endif %}>Europe/London</option>
+                    <option value="Europe/Zurich" {% if sh_settings.timezone == 'Europe/Zurich' %}selected{% endif %}>Europe/Zurich</option>
+                    <option value="America/New_York" {% if sh_settings.timezone == 'America/New_York' %}selected{% endif %}>America/New_York</option>
+                    <option value="UTC" {% if sh_settings.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                </select>
+
+                <label>Content Pillars <span class="text-light" style="font-weight:normal;font-size:0.8rem;">(comma-separated)</span></label>
+                <input type="text" name="content_pillars"
+                       value="{{ sh_settings.content_pillars|join(', ') if sh_settings.content_pillars else '' }}"
+                       placeholder="e.g. Innovation, Leadership, Industry News">
+
+                <label>Preferred Days <span class="text-light" style="font-weight:normal;font-size:0.8rem;">(comma-separated)</span></label>
+                <input type="text" name="preferred_days"
+                       value="{{ sh_settings.preferred_days|join(', ') if sh_settings.preferred_days else '' }}"
+                       placeholder="e.g. Mon, Wed, Fri">
+
+                <label>Preferred Times <span class="text-light" style="font-weight:normal;font-size:0.8rem;">(comma-separated)</span></label>
+                <input type="text" name="preferred_times"
+                       value="{{ sh_settings.preferred_times|join(', ') if sh_settings.preferred_times else '' }}"
+                       placeholder="e.g. 09:00, 12:00, 17:00">
+            </div>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                <input type="checkbox" name="auto_approve" {% if sh_settings.auto_approve %}checked{% endif %}
+                       style="width:18px;height:18px;accent-color:var(--red);">
+                <span>Auto-approve generated posts</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;margin-top:0.5rem;">
+                <input type="checkbox" name="value_comments_enabled" {% if sh_settings.value_comments_enabled %}checked{% endif %}
+                       style="width:18px;height:18px;accent-color:var(--red);">
+                <span>Enable AI value comments on published posts</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;margin-top:0.5rem;">
+                <input type="checkbox" name="image_generation_enabled" {% if sh_settings.image_generation_enabled %}checked{% endif %}
+                       style="width:18px;height:18px;accent-color:var(--red);">
+                <span>Enable AI image generation</span>
+            </label>
+        </div>
+
+        <div style="margin-top:2rem;">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <a href="{{ sh_url('/project/' ~ project_id) }}" class="btn btn-ghost" style="margin-left:0.5rem;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% if accounts %}
+<div class="card">
+    <h3>Connected Accounts</h3>
+    <p class="form-hint">Accounts are managed via the Social Hub account connection flow.</p>
+    {% for acct in accounts %}
+    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+        <span class="platform-badge platform-{{ acct.platform }}">{{ acct.platform }}</span>
+        <span style="font-size:0.85rem;font-weight:500;">{{ acct.account_name or acct.platform_user_id }}</span>
+        <span class="text-light" style="font-size:0.78rem;margin-left:auto;">
+            {% if acct.token_expires_at %}Expires: {{ acct.token_expires_at.strftime('%d.%m.%Y') }}{% endif %}
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

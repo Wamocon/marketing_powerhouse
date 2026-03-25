@@ -133,16 +133,16 @@ describe('computePermission()', () => {
 // 2. PERMISSIONS matrix structure
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('PERMISSIONS matrix completeness', () => {
-  it('defines all 19 permissions for company_admin', () => {
-    expect(Object.keys(PERMISSIONS.company_admin)).toHaveLength(19);
+  it('defines all 20 permissions for company_admin', () => {
+    expect(Object.keys(PERMISSIONS.company_admin)).toHaveLength(20);
   });
 
-  it('defines all 19 permissions for manager', () => {
-    expect(Object.keys(PERMISSIONS.manager)).toHaveLength(19);
+  it('defines all 20 permissions for manager', () => {
+    expect(Object.keys(PERMISSIONS.manager)).toHaveLength(20);
   });
 
-  it('defines all 19 permissions for member', () => {
-    expect(Object.keys(PERMISSIONS.member)).toHaveLength(19);
+  it('defines all 20 permissions for member', () => {
+    expect(Object.keys(PERMISSIONS.member)).toHaveLength(20);
   });
 
   it('company_admin has MORE permissions than manager', () => {

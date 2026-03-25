@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% set active = "topics" %}
+{% block title %}Topics &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Topic Queue</h1>
+    <p class="subtitle">Collect and manage topic ideas</p>
+</div>
+
+<div class="card card-accent">
+    <h3>New Topic</h3>
+    <form method="POST" action="/topics/add" class="flex mt-1" style="gap:0.5rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="text" name="topic" placeholder="e.g. AI upskilling for career changers"
+               required style="margin-bottom:0; flex:1;">
+        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Add</button>
+    </form>
+</div>
+
+<!-- AI suggestions -->
+<div class="card">
+    <div class="flex-between mb-1">
+        <h3>AI Suggestions</h3>
+        <button class="btn btn-outline btn-sm" id="loadSuggestions">Load Suggestions</button>
+    </div>
+    <div id="aiSuggestions">
+        <p class="text-light" style="font-size:0.85rem;">Click &laquo;Load Suggestions&raquo; for AI-generated topic ideas.</p>
+    </div>
+</div>
+
+<!-- Queue -->
+<div class="card">
+    <h3>Queue <span class="text-mono text-light" style="font-size:0.82rem;">({{ topics|selectattr('used', 'false')|list|length }} open)</span></h3>
+    {% set pending = topics|selectattr('used', 'false')|list %}
+    {% set used = topics|selectattr('used', 'true')|list %}
+
+    {% if pending %}
+    <table class="mt-1">
+        <thead><tr><th>Topic</th><th style="width:100px;">Date</th><th style="width:180px;"></th></tr></thead>
+        <tbody>
+        {% for t in pending %}
+        <tr style="animation: cardIn 0.3s ease both;">
+            <td style="font-weight:500;">{{ t.topic }}</td>
+            <td class="text-mono text-light" style="font-size:0.78rem;">{{ t.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <div class="flex">
+                    <form method="POST" action="/generate" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="topic" value="{{ t.topic }}">
+                        <button type="submit" class="btn btn-outline btn-xs">Generate</button>
+                    </form>
+                    <form method="POST" action="/topics/{{ t.id }}/delete" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn btn-ghost btn-xs">&times;</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-light mt-1" style="font-size:0.85rem;">No topics in the queue.</p>
+    {% endif %}
+
+    {% if used %}
+    <details class="mt-3">
+        <summary class="text-light" style="cursor:pointer; font-size:0.82rem;">{{ used|length }} used topics</summary>
+        <table class="mt-1">
+        <tbody>
+        {% for t in used %}
+        <tr style="opacity:0.5;">
+            <td>{{ t.topic }}</td>
+            <td class="text-mono text-light" style="font-size:0.78rem;">{{ t.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <form method="POST" action="/topics/{{ t.id }}/delete" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-ghost btn-xs">&times;</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </details>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var btn = document.getElementById('loadSuggestions');
+    var container = document.getElementById('aiSuggestions');
+
+    btn.addEventListener('click', async function() {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner spinner-dark" style="width:14px;height:14px;"></span> Loading...';
+        container.innerHTML = '<p class="text-light" style="font-size:0.85rem;">Loading topics...</p>';
+        try {
+            var resp = await fetch('/api/topics/suggest');
+            var data = await resp.json();
+            if (data.topics && data.topics.length) {
+                var html = '';
+                data.topics.forEach(function(topic) {
+                    var escaped = topic.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+                    html += '<div class="flex-between" style="padding:0.55rem 0; border-bottom:1px solid var(--border);">';
+                    html += '<span style="font-size:0.875rem;">' + escaped + '</span>';
+                    html += '<form method="POST" action="/topics/add" style="display:inline;">';
+                    html += '<input type="hidden" name="csrf_token" value="{{ csrf_token }}">';
+                    html += '<input type="hidden" name="topic" value="' + escaped + '">';
+                    html += '<button type="submit" class="btn btn-outline btn-xs">+ Add</button>';
+                    html += '</form></div>';
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<p class="text-light" style="font-size:0.85rem;">No suggestions available.</p>';
+            }
+        } catch(e) {
+            container.innerHTML = '<p class="text-light" style="font-size:0.85rem;">Error loading suggestions.</p>';
+        }
+        btn.disabled = false;
+        btn.textContent = 'Load Suggestions';
+    });
+})();
+</script>
+{% endblock %}

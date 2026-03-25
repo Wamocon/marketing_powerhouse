@@ -1,15 +1,24 @@
+import { useState, useEffect } from 'react';
 import type { Task, ContentItem } from '../types';
 import {
     TrendingUp,
     TrendingDown,
     ArrowUpRight,
+    Radio,
+    Send,
+    FileEdit,
+    Clock,
 } from 'lucide-react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
+import { useLanguage } from '../context/LanguageContext';
 import { buildDashboardStats, CustomTooltip, getTaskColorLogic, BudgetOverview } from './DashboardComponents';
+import { checkSocialHubHealth, listPosts, type ScheduledPost } from '../lib/socialHub';
 
 interface DashboardViewProps {
     navigate: (path: string) => void;
@@ -22,8 +31,31 @@ interface DashboardViewProps {
 
 export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedContent: _sc }: DashboardViewProps) {
     const { campaigns, activityFeed, dashboardChartData, channelPerformance, budgetData } = useData();
+    const { can } = useAuth();
+    const { activeCompany } = useCompany();
+    const { language } = useLanguage();
+    const isGerman = language === 'de';
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
     const stats = buildDashboardStats(dashboardChartData, budgetData);
+
+    // Live Social Hub stats
+    const [shOnline, setShOnline] = useState<boolean | null>(null);
+    const [shPosts, setShPosts] = useState<ScheduledPost[]>([]);
+    useEffect(() => {
+        if (!can('canUseSocialHub') || !activeCompany?.id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                await checkSocialHubHealth();
+                if (!cancelled) setShOnline(true);
+                const posts = await listPosts({ companyId: activeCompany.id, limit: 200 });
+                if (!cancelled) setShPosts(posts);
+            } catch {
+                if (!cancelled) { setShOnline(false); setShPosts([]); }
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [activeCompany?.id, can]);
     return (
         <>
             <div className="stats-grid">
@@ -179,6 +211,82 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
             </div>
 
             <BudgetOverview navigate={navigate} />
+
+            {/* Social Hub Quick Access – Live Stats */}
+            {can('canUseSocialHub') && (
+            <div className="card">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Radio size={18} style={{ color: 'var(--color-primary)' }} /> Social Hub
+                        </div>
+                        <div className="card-subtitle">{isGerman ? 'KI-gestützte Social-Media-Veröffentlichung' : 'AI-powered social media publishing'}</div>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => navigate('/social-hub')}>
+                        {isGerman ? 'Öffnen' : 'Open'} <ArrowUpRight size={14} />
+                    </button>
+                </div>
+                {(() => {
+                    const published = shPosts.filter(p => p.status === 'published').length;
+                    const drafts = shPosts.filter(p => p.status === 'draft' || p.status === 'generated').length;
+                    const scheduled = shPosts.filter(p => p.status === 'approved' || p.status === 'scheduled').length;
+                    const lastPublished = shPosts
+                        .filter(p => p.published_at)
+                        .sort((a, b) => (b.published_at || '').localeCompare(a.published_at || ''))[0];
+                    return (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                            {/* Connection status */}
+                            <div style={{
+                                flex: '1 1 100%', display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                                background: 'var(--bg-elevated)', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)',
+                            }}>
+                                <div style={{
+                                    width: '8px', height: '8px', borderRadius: '50%',
+                                    background: shOnline === null ? 'var(--text-tertiary)' : shOnline ? 'var(--color-success)' : '#ef4444',
+                                    boxShadow: shOnline ? '0 0 6px rgba(16,185,129,0.4)' : 'none',
+                                }} />
+                                {shOnline === null
+                                    ? (isGerman ? 'Verbindung wird geprüft…' : 'Checking connection…')
+                                    : shOnline
+                                    ? (isGerman ? 'Social Hub verbunden' : 'Social Hub connected')
+                                    : (isGerman ? 'Social Hub offline – Momentum läuft weiter' : 'Social Hub offline – Momentum continues')}
+                            </div>
+                            {/* Stats tiles */}
+                            <div style={{
+                                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', width: '100%',
+                            }}>
+                                <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(16,185,129,0.06)', textAlign: 'center' }}>
+                                    <Send size={16} style={{ color: 'var(--color-success)', marginBottom: '4px' }} />
+                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{published}</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? 'Veröffentlicht' : 'Published'}</div>
+                                </div>
+                                <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(14,165,233,0.06)', textAlign: 'center' }}>
+                                    <FileEdit size={16} style={{ color: '#0ea5e9', marginBottom: '4px' }} />
+                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{drafts}</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? 'Entwürfe' : 'Drafts'}</div>
+                                </div>
+                                <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(139,92,246,0.06)', textAlign: 'center' }}>
+                                    <Clock size={16} style={{ color: '#8b5cf6', marginBottom: '4px' }} />
+                                    <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{scheduled}</div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? 'Geplant' : 'Scheduled'}</div>
+                                </div>
+                            </div>
+                            {/* Last published */}
+                            {lastPublished && (
+                                <div style={{
+                                    flex: '1 1 100%', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)',
+                                    padding: '6px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-elevated)',
+                                }}>
+                                    {isGerman ? 'Letzter Post' : 'Last post'}: <strong style={{ color: 'var(--text-secondary)' }}>{lastPublished.topic}</strong>
+                                    {' '}({lastPublished.platform}) – {new Date(lastPublished.published_at!).toLocaleDateString(isGerman ? 'de-DE' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
+            </div>
+            )}
         </>
     );
 }

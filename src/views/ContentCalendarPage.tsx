@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ContentItem } from '../types';
-import { ChevronLeft, ChevronRight, Plus, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, AlertTriangle, Radio } from 'lucide-react';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import ContentDetailModal from '../components/ContentDetailModal';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
+import { listPosts, type ScheduledPost } from '../lib/socialHub';
 
 const daysOfWeek = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const monthNames = [
@@ -29,6 +31,7 @@ export default function ContentCalendarPage() {
     const { contents } = useContents();
     useTasks();
     const { can } = useAuth();
+    const { activeCompany } = useCompany();
     const { language, locale } = useLanguage();
     const [currentDate, setCurrentDate] = useState(() => {
         const now = new Date();
@@ -37,6 +40,17 @@ export default function ContentCalendarPage() {
     const [view, setView] = useState('month');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
+
+    // Social Hub posts for calendar overlay
+    const [socialPosts, setSocialPosts] = useState<ScheduledPost[]>([]);
+    useEffect(() => {
+        if (!can('canUseSocialHub') || !activeCompany?.id) return;
+        let cancelled = false;
+        listPosts({ companyId: activeCompany.id, limit: 500 })
+            .then(posts => { if (!cancelled) setSocialPosts(posts); })
+            .catch(() => { /* SH offline — calendar content still works */ });
+        return () => { cancelled = true; };
+    }, [activeCompany?.id, can]);
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -67,6 +81,14 @@ export default function ContentCalendarPage() {
         return contents.filter(c => c.publishDate === dateStr);
     };
 
+    const getSocialPostsForDate = (dateStr: string | null) => {
+        if (!dateStr) return [];
+        return socialPosts.filter(p => {
+            const d = p.scheduled_at || p.published_at || p.created_at;
+            return d && d.startsWith(dateStr);
+        });
+    };
+
     const getColorClass = (content) => {
         if (!content.taskIds || content.taskIds.length === 0) return 'danger';
         return CONTENT_TYPE_COLORS[content.contentType] || 'primary';
@@ -79,7 +101,7 @@ export default function ContentCalendarPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">{language === 'en' ? 'Content calendar' : 'Content-Kalender'}</h1>
-                    <p className="page-subtitle">{language === 'en' ? 'Editorial planning across all channels' : 'Redaktionsplanung ueber alle Kanaele hinweg'} ({contents.length} {language === 'en' ? 'items' : 'Inhalte'})</p>
+                    <p className="page-subtitle">{language === 'en' ? 'Editorial planning across all channels' : 'Redaktionsplanung ueber alle Kanaele hinweg'} ({contents.length} {language === 'en' ? 'items' : 'Inhalte'}{socialPosts.length > 0 ? `, ${socialPosts.length} Social Hub Posts` : ''})</p>
                 </div>
                 <div className="page-header-actions">
                     <PageHelp title={language === 'en' ? 'Content calendar' : 'Content-Kalender'}>
@@ -142,6 +164,7 @@ export default function ContentCalendarPage() {
                     ))}
                     {calendarDays.map((cell, index) => {
                         const dayContents = getContentsForDate(cell.date);
+                        const daySocialPosts = getSocialPostsForDate(cell.date);
                         const isToday = cell.date === today;
                         return (
                             <div key={index} className={`calendar-cell ${!cell.isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}>
@@ -154,6 +177,19 @@ export default function ContentCalendarPage() {
                                         style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                         {(!cnt.taskIds || cnt.taskIds.length === 0) && <AlertTriangle size={9} />}
                                         {cnt.title.length > 22 ? cnt.title.slice(0, 22) + '…' : cnt.title}
+                                    </div>
+                                ))}
+                                {daySocialPosts.map(sp => (
+                                    <div key={sp.id} className="calendar-event"
+                                        title={sp.post_text?.slice(0, 100)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '3px',
+                                            background: 'rgba(14,165,233,0.12)', color: '#0284c7',
+                                            borderLeft: '2px solid #0ea5e9', fontSize: 'var(--font-size-xs)',
+                                            padding: '2px 6px', borderRadius: '4px', cursor: 'default',
+                                        }}>
+                                        <Radio size={9} />
+                                        {(sp.topic || sp.platform || 'Post').length > 18 ? (sp.topic || sp.platform || 'Post').slice(0, 18) + '…' : (sp.topic || sp.platform || 'Post')}
                                     </div>
                                 ))}
                             </div>
@@ -222,6 +258,12 @@ export default function ContentCalendarPage() {
                         {item.label}
                     </div>
                 ))}
+                {socialPosts.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
+                        <div style={{ width: 12, height: 12, borderRadius: '3px', background: 'rgba(14,165,233,0.2)', borderLeft: '2px solid #0ea5e9' }} />
+                        Social Hub Post
+                    </div>
+                )}
             </div>
 
             {/* Detail Modal */}

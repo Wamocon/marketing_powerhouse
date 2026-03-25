@@ -6,7 +6,7 @@ import {
     ArrowLeft, Calendar, Users, Edit, MoreVertical, Bot, Tag, Lock, Plus, X,
     ChevronLeft, ChevronRight, Instagram, Youtube, Linkedin, Facebook, Globe,
     Sparkles, Eye, CheckCircle2, Clock, Send, BarChart3, AlertCircle, RefreshCw,
-    FileText, Image, Video, MessageSquare, Target, Trash2
+    FileText, Image, Video, MessageSquare, Target, Trash2, Share2, Loader2, Radio
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
@@ -231,6 +231,39 @@ export default function CampaignDetailPage() {
                         </div>
                     </div>
 
+                    {/* Social Hub CTA for campaigns with social channels */}
+                    {can('canUseSocialHub') && campaign.channels.some(ch => ch === 'LinkedIn' || ch === 'Instagram') && (
+                        <div style={{
+                            marginBottom: '20px', padding: '16px 20px',
+                            borderRadius: 'var(--radius-md)', background: 'rgba(14, 165, 233, 0.04)',
+                            border: '1px solid rgba(14, 165, 233, 0.15)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: 'var(--radius-md)',
+                                    background: 'rgba(14, 165, 233, 0.1)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                }}>
+                                    <Share2 size={20} style={{ color: '#0ea5e9' }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
+                                        Social Hub
+                                    </div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                        {isGerman
+                                            ? `Generiere und veröffentliche KI-Posts für ${campaign.channels.filter(ch => ch === 'LinkedIn' || ch === 'Instagram').join(' & ')}`
+                                            : `Generate and publish AI posts for ${campaign.channels.filter(ch => ch === 'LinkedIn' || ch === 'Instagram').join(' & ')}`}
+                                    </div>
+                                </div>
+                            </div>
+                            <button className="btn btn-ghost btn-sm" onClick={() => router.push('/social-hub')}>
+                                <Radio size={14} /> {isGerman ? 'Social Hub öffnen' : 'Open Social Hub'}
+                            </button>
+                        </div>
+                    )}
+
                     {/* All-Platform Creatives */}
                     {allPlatformCreatives.length > 0 && (
                         <div style={{ marginBottom: '24px' }}>
@@ -354,6 +387,7 @@ export default function CampaignDetailPage() {
                             </div>
                         </div>
                     )}
+
                 </>
             )}
 

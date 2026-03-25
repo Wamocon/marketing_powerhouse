@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% set active = "posts" %}
+{% block title %}Posts &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="flex-between" style="margin-bottom:1.5rem;">
+    <div class="page-header" style="margin-bottom:0;">
+        <h1>Posts <span class="text-mono text-light" style="font-size:1rem;">({{ total_count }})</span></h1>
+    </div>
+    <div class="flex flex-wrap" style="gap:0.5rem;">
+        <div class="search-bar">
+            <span class="search-icon">&#128269;</span>
+            <form method="GET" action="/posts" id="searchForm" style="margin:0;">
+                {% if filter %}<input type="hidden" name="status" value="{{ filter }}">{% endif %}
+                {% if platform_filter %}<input type="hidden" name="platform" value="{{ platform_filter }}">{% endif %}
+                <input type="search" name="q" value="{{ search }}" placeholder="Search..."
+                       style="width:200px;" id="searchInput">
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Platform + Status filters -->
+<div class="flex flex-wrap mb-2" style="gap: 0.35rem;">
+    <span class="text-light" style="font-size:0.78rem; margin-right:0.25rem; align-self:center;">Platform:</span>
+    <a href="/posts?{% if filter %}status={{ filter }}&{% endif %}{% if search %}q={{ search }}&{% endif %}" class="btn btn-xs {% if not platform_filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+    <a href="/posts?platform=linkedin{% if filter %}&status={{ filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if platform_filter == 'linkedin' %}btn-primary{% else %}btn-outline{% endif %}">LinkedIn</a>
+    <a href="/posts?platform=instagram{% if filter %}&status={{ filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if platform_filter == 'instagram' %}btn-primary{% else %}btn-outline{% endif %}">Instagram</a>
+    <span style="border-left:1px solid var(--border); margin:0 0.25rem;"></span>
+    <span class="text-light" style="font-size:0.78rem; margin-right:0.25rem; align-self:center;">Status:</span>
+    <a href="/posts?{% if platform_filter %}platform={{ platform_filter }}&{% endif %}{% if search %}q={{ search }}&{% endif %}" class="btn btn-xs {% if not filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+    <a href="/posts?status=draft{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if filter == 'draft' %}btn-primary{% else %}btn-outline{% endif %}">Drafts</a>
+    <a href="/posts?status=approved{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if filter == 'approved' %}btn-primary{% else %}btn-outline{% endif %}">Approved</a>
+    <a href="/posts?status=published{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if filter == 'published' %}btn-primary{% else %}btn-outline{% endif %}">Published</a>
+    <a href="/posts?status=failed{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="btn btn-xs {% if filter == 'failed' %}btn-primary{% else %}btn-outline{% endif %}">Failed</a>
+</div>
+
+<!-- Bulk actions bar -->
+<div id="bulkBar" style="display:none; margin-bottom:1rem;">
+    <div class="card" style="padding:0.75rem 1.25rem; background: var(--info-light); border-color: var(--info);">
+        <div class="flex-between">
+            <span style="font-size:0.85rem; font-weight:500;">
+                <span id="selectedCount">0</span> selected
+            </span>
+            <div class="flex" style="gap:0.4rem;">
+                <button class="btn btn-success btn-xs" onclick="bulkAction('approve')">Approve</button>
+                <button class="btn btn-outline btn-xs" onclick="bulkAction('reject')">Reject</button>
+                <button class="btn btn-danger btn-xs" onclick="bulkAction('delete')">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if posts %}
+<div class="card" style="padding:0; overflow:hidden;">
+<table>
+    <thead>
+        <tr>
+            <th style="width:36px;">
+                <input type="checkbox" id="selectAll" style="width:16px; height:16px; accent-color:var(--red); cursor:pointer;">
+            </th>
+            <th style="width:40px;">#</th>
+            <th style="width:55px;">Platform</th>
+            <th>Topic</th>
+            <th style="width:100px;">Status</th>
+            <th style="width:95px;">Created</th>
+            <th style="width:120px;">Published</th>
+            <th style="width:70px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for post in posts %}
+        <tr style="animation: cardIn 0.3s ease both;">
+            <td>
+                <input type="checkbox" class="post-check" value="{{ post.id }}"
+                       style="width:16px; height:16px; accent-color:var(--red); cursor:pointer;">
+            </td>
+            <td class="text-mono text-light">{{ post.id }}</td>
+            <td>
+                <span class="platform-badge platform-{{ post.platform.value }}">
+                    {% if post.platform == 'instagram' %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram{% else %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn{% endif %}
+                </span>
+            </td>
+            <td>
+                <a href="/posts/{{ post.id }}" style="color:var(--text); text-decoration:none; font-weight:500; transition: color var(--transition);"
+                   onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text)'">
+                    {{ post.topic[:55] }}{% if post.topic|length > 55 %}...{% endif %}
+                </a>
+            </td>
+            <td><span class="badge badge-{{ post.status.value }}">{{ post.status.value }}</span></td>
+            <td class="text-light text-mono" style="font-size:0.78rem;">{{ post.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="text-mono" style="font-size:0.78rem;">
+                {% if post.published_at %}
+                {{ post.published_at.strftime('%d.%m.%Y %H:%M') }}
+                {% else %}
+                <span class="text-light">&mdash;</span>
+                {% endif %}
+            </td>
+            <td><a href="/posts/{{ post.id }}" class="btn btn-outline btn-xs">Open</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/posts?page={{ page - 1 }}{% if filter %}&status={{ filter }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}">&laquo;</a>
+    {% endif %}
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+            <span class="current">{{ p }}</span>
+        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+            <a href="/posts?page={{ p }}{% if filter %}&status={{ filter }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}">{{ p }}</a>
+        {% elif p == page - 3 or p == page + 3 %}
+            <span class="ellipsis">&hellip;</span>
+        {% endif %}
+    {% endfor %}
+    {% if page < total_pages %}
+    <a href="/posts?page={{ page + 1 }}{% if filter %}&status={{ filter }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}">&raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card empty-state">
+    <div class="empty-icon">&#128196;</div>
+    <p>No posts found{% if filter %} with status &laquo;{{ filter }}&raquo;{% endif %}{% if platform_filter %} for {{ platform_filter }}{% endif %}{% if search %} matching &laquo;{{ search }}&raquo;{% endif %}.</p>
+    <a href="/generate" class="btn btn-primary">Generate a Post</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var selectAll = document.getElementById('selectAll');
+    var checks = document.querySelectorAll('.post-check');
+    var bulkBar = document.getElementById('bulkBar');
+    var countEl = document.getElementById('selectedCount');
+
+    function updateBulkBar() {
+        var selected = document.querySelectorAll('.post-check:checked');
+        countEl.textContent = selected.length;
+        bulkBar.style.display = selected.length > 0 ? 'block' : 'none';
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checks.forEach(function(cb) { cb.checked = selectAll.checked; });
+            updateBulkBar();
+        });
+    }
+
+    checks.forEach(function(cb) {
+        cb.addEventListener('change', updateBulkBar);
+    });
+
+    window.bulkAction = function(action) {
+        var ids = [];
+        document.querySelectorAll('.post-check:checked').forEach(function(cb) {
+            ids.push(parseInt(cb.value));
+        });
+        if (!ids.length) return;
+
+        var labels = { approve: 'approve', reject: 'reject', delete: 'delete' };
+        if (!confirm(ids.length + ' posts ' + labels[action] + '?')) return;
+
+        socialHubFetch('/api/posts/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: action, ids: ids })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.success) location.reload();
+            else showFlash(data.error || 'Bulk action failed.', 'error');
+        });
+    };
+
+    // Search on Enter
+    document.getElementById('searchInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('searchForm').submit();
+    });
+})();
+</script>
+{% endblock %}
