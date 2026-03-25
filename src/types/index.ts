@@ -79,7 +79,8 @@ export type PermissionKey =
   | 'canCreateCampaignTasks'
   | 'canEditAllTasks'
   | 'canEditOwnTasks'
-  | 'canEditContent';
+  | 'canEditContent'
+  | 'canUseSocialHub';
 
 export type PermissionMap = Record<PermissionKey, boolean>;
 

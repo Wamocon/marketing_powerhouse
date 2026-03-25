@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+{% set active = "settings" %}
+{% block title %}Settings &mdash; SocialHub{% endblock %}
+{% block content %}
+<section class="hero-shell">
+    <div class="hero-kicker">Go-live control center</div>
+    <h1 class="hero-title">Configure channels, approvals, schedules, and publishing safety.</h1>
+    <p class="hero-copy">
+        This page is where client readiness is controlled: credentials, posting cadence, content rules, and the safeguards needed for human-reviewed automation.
+    </p>
+    <div class="hero-meta">
+        <span class="chip chip-ready">Manual approval before publish</span>
+        <span class="chip {% if google_api_ok %}chip-ready{% else %}chip-issue{% endif %}">Gemini/Imagen {% if google_api_ok %}configured{% else %}missing{% endif %}</span>
+        <span class="chip {% if media_public_base_url %}chip-ready{% else %}chip-warn{% endif %}">{% if media_public_base_url %}Instagram media URL ready{% else %}Public media URL still needed{% endif %}</span>
+    </div>
+    <div class="hero-score">
+        <strong>{{ readiness_score }}%</strong>
+        <span>Ready</span>
+    </div>
+</section>
+
+<div class="insight-grid">
+    <div class="card">
+        <div class="flex-between mb-1">
+            <h3>Go-Live Checklist</h3>
+            <span class="chip {% if readiness_score >= 85 %}chip-ready{% elif readiness_score >= 60 %}chip-warn{% else %}chip-issue{% endif %}">
+                {{ readiness_score }}% operational fit
+            </span>
+        </div>
+        <div class="readiness-list">
+            {% for item in readiness_items %}
+            <div class="readiness-item state-{{ item.state }}">
+                <span class="readiness-dot"></span>
+                <div>
+                    <h4>{{ item.label }}</h4>
+                    <p>{{ item.detail }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="stack-grid">
+        <div class="metric-panel">
+            <h3>Client workflow</h3>
+            <p>AI drafts content, your team approves it, then the scheduler publishes through official APIs. That is the right control model for agency and client work.</p>
+            <div class="metric-strip">
+                <div class="metric-pill"><strong>AI</strong><span>Drafting</span></div>
+                <div class="metric-pill"><strong>Human</strong><span>Approval</span></div>
+                <div class="metric-pill"><strong>Auto</strong><span>Scheduling</span></div>
+            </div>
+        </div>
+        <div class="metric-panel">
+            <h3>Instagram delivery</h3>
+            <p>Publishing depends on a public image URL, valid Meta permissions, and a Professional account connected to a Page.</p>
+            <div class="metric-strip">
+                <div class="metric-pill"><strong>{% if media_public_base_url %}Yes{% else %}No{% endif %}</strong><span>Public URL</span></div>
+                <div class="metric-pill"><strong>Meta</strong><span>Graph API</span></div>
+                <div class="metric-pill"><strong>Page</strong><span>Required</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LinkedIn Account -->
+<div class="card card-accent">
+    <div class="card-header">
+        <div class="flex-between">
+            <div class="flex">
+                <span class="platform-badge platform-linkedin"><svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</span>
+                <h3 style="margin-bottom:0;">Account Connection</h3>
+            </div>
+            {% if li_account and li_account.access_token %}
+            <div class="flex">
+                <a href="/auth/linkedin" class="btn btn-outline btn-sm">Reconnect</a>
+                <form method="POST" action="/settings/account/disconnect" style="display:inline;"
+                      onsubmit="return confirm('Disconnect LinkedIn account?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
+                </form>
+            </div>
+            {% elif li_account %}
+            <a href="/auth/linkedin" class="btn btn-primary btn-sm">Connect</a>
+            {% endif %}
+        </div>
+    </div>
+    {% if li_account %}
+    <table>
+        <tr>
+            <th style="width:35%;">Name</th>
+            <td>{{ li_account.name }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                {% if li_account.access_token %}
+                    {% if li_account.token_expires_at and li_account.token_expires_at > now %}
+                        <span class="text-success" style="font-weight:600;">&#10003; Connected</span>
+                    {% else %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Token expired</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-danger" style="font-weight:600;">&#10007; Not connected</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% if li_account.token_expires_at %}
+        <tr>
+            <th>Token valid until</th>
+            <td class="text-mono">{{ li_account.token_expires_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% else %}
+    <div style="padding:1rem 0;">
+        <p class="text-muted mb-2">No LinkedIn account created yet.</p>
+        <form method="POST" action="/settings/account" class="flex" style="gap:0.5rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="text" name="name" placeholder="Account name" style="margin:0; max-width:300px;">
+            <button type="submit" class="btn btn-primary btn-sm">Create</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Instagram Account -->
+<div class="card card-accent">
+    <div class="card-header">
+        <div class="flex-between">
+            <div class="flex">
+                <span class="platform-badge platform-instagram"><svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</span>
+                <h3 style="margin-bottom:0;">Account Connection</h3>
+            </div>
+            {% if ig_account and ig_account.access_token %}
+            <div class="flex">
+                <a href="/auth/instagram" class="btn btn-outline btn-sm">Reconnect</a>
+                <form method="POST" action="/settings/ig-account/disconnect" style="display:inline;"
+                      onsubmit="return confirm('Disconnect Instagram account?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger btn-sm">Disconnect</button>
+                </form>
+            </div>
+            {% elif ig_account %}
+            <a href="/auth/instagram" class="btn btn-primary btn-sm">Connect</a>
+            {% endif %}
+        </div>
+    </div>
+    {% if ig_account %}
+    <table>
+        <tr>
+            <th style="width:35%;">Username</th>
+            <td>@{{ ig_account.username or '—' }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                {% if ig_account.access_token %}
+                    {% if ig_account.token_expires_at and ig_account.token_expires_at > now %}
+                        <span class="text-success" style="font-weight:600;">&#10003; Connected</span>
+                    {% else %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Token expired</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-danger" style="font-weight:600;">&#10007; Not connected</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% if ig_account.token_expires_at %}
+        <tr>
+            <th>Token valid until</th>
+            <td class="text-mono">{{ ig_account.token_expires_at.strftime('%Y-%m-%d %H:%M') }} UTC</td>
+        </tr>
+        {% endif %}
+    </table>
+    {% else %}
+    <div style="padding:1rem 0;">
+        <p class="text-muted mb-2">No Instagram account yet. Connect via OAuth to get started.</p>
+        {% if instagram_ok %}
+        <a href="/auth/instagram" class="btn btn-primary btn-sm">Connect Instagram</a>
+        {% else %}
+        <p class="text-light" style="font-size:0.82rem;">Configure INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET in .env first.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<form method="POST" action="/settings/save">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+<!-- LinkedIn Schedule -->
+<div class="card">
+    <div class="flex mb-1">
+        <span class="platform-badge platform-linkedin"><svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</span>
+        <h3 style="margin-bottom:0;">Publishing Cadence</h3>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Posting Time</label>
+            <input type="time" name="posting_time" value="{{ s.get('posting_time', '09:00') }}">
+        </div>
+        <div>
+            <label>Max Pending Drafts</label>
+            <input type="number" name="max_pending_drafts" value="{{ s.get('max_pending_drafts', '3') }}" min="1" max="20">
+        </div>
+    </div>
+    <div class="mt-1">
+        <label style="margin-bottom:0.5rem; display:block;">Posting Days</label>
+        <div class="flex" style="gap:0.5rem; flex-wrap:wrap;">
+            {% set li_days = s.get('posting_days_display', []) %}
+            {% for d in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+            <label class="day-check">
+                <input type="checkbox" name="li_day_{{ d }}" value="{{ d }}" {{ 'checked' if d in li_days else '' }}>
+                <span>{{ d[:2] }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="posting_days" id="liPostingDaysHidden" value="">
+    </div>
+    <div class="mt-2">
+        <label class="checkbox-label">
+            <input type="checkbox" name="auto_generate_drafts" value="true"
+                   {{ 'checked' if s.get('auto_generate_drafts','true') == 'true' else '' }}>
+            Auto-generate drafts (daily at 07:00)
+        </label>
+    </div>
+    <div class="form-row mt-2">
+        <div>
+            <label>Value Comment Delay (min)</label>
+            <input type="number" name="value_comment_delay_min" value="{{ s.get('value_comment_delay_min', '60') }}" min="5" max="1440">
+            <p class="form-hint">Minutes after publishing before the comment is posted.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Instagram Schedule -->
+<div class="card">
+    <div class="flex mb-1">
+        <span class="platform-badge platform-instagram"><svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</span>
+        <h3 style="margin-bottom:0;">Publishing Cadence</h3>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Posting Time</label>
+            <input type="time" name="ig_posting_time" value="{{ s.get('ig_posting_time', '10:00') }}">
+        </div>
+        <div>
+            <label>Max Pending Drafts</label>
+            <input type="number" name="ig_max_pending_drafts" value="{{ s.get('ig_max_pending_drafts', '3') }}" min="1" max="20">
+        </div>
+    </div>
+    <div class="mt-1">
+        <label style="margin-bottom:0.5rem; display:block;">Posting Days</label>
+        <div class="flex" style="gap:0.5rem; flex-wrap:wrap;">
+            {% set ig_days = s.get('ig_posting_days_display', []) %}
+            {% for d in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+            <label class="day-check">
+                <input type="checkbox" name="ig_day_{{ d }}" value="{{ d }}" {{ 'checked' if d in ig_days else '' }}>
+                <span>{{ d[:2] }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="ig_posting_days" id="igPostingDaysHidden" value="">
+    </div>
+    <div class="mt-2">
+        <label class="checkbox-label">
+            <input type="checkbox" name="ig_auto_generate_drafts" value="true"
+                   {{ 'checked' if s.get('ig_auto_generate_drafts','true') == 'true' else '' }}>
+            Auto-generate Instagram drafts (daily at 07:30)
+        </label>
+    </div>
+</div>
+
+<!-- LinkedIn Content Settings -->
+<div class="card">
+    <div class="flex mb-1">
+        <span class="platform-badge platform-linkedin"><svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</span>
+        <h3 style="margin-bottom:0;">Content Rules</h3>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Language</label>
+            <select name="language">
+                <option value="Deutsch" {{ 'selected' if s.get('language','Deutsch')=='Deutsch' }}>Deutsch</option>
+                <option value="English" {{ 'selected' if s.get('language','Deutsch')=='English' }}>English</option>
+            </select>
+        </div>
+        <div>
+            <label>Tone / Style</label>
+            <input type="text" name="tone" value="{{ s.get('tone', 'professional-friendly') }}">
+        </div>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Target Audience</label>
+            <input type="text" name="target_audience" value="{{ s.get('target_audience', '') }}">
+        </div>
+        <div>
+            <label>Core Topics</label>
+            <input type="text" name="core_topics" value="{{ s.get('core_topics', '') }}">
+        </div>
+    </div>
+    <div class="mt-1">
+        <label>Default Hashtags</label>
+        <input type="text" name="default_hashtags" value="{{ s.get('default_hashtags', '') }}">
+        <p class="form-hint">Automatically added to generated posts.</p>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Max Characters per Post</label>
+            <input type="number" name="post_max_chars" value="{{ s.get('post_max_chars', '3000') }}" min="500" max="3000">
+        </div>
+    </div>
+</div>
+
+<!-- Instagram Content Settings -->
+<div class="card">
+    <div class="flex mb-1">
+        <span class="platform-badge platform-instagram"><svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</span>
+        <h3 style="margin-bottom:0;">Content Rules</h3>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Default Hashtags</label>
+            <input type="text" name="ig_default_hashtags" value="{{ s.get('ig_default_hashtags', '') }}">
+            <p class="form-hint">Added to captions. Instagram allows up to 30 hashtags.</p>
+        </div>
+        <div>
+            <label>Hashtag Placement</label>
+            <select name="ig_hashtag_placement">
+                <option value="inline" {{ 'selected' if s.get('ig_hashtag_placement','inline')=='inline' }}>Inline (in caption)</option>
+                <option value="comment" {{ 'selected' if s.get('ig_hashtag_placement','inline')=='comment' }}>First Comment</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-row mt-1">
+        <div>
+            <label>Max Caption Characters</label>
+            <input type="number" name="ig_post_max_chars" value="{{ s.get('ig_post_max_chars', '2200') }}" min="300" max="2200">
+        </div>
+        <div>
+            <label>Default Media Type</label>
+            <select name="ig_media_type">
+                <option value="image" {{ 'selected' if s.get('ig_media_type','image')=='image' }}>Image (1:1 square)</option>
+                <option value="portrait" {{ 'selected' if s.get('ig_media_type','image')=='portrait' }}>Portrait (4:5)</option>
+            </select>
+        </div>
+    </div>
+    <div class="mt-1">
+        <label>Image Style</label>
+        <input type="text" name="ig_image_style" value="{{ s.get('ig_image_style', 'vibrant, bold colors, minimal text') }}">
+        <p class="form-hint">Appended to image generation prompts for Instagram posts.</p>
+    </div>
+</div>
+
+<!-- AI Model -->
+<div class="card">
+    <h3>AI Models</h3>
+    <div class="form-row mt-1">
+        <div>
+            <label>Gemini Text Model</label>
+            <input type="text" name="gemini_model" value="{{ s.get('gemini_model', 'gemini-2.5-pro') }}">
+            <p class="form-hint">e.g. gemini-2.5-pro, gemini-2.5-flash</p>
+        </div>
+        <div>
+            <label>Imagen Image Model</label>
+            <input type="text" name="imagen_model" value="{{ s.get('imagen_model', 'imagen-4-ultra') }}">
+            <p class="form-hint">e.g. imagen-4-ultra</p>
+        </div>
+    </div>
+</div>
+
+<!-- API Status -->
+<div class="card">
+    <h3>API Connections</h3>
+    <table class="mt-1">
+        <thead><tr><th>Service</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody>
+            <tr>
+                <td style="font-weight:500;">Google Gemini</td>
+                <td><span class="badge {{ 'badge-published' if google_api_ok else 'badge-failed' }}">{{ 'Configured' if google_api_ok else 'Missing' }}</span></td>
+                <td class="text-light" style="font-size:0.82rem;">{{ 'GOOGLE_API_KEY set in .env' if google_api_ok else 'Add GOOGLE_API_KEY to .env' }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight:500;">LinkedIn OAuth</td>
+                <td><span class="badge {{ 'badge-published' if linkedin_ok else 'badge-failed' }}">{{ 'Configured' if linkedin_ok else 'Missing' }}</span></td>
+                <td class="text-light" style="font-size:0.82rem;">{{ 'Client ID/Secret present' if linkedin_ok else 'Add LINKEDIN_CLIENT_ID/SECRET to .env' }}</td>
+            </tr>
+            <tr>
+                <td style="font-weight:500;">Instagram API</td>
+                <td><span class="badge {{ 'badge-published' if instagram_ok else 'badge-failed' }}">{{ 'Configured' if instagram_ok else 'Missing' }}</span></td>
+                <td class="text-light" style="font-size:0.82rem;">{{ 'App ID/Secret present' if instagram_ok else 'Add INSTAGRAM_APP_ID/SECRET to .env' }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Export -->
+<div class="card">
+    <h3>Export Data</h3>
+    <p class="text-muted mb-2">Download all posts as CSV or JSON.</p>
+    <div class="flex" style="gap:0.5rem;">
+        <a href="/api/posts/export?format=csv" class="btn btn-outline btn-sm" download>Export CSV</a>
+        <a href="/api/posts/export?format=json" class="btn btn-outline btn-sm" download>Export JSON</a>
+    </div>
+</div>
+
+<div class="flex mt-2" style="gap:0.75rem;">
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+    <a href="/settings" class="btn btn-outline">Reset</a>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var form = document.querySelector('form[action="/settings/save"]');
+    form.addEventListener('submit', function() {
+        // LinkedIn days
+        var liChecked = [];
+        document.querySelectorAll('[name^="li_day_"]:checked').forEach(function(cb) {
+            liChecked.push(cb.value);
+        });
+        document.getElementById('liPostingDaysHidden').value = liChecked.join(',');
+
+        // Instagram days
+        var igChecked = [];
+        document.querySelectorAll('[name^="ig_day_"]:checked').forEach(function(cb) {
+            igChecked.push(cb.value);
+        });
+        document.getElementById('igPostingDaysHidden').value = igChecked.join(',');
+    });
+})();
+</script>
+{% endblock %}

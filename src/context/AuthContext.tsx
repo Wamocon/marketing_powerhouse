@@ -18,7 +18,7 @@ export const PERMISSIONS: Record<CompanyRole, PermissionMap> = {
         canManageTouchpoints: true, canEditAudiences: true, canViewAudiences: true,
         canSeeBudget: true, canEditBudget: true, canAssignTasks: true,
         canCreateCampaignTasks: true, canEditAllTasks: true, canEditOwnTasks: true,
-        canEditContent: true,
+        canEditContent: true, canUseSocialHub: true,
     },
     manager: {
         canEditPositioning: false, canEditCompanyKeywords: false, canManageUsers: false,
@@ -27,7 +27,7 @@ export const PERMISSIONS: Record<CompanyRole, PermissionMap> = {
         canManageTouchpoints: true, canEditAudiences: true, canViewAudiences: true,
         canSeeBudget: true, canEditBudget: true, canAssignTasks: true,
         canCreateCampaignTasks: true, canEditAllTasks: true, canEditOwnTasks: true,
-        canEditContent: true,
+        canEditContent: true, canUseSocialHub: true,
     },
     member: {
         canEditPositioning: false, canEditCompanyKeywords: false, canManageUsers: false,
@@ -36,7 +36,7 @@ export const PERMISSIONS: Record<CompanyRole, PermissionMap> = {
         canManageTouchpoints: false, canEditAudiences: false, canViewAudiences: true,
         canSeeBudget: false, canEditBudget: false, canAssignTasks: false,
         canCreateCampaignTasks: false, canEditAllTasks: false, canEditOwnTasks: true,
-        canEditContent: false,
+        canEditContent: false, canUseSocialHub: false,
     },
 };
 

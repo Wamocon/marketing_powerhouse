@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% set active = "campaigns" %}
+{% block title %}Campaigns &mdash; {{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="flex-between" style="margin-bottom:1.5rem;">
+    <div class="page-header" style="margin-bottom:0;">
+        <h1>Campaigns <span class="text-mono text-light" style="font-size:1rem;">({{ campaigns|length }})</span></h1>
+        <p class="subtitle">Campaigns from Momentum for {{ project_name }}</p>
+    </div>
+    <a href="{{ sh_url('/project/' ~ project_id ~ '/generate') }}" class="btn btn-primary btn-sm">Generate Post</a>
+</div>
+
+{% if campaigns %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    {% for c in campaigns %}
+    <div class="card stat-card">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">
+                {{ c.name[:2]|upper if c.name else 'CA' }}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <h3 style="margin:0;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.name }}</h3>
+                {% if c.status %}
+                <span class="badge badge-{{ c.status }}" style="font-size:0.7rem;">{{ c.status }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% if c.description %}
+        <p class="text-light" style="font-size:0.82rem;margin-bottom:0.75rem;">
+            {{ c.description[:120] }}{% if c.description|length > 120 %}...{% endif %}
+        </p>
+        {% endif %}
+        <div class="metric-strip">
+            <div class="metric-pill">
+                <strong>{{ c.post_count }}</strong>
+                <span>Social Posts</span>
+            </div>
+        </div>
+        <div style="margin-top:0.75rem;">
+            <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}?campaign_id={{ c.id }}" class="btn btn-outline btn-xs">View Posts</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+    <h3>No campaigns found</h3>
+    <p class="text-light">Campaigns are created in the Momentum app and automatically appear here.</p>
+</div>
+{% endif %}
+{% endblock %}

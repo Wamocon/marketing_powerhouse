@@ -15,7 +15,7 @@ function extractProjectId(pathname: string): string | null {
 
 export default function ClientShell({ children }: { children: ReactNode }) {
     const { currentUser, sessionLoading, login, logout } = useAuth();
-    const { activeCompany, selectCompany, loading: companyLoading } = useCompany();
+    const { activeCompany, userCompanies, selectCompany, loading: companyLoading } = useCompany();
     const pathname = usePathname();
     const router = useRouter();
     const isPublicLegalRoute = pathname === '/impressum' || pathname === '/datenschutz' || pathname === '/agb';
@@ -28,17 +28,20 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     // Sync project context with URL
     const syncRef = useRef(false);
     const syncAttemptedRef = useRef<string | null>(null);
+    const companyListReady = companyLoading || !currentUser ? false : userCompanies.length > 0;
+
     useEffect(() => {
-        if (!currentUser || companyLoading || !urlProjectId) return;
+        if (!currentUser || companyLoading || !companyListReady || !urlProjectId) return;
         if (activeCompany?.id !== urlProjectId && !syncRef.current) {
             syncRef.current = true;
             syncAttemptedRef.current = urlProjectId;
             selectCompany(urlProjectId).finally(() => { syncRef.current = false; });
         }
-    }, [currentUser, urlProjectId, activeCompany?.id, companyLoading, selectCompany]);
+    }, [currentUser, urlProjectId, activeCompany?.id, companyLoading, companyListReady, selectCompany]);
 
     // If sync was attempted but company didn't change → invalid company, redirect to home
     const syncFailed = isProjectRoute && !companyLoading && !syncRef.current
+        && companyListReady
         && urlProjectId !== null && activeCompany?.id !== urlProjectId
         && syncAttemptedRef.current === urlProjectId;
     useEffect(() => {
@@ -60,9 +63,22 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         router.replace(pathname.replace('/company/', '/project/'));
     }, [isLegacyCompanyRoute, pathname, router]);
 
+    const shouldRedirectMissingProject = isProjectRoute
+        && !sessionLoading
+        && !companyLoading
+        && companyListReady
+        && !syncRef.current
+        && !activeCompany;
+
+    useEffect(() => {
+        if (shouldRedirectMissingProject) {
+            router.replace('/');
+        }
+    }, [shouldRedirectMissingProject, router]);
+
     if (sessionLoading) {
         return (
-            <div style={{
+            <div suppressHydrationWarning style={{
                 display: 'flex', height: '100vh', alignItems: 'center',
                 justifyContent: 'center', background: 'var(--bg-base)',
                 flexDirection: 'column', gap: '16px',
@@ -108,7 +124,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     // Redirect old flat routes — show spinner while redirect effect fires
     if (isOldFlatRoute) {
         return (
-            <div style={{
+            <div suppressHydrationWarning style={{
                 display: 'flex', height: '100vh', alignItems: 'center',
                 justifyContent: 'center', background: 'var(--bg-base)',
                 flexDirection: 'column', gap: '16px',
@@ -132,7 +148,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
     // Show company loading spinner (includes sync in progress)
     if (companyLoading || (isProjectRoute && syncRef.current)) {
         return (
-            <div style={{
+            <div suppressHydrationWarning style={{
                 display: 'flex', height: '100vh', alignItems: 'center',
                 justifyContent: 'center', background: 'var(--bg-base)',
                 flexDirection: 'column', gap: '16px',
@@ -153,10 +169,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         );
     }
 
-    // Project route — project must be loaded by now
     if (!activeCompany) {
-        // Company ID from URL is invalid or user has no access — redirect home
-        router.replace('/');
         return null;
     }
 

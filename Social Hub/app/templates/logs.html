@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set active = "logs" %}
+{% block title %}Logs &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="flex-between" style="align-items:flex-end;">
+        <div>
+            <h1>Logs</h1>
+            <p class="subtitle">System log &amp; activity feed</p>
+        </div>
+        <label class="flex" style="gap:0.4rem; font-size:0.78rem; color:var(--text-light); cursor:pointer;">
+            <input type="checkbox" id="autoRefresh" style="accent-color:var(--red); width:14px; height:14px;">
+            Auto-Refresh
+        </label>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="flex mb-2" style="gap:0.4rem; flex-wrap:wrap;">
+    <a href="/logs" class="btn {{ 'btn-primary' if not level_filter else 'btn-outline' }} btn-sm">All</a>
+    <a href="/logs?level=INFO" class="btn {{ 'btn-primary' if level_filter=='INFO' else 'btn-outline' }} btn-sm">Info</a>
+    <a href="/logs?level=WARNING" class="btn {{ 'btn-primary' if level_filter=='WARNING' else 'btn-outline' }} btn-sm">Warnings</a>
+    <a href="/logs?level=ERROR" class="btn {{ 'btn-primary' if level_filter=='ERROR' else 'btn-outline' }} btn-sm">Errors</a>
+</div>
+
+<div class="card">
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width:140px;">Timestamp</th>
+                <th style="width:80px;">Level</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+        <tr style="animation: cardIn 0.25s ease both; animation-delay: {{ loop.index0 * 0.02 }}s;">
+            <td class="text-mono" style="font-size:0.75rem;">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+                {% if log.level == 'ERROR' %}
+                <span class="badge badge-failed">ERROR</span>
+                {% elif log.level == 'WARNING' %}
+                <span class="badge badge-rejected">WARN</span>
+                {% else %}
+                <span class="badge badge-draft">INFO</span>
+                {% endif %}
+            </td>
+            <td style="font-size:0.82rem;">{{ log.message }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">&#128220;</div>
+        <p>No log entries{{ ' for level ' + level_filter if level_filter else '' }}.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var cb = document.getElementById('autoRefresh');
+    var timer;
+    cb.addEventListener('change', function() {
+        if (cb.checked) {
+            timer = setInterval(function() { location.reload(); }, 10000);
+        } else {
+            clearInterval(timer);
+        }
+    });
+})();
+</script>
+{% endblock %}

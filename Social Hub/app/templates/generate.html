@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% set active = "generate" %}
+{% block title %}Generate &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Generate Post</h1>
+    <p class="subtitle">AI creates a researched post with image for LinkedIn or Instagram</p>
+</div>
+
+<div class="card card-accent">
+    <form method="POST" action="/generate" id="genForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>Platform</label>
+        <div class="flex mb-2" style="gap:0.5rem;">
+            <label class="platform-select-label">
+                <input type="radio" name="platform" value="linkedin" checked>
+                <span class="platform-select-btn"><svg class="icon icon-md" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</span>
+            </label>
+            <label class="platform-select-label">
+                <input type="radio" name="platform" value="instagram">
+                <span class="platform-select-btn"><svg class="icon icon-md" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</span>
+            </label>
+        </div>
+
+        <label>Topic</label>
+        <input type="text" name="topic" id="topicInput"
+               placeholder="e.g. AI trends in the job market 2026">
+        <p class="form-hint">
+            Leave empty = AI will automatically choose a trending topic.
+        </p>
+        <button type="submit" class="btn btn-primary" id="genBtn">
+            Generate Post
+        </button>
+    </form>
+</div>
+
+<!-- AI Suggestions -->
+<div class="card" id="suggestionsCard">
+    <div class="flex-between mb-1">
+        <h3>Topic Suggestions</h3>
+        <button class="btn btn-outline btn-sm" id="refreshSuggestions">
+            Load Suggestions
+        </button>
+    </div>
+    <div id="suggestionsList">
+        <p class="text-light" style="font-size:0.85rem;">Click &laquo;Load Suggestions&raquo; for AI-generated topics.</p>
+    </div>
+</div>
+
+{% if queued_topics %}
+<div class="card">
+    <h3>Topic Queue <span class="text-mono text-light" style="font-size:0.82rem;">({{ queued_topics|length }})</span></h3>
+    <p class="form-hint" style="margin-top:0;">These will be used automatically in the next generation cycle.</p>
+    {% for t in queued_topics %}
+    <div class="flex-between{% if not loop.last %} row-divider{% endif %}" style="padding:0.6rem 0;">
+        <span style="font-size:0.875rem;">{{ t.topic }}</span>
+        <form method="POST" action="/generate" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="topic" value="{{ t.topic }}">
+            <button type="submit" class="btn btn-outline btn-xs">Generate</button>
+        </form>
+    </div>
+    {% endfor %}
+    <div class="mt-2">
+        <a href="/topics" class="btn btn-ghost btn-sm">Manage all topics &rarr;</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var topicInput = document.getElementById('topicInput');
+    var genForm = document.getElementById('genForm');
+    var genBtn = document.getElementById('genBtn');
+    var suggestionsList = document.getElementById('suggestionsList');
+    var refreshBtn = document.getElementById('refreshSuggestions');
+
+    genForm.addEventListener('submit', function() {
+        genBtn.disabled = true;
+        genBtn.innerHTML = '<span class="spinner"></span> Generating...';
+        var overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = '<div class="loading-box"><div class="spinner-lg"></div><p>Generating post...</p><small>This may take 30-60 seconds.</small></div>';
+        document.body.appendChild(overlay);
+    });
+
+    async function loadSuggestions() {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<span class="spinner spinner-dark" style="width:14px;height:14px;"></span> Loading...';
+        suggestionsList.innerHTML = '<p class="text-light" style="font-size:0.85rem;">Loading topics...</p>';
+        try {
+            var resp = await fetch('/api/topics/suggest');
+            var data = await resp.json();
+            if (data.topics && data.topics.length) {
+                var html = '<div class="flex flex-wrap" style="gap:0.4rem;">';
+                data.topics.forEach(function(topic) {
+                    html += '<button class="btn btn-outline btn-sm" onclick="useTopic(this)" style="text-align:left;">' + topic.replace(/</g,'&lt;') + '</button>';
+                });
+                html += '</div>';
+                suggestionsList.innerHTML = html;
+            } else {
+                suggestionsList.innerHTML = '<p class="text-light" style="font-size:0.85rem;">No suggestions available.</p>';
+            }
+        } catch(e) {
+            suggestionsList.innerHTML = '<p class="text-light" style="font-size:0.85rem;">Error loading suggestions.</p>';
+        }
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Load Suggestions';
+    }
+
+    refreshBtn.addEventListener('click', loadSuggestions);
+
+    window.useTopic = function(btn) {
+        topicInput.value = btn.textContent;
+        topicInput.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+})();
+</script>
+<style>
+.row-divider { border-bottom: 1px solid var(--border); }
+</style>
+{% endblock %}

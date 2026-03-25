@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% set active = "analytics" %}
+{% block title %}Analytics &mdash; {{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Analytics</h1>
+    <p class="subtitle">Social media performance for {{ project_name }}</p>
+</div>
+
+<!-- Post Stats -->
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-number">{{ total }}</div>
+        <div class="stat-label">Total Posts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ published }}</div>
+        <div class="stat-label">Published</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ drafts }}</div>
+        <div class="stat-label">Drafts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ approved }}</div>
+        <div class="stat-label">Approved</div>
+    </div>
+    {% if failed %}
+    <div class="card stat-card" style="border-color:var(--danger);">
+        <div class="stat-number" style="color:var(--danger);">{{ failed }}</div>
+        <div class="stat-label">Failed</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="insight-grid">
+    <!-- Engagement Metrics -->
+    <div class="card">
+        <h3>Engagement Summary</h3>
+        {% if engagement.impressions or engagement.clicks or engagement.likes %}
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap:0.75rem; margin-top:1rem;">
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.impressions) }}</div>
+                <div class="stat-label">Impressions</div>
+            </div>
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.reach) }}</div>
+                <div class="stat-label">Reach</div>
+            </div>
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.clicks) }}</div>
+                <div class="stat-label">Clicks</div>
+            </div>
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.likes) }}</div>
+                <div class="stat-label">Likes</div>
+            </div>
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.comments) }}</div>
+                <div class="stat-label">Comments</div>
+            </div>
+            <div class="stat-card" style="padding:1rem;">
+                <div class="stat-number" style="font-size:1.5rem;">{{ "{:,}".format(engagement.shares) }}</div>
+                <div class="stat-label">Shares</div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-light" style="font-size:0.85rem;margin-top:0.75rem;">
+            No engagement data yet. Publish posts and engagement metrics will appear here.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Platform Breakdown -->
+    <div class="stack-grid">
+        {% if platform_stats %}
+        {% for plat, stats in platform_stats.items() %}
+        <div class="metric-panel">
+            <div class="platform-badge platform-{{ plat }}">{{ plat|title }}</div>
+            <div class="metric-strip" style="margin-top:0.75rem;">
+                <div class="metric-pill">
+                    <strong>{{ stats.total }}</strong>
+                    <span>Total</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ stats.published }}</strong>
+                    <span>Published</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{% if stats.total > 0 %}{{ ((stats.published / stats.total) * 100)|round|int }}%{% else %}0%{% endif %}</strong>
+                    <span>Pub. Rate</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="metric-panel">
+            <h3>Platform Breakdown</h3>
+            <p class="text-light" style="font-size:0.85rem;">No platform data available yet.</p>
+        </div>
+        {% endif %}
+
+        <!-- Connected Accounts -->
+        <div class="metric-panel">
+            <h3>Connected Accounts</h3>
+            {% if accounts %}
+            {% for acct in accounts %}
+            <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;">
+                <span class="platform-badge platform-{{ acct.platform }}">{{ acct.platform }}</span>
+                <span style="font-size:0.85rem;">{{ acct.account_name or acct.platform_user_id }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-light" style="font-size:0.85rem;">No connected accounts.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

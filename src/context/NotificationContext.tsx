@@ -191,8 +191,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     try {
       const data = await api.fetchNotifications(userId, companyId);
       setAllNotifications(data);
-    } catch (err) {
-      console.error('[NotificationContext] fetch error:', err);
+    } catch (err: unknown) {
+      // Silently handle expected errors (missing table, no permissions)
+      const msg = err instanceof Error ? err.message : String(err ?? '');
+      if (msg && !msg.includes('does not exist') && !msg.includes('permission denied')) {
+        console.error('[NotificationContext] fetch error:', err);
+      }
       setAllNotifications([]);
     } finally {
       setLoading(false);

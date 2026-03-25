@@ -36,8 +36,9 @@ Eine **Multi-Tenancy SaaS-Plattform zur Unterstützung und Automatisierung von M
 ## 🚀 Quick Start
 
 ### Anforderungen
-- Node.js 18+
+- Node.js 20+
 - npm
+- Python 3.11+
 
 ### Installation
 
@@ -48,6 +49,11 @@ cd marketing_powerhouse
 
 # Dependencies installieren
 npm install
+
+# Python-Umgebung fuer den Social Hub vorbereiten
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r "Social Hub/app/requirements.txt"
 ```
 
 ### Umgebungsvariablen
@@ -57,33 +63,24 @@ Erstelle eine `.env.local`-Datei im Projektstamm:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<dein-projekt>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<dein-anon-key>
+NEXT_PUBLIC_SUPABASE_SCHEMA=test
+SOCIAL_HUB_INTERNAL_URL=http://127.0.0.1:8000
 ```
 
-### Supabase Upgrade (Migrationen)
+### Datenbank-Migrationen
 
-Für bestehende Datenbanken sind **alle Multi-Tenancy-DB-Änderungen** in einem Skript gebündelt:
-
-```bash
-node scripts/migrate_multi_tenant.mjs
-```
-
-Für das neue Benachrichtigungssystem zusätzlich ausführen:
+Die aktiv gepflegten Migrationen und Setup-Skripte liegen unter [scripts/](d:/marketing_powerhouse/marketing_powerhouse/scripts):
 
 ```bash
 node scripts/migrate_notifications.mjs
+node scripts/migrate_plans.mjs
 ```
 
-Das Skript enthält:
-- Tabellen `companies` und `company_members`
-- Spalte `users.is_super_admin`
-- Rollen-Constraint-Umstellung auf `company_admin|manager|member`
-- `company_id`-Spalten + Indizes für alle relevanten Datentabellen
-- Seed/Mapping für **WAMOCON Academy** inkl. Rollenzuweisung aller bestehenden Benutzer
+Zusätzlich gibt es einen reproduzierbaren Social-Hub-QA-Seed:
 
-Das Notification-Skript enthält:
-- Tabellen `notifications` und `notification_preferences`
-- Indizes für `recipient_user_id`, `company_id`, `is_read`
-- Typisierte Notification-Kategorien (Task, Campaign, Budget, Content, Team, System)
+```bash
+npm run qa:seed-shared
+```
 
 ### Starten
 
@@ -92,6 +89,26 @@ npm run dev
 ```
 
 Dev-Server läuft unter: **http://localhost:3000**
+
+Der Befehl startet:
+- Next.js unter `http://localhost:3000`
+- den Social-Hub-FastAPI-Server parallel im Workspace-Kontext
+
+### QA-Befehle
+
+```bash
+npm run typecheck
+npm run test:run
+npm run qa:db
+npm run qa:api
+npm run qa:ai
+npm run qa:pricing
+npm run qa:smoke
+npm run qa:backend
+npm run qa:full
+```
+
+`qa:full` fuehrt den aktuell gepflegten End-to-End-Check fuer Seed, TypeScript, Unit-Tests, API/AI-Checks, Browser-Smoke und Social-Hub-Live-QA aus.
 
 ---
 
@@ -156,8 +173,13 @@ marketing_powerhouse/
 ├── tsconfig.json                     ← TypeScript (strict mode)
 ├── .env.local                        ← Supabase-Credentials (nicht in Git)
 ├── scripts/
-│   ├── migrate.mjs                   ← DB-Schema + Seed-Daten (Original)
-│   └── migrate_multi_tenant.mjs      ← Einmaliges Supabase-Upgrade-Skript (alle Multi-Tenancy DB-Änderungen)
+│   ├── migrate_notifications.mjs     ← Notification-Migration
+│   ├── migrate_plans.mjs             ← Plans/Subscriptions-Migration
+│   ├── qa_check.cjs                  ← DB-Integritätscheck für Plans/Subscriptions/Wissensbasis
+│   ├── qa_api_test.cjs               ← API-/Datenfluss-Check gegen Supabase
+│   ├── qa_ai_e2e.cjs                 ← KI-Qualitätsprüfung gegen Gemini
+│   ├── qa_pricing.mjs                ← Pricing-/Subscription-QA
+│   └── seed_shared_social_hub.cjs    ← Reproduzierbarer Social-Hub-QA-Seed
 ├── app/                              ← Next.js App Router (dateibasiertes Routing)
 │   ├── layout.tsx                    ← Root-Layout (Fonts, Providers)
 │   ├── providers.tsx                 ← Client-seitiger Context-Provider-Wrapper (5 Provider)

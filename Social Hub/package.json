@@ -1,0 +1,15 @@
+{
+  "name": "socialhub-dev-runner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root npm scripts for the SocialHub FastAPI application",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "start": ".venv\\Scripts\\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "seed": ".venv\\Scripts\\python.exe -m app.seed_test_data --reset",
+    "qa": ".venv\\Scripts\\python.exe -m app.qa_live_e2e",
+    "qa:smoke": ".venv\\Scripts\\python.exe -m app.qa_live_supabase",
+    "qa:live": ".venv\\Scripts\\python.exe -m app.qa_live_supabase",
+    "qa:live:e2e": ".venv\\Scripts\\python.exe -m app.qa_live_e2e"
+  }
+}

@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Dashboard &mdash; SocialHub{% endblock %}
+{% block content %}
+<section class="hero-shell">
+    <div class="hero-kicker">Client-safe social automation</div>
+    <h1 class="hero-title">Generate faster. Review carefully. Publish with control.</h1>
+    <p class="hero-copy">
+        SocialHub keeps a human in the loop while orchestrating LinkedIn and Instagram through official APIs.
+        Your client gets faster content production without losing review control, brand safety, or operational visibility.
+    </p>
+    <div class="hero-actions">
+        <a href="/generate" class="btn btn-primary">Generate Post</a>
+        <a href="/settings" class="btn btn-outline">Review Go-Live Setup</a>
+    </div>
+    <div class="hero-meta">
+        <span class="chip chip-ready">Human review required before publishing</span>
+        <span class="chip chip-ready">Official LinkedIn + Instagram APIs</span>
+        <span class="chip {% if media_public_base_url %}chip-ready{% else %}chip-warn{% endif %}">
+            {% if media_public_base_url %}Public media URL configured{% else %}Instagram public media URL still needed{% endif %}
+        </span>
+    </div>
+    <div class="hero-score">
+        <strong>{{ readiness_score }}%</strong>
+        <span>Ready</span>
+    </div>
+</section>
+
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">Total Posts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ stats.drafts }}</div>
+        <div class="stat-label">Awaiting Review</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ stats.approved }}</div>
+        <div class="stat-label">Ready To Publish</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number">{{ stats.published }}</div>
+        <div class="stat-label">Published</div>
+    </div>
+    {% if stats.failed %}
+    <div class="card stat-card" style="border-color: var(--danger);">
+        <div class="stat-number" style="color: var(--danger);">{{ stats.failed }}</div>
+        <div class="stat-label">Needs Attention</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="insight-grid">
+    <div class="card">
+        <div class="flex-between mb-1">
+            <h3>Go-Live Readiness</h3>
+            <span class="chip {% if readiness_score >= 85 %}chip-ready{% elif readiness_score >= 60 %}chip-warn{% else %}chip-issue{% endif %}">
+                {{ readiness_score }}% operational fit
+            </span>
+        </div>
+        <div class="readiness-list">
+            {% for item in readiness_items %}
+            <div class="readiness-item state-{{ item.state }}">
+                <span class="readiness-dot"></span>
+                <div>
+                    <h4>{{ item.label }}</h4>
+                    <p>{{ item.detail }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="stack-grid">
+        <div class="metric-panel">
+            <div class="platform-badge platform-linkedin"><svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</div>
+            <h3 class="mt-1">Published footprint</h3>
+            <p>Official B2B distribution channel with comment follow-up support.</p>
+            <div class="metric-strip">
+                <div class="metric-pill">
+                    <strong>{{ stats.li_published }}</strong>
+                    <span>Published</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ li_days_str }}</strong>
+                    <span>Days</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ li_time }}</strong>
+                    <span>Time</span>
+                </div>
+            </div>
+        </div>
+        <div class="metric-panel">
+            <div class="platform-badge platform-instagram"><svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</div>
+            <h3 class="mt-1">Visual reach engine</h3>
+            <p>Square-first publishing flow with caption, comment, and image pipeline.</p>
+            <div class="metric-strip">
+                <div class="metric-pill">
+                    <strong>{{ stats.ig_published }}</strong>
+                    <span>Published</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ ig_days_str }}</strong>
+                    <span>Days</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ ig_time }}</strong>
+                    <span>Time</span>
+                </div>
+            </div>
+        </div>
+        <div class="metric-panel">
+            <h3>Human In The Loop</h3>
+            <p>Drafts are generated automatically, but publishing still requires approval. That is the right risk profile for client work.</p>
+            <div class="metric-strip">
+                <div class="metric-pill">
+                    <strong>{{ stats.drafts }}</strong>
+                    <span>Draft Queue</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ stats.approved }}</strong>
+                    <span>Approved</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>{{ topic_count }}</strong>
+                    <span>Topics</span>
+                </div>
+            </div>
+        </div>
+        <div class="metric-panel">
+            <h3>Business Value</h3>
+            <p>The strongest value is time saved in ideation, drafting, image generation, and scheduling, while keeping final client approval intact.</p>
+            <div class="metric-strip">
+                <div class="metric-pill">
+                    <strong>2</strong>
+                    <span>Channels</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>Official</strong>
+                    <span>APIs</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>Manual</strong>
+                    <span>Publish Gate</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2 mb-2">
+    <div class="card card-accent">
+        <div class="card-header">
+            <div class="flex-between">
+                <h3>Publishing Cadence</h3>
+                <a href="/settings" class="btn btn-ghost btn-sm">Edit</a>
+            </div>
+        </div>
+        <table>
+            <tr>
+                <th style="width:40%">LinkedIn</th>
+                <td>{{ li_days_str }} &middot; <span class="text-mono">{{ li_time }}</span></td>
+            </tr>
+            <tr>
+                <th>Instagram</th>
+                <td>{{ ig_days_str }} &middot; <span class="text-mono">{{ ig_time }}</span></td>
+            </tr>
+            <tr>
+                <th>Next LI publish</th>
+                <td>{% if li_next %}<strong class="text-red">{{ li_next.strftime('%d.%m.%Y %H:%M') }}</strong>{% else %}<span class="text-light">&mdash;</span>{% endif %}</td>
+            </tr>
+            <tr>
+                <th>Next IG publish</th>
+                <td>{% if ig_next %}<strong class="text-red">{{ ig_next.strftime('%d.%m.%Y %H:%M') }}</strong>{% else %}<span class="text-light">&mdash;</span>{% endif %}</td>
+            </tr>
+            <tr>
+                <th>Topic Queue</th>
+                <td><a href="/topics" style="color:var(--red); text-decoration:none; font-weight:600;">{{ topic_count }} topics pending</a></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3>Account Health</h3></div>
+        <table>
+            <tr>
+                <th style="width:40%">LinkedIn</th>
+                <td>
+                    {% if li_status == 'ok' %}
+                        <span class="text-success" style="font-weight:600;">&#10003; Connected{% if li_account %} &middot; {{ li_account.name }}{% endif %}</span>
+                    {% elif li_status == 'warning' %}
+                        <span class="text-warning" style="font-weight:600;">&#9888; Token expires in {{ li_days_left }}d</span>
+                    {% elif li_status == 'expired' %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Token expired</span>
+                    {% elif li_status == 'disconnected' %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Disconnected</span>
+                    {% else %}
+                        <a href="/settings" class="btn btn-primary btn-xs">Setup</a>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Instagram</th>
+                <td>
+                    {% if ig_status == 'ok' %}
+                        <span class="text-success" style="font-weight:600;">&#10003; Connected{% if ig_account %} &middot; @{{ ig_account.username }}{% endif %}</span>
+                    {% elif ig_status == 'warning' %}
+                        <span class="text-warning" style="font-weight:600;">&#9888; Token expires in {{ ig_days_left }}d</span>
+                    {% elif ig_status == 'expired' %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Token expired</span>
+                    {% elif ig_status == 'disconnected' %}
+                        <span class="text-danger" style="font-weight:600;">&#10007; Disconnected</span>
+                    {% else %}
+                        <a href="/settings" class="btn btn-primary btn-xs">Setup</a>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="flex-between mb-1">
+    <h3 style="font-size:1.12rem;">Pipeline <span class="text-mono text-light" style="font-size:0.85rem;">({{ upcoming|length }}/{{ max_pending }})</span></h3>
+    <a href="/generate" class="btn btn-primary btn-sm">+ New Post</a>
+</div>
+
+{% for post in upcoming %}
+<div class="card">
+    <div class="flex-between mb-1">
+        <div class="flex">
+            <span class="platform-badge platform-{{ post.platform.value }}">
+                {% if post.platform == 'instagram' %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram{% else %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn{% endif %}
+            </span>
+            <span class="badge badge-{{ post.status.value }}">{{ post.status.value }}</span>
+            <strong style="font-size:0.92rem;">{{ post.topic[:80] }}{% if post.topic|length > 80 %}...{% endif %}</strong>
+        </div>
+        <span class="text-light text-mono" style="font-size:0.78rem;">{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+    </div>
+    <div class="post-preview">{{ post.body[:300] }}{% if post.body|length > 300 %}...{% endif %}</div>
+    <div class="mt-2 flex">
+        <a href="/posts/{{ post.id }}" class="btn btn-outline btn-sm">View</a>
+        {% if post.status.value == 'draft' %}
+        <form method="POST" action="/posts/{{ post.id }}/approve" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+        </form>
+        {% elif post.status.value == 'approved' %}
+        <form method="POST" action="/posts/{{ post.id }}/publish-now" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-primary btn-sm">Publish Now</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card empty-state">
+    <div class="empty-icon">&#128221;</div>
+    <p>No posts in the pipeline.</p>
+    <a href="/generate" class="btn btn-primary">Generate Your First Post</a>
+</div>
+{% endfor %}
+{% endblock %}

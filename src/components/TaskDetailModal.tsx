@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useProjectPath } from '../hooks/useProjectRouter';
-import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play } from 'lucide-react';
+import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play, Share2, Sparkles, Loader2, CheckCircle2, Eye, Radio, AlertCircle } from 'lucide-react';
+import { generateFromTask, listPosts, type ScheduledPost } from '../lib/socialHub';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import { useTasks } from '../context/TaskContext';
 import { TaskAiAgent } from './TaskAiAgent';
 import FeatureGate from './FeatureGate';
@@ -24,6 +26,7 @@ interface TaskDetailModalProps {
 
 export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
     const { currentUser, can } = useAuth();
+    const { activeCompany } = useCompany();
     const { updateTask, deleteTask, executeAiAgent, sendAiFeedback, setPromptContext } = useTasks();
     const { contents } = useContents();
     const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
@@ -88,9 +91,25 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
     const canDelete = can ? can('canDeleteItems') : (currentUser?.role === 'company_admin' || currentUser?.role === 'manager');
-
-    // Find linked content(s) for this task
+    const canSocialHub = can('canUseSocialHub');
+    const [socialGenerating, setSocialGenerating] = useState(false);
+    const [socialGenResult, setSocialGenResult] = useState<{ post_id: string; platform: string } | null>(null);
+    const [socialGenError, setSocialGenError] = useState<string | null>(null);
+    const [linkedSocialPosts, setLinkedSocialPosts] = useState<ScheduledPost[]>([]);
+    const isGerman = language === 'de';
     const linkedContents = contents.filter(c => c.taskIds && c.taskIds.includes(task.id));
+
+    // Fetch social posts linked to this task (bidirectional sync)
+    useEffect(() => {
+        if (!canSocialHub || !activeCompany?.id) return;
+        let cancelled = false;
+        listPosts({ companyId: activeCompany.id, limit: 500 })
+            .then(posts => {
+                if (!cancelled) setLinkedSocialPosts(posts.filter(p => p.task_id === task.id));
+            })
+            .catch(() => { /* SH offline — task modal still works */ });
+        return () => { cancelled = true; };
+    }, [canSocialHub, activeCompany?.id, task.id, socialGenResult]);
 
     const getCampaignName = (campaignId: string | null | undefined) => {
         if (!campaignId) return 'Allgemein';
@@ -303,6 +322,166 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                         </div>
                     )}
 
+                    {/* ─── Social Hub Publishing CTA ─── */}
+                    {canSocialHub && !isEditing && (task.platform === 'LinkedIn' || task.platform === 'Instagram') &&
+                     ['Post (Beschreibung)', 'Post (Foto)', 'Videoskript', 'Video', 'Karousell'].includes(task.type) && (
+                        <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid #0ea5e9', background: 'rgba(14, 165, 233, 0.03)' }}>
+                            {/* Workflow indicator */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'var(--color-primary)', color: '#fff', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    {isGerman ? 'Aufgabe' : 'Task'}
+                                </span>
+                                <span>→</span>
+                                <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(14, 165, 233, 0.12)', color: '#0ea5e9', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    Social Hub
+                                </span>
+                                <span>→</span>
+                                <span style={{ padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(16,185,129,0.12)', color: 'var(--color-success)', fontWeight: 600, fontSize: '0.6rem' }}>
+                                    {task.platform}
+                                </span>
+                            </div>
+
+                            {socialGenResult ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <CheckCircle2 size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
+                                            {isGerman ? 'Post erfolgreich generiert!' : 'Post generated successfully!'}
+                                        </div>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                            {isGerman
+                                                ? `Entwurf für ${socialGenResult.platform} erstellt – bearbeite und veröffentliche ihn im Social Hub.`
+                                                : `Draft for ${socialGenResult.platform} created – edit and publish it in Social Hub.`}
+                                        </div>
+                                    </div>
+                                    <Link href={companyPath('/social-hub')} className="btn btn-primary btn-sm" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                        <Eye size={14} /> {isGerman ? 'Im Social Hub ansehen' : 'View in Social Hub'}
+                                    </Link>
+                                </div>
+                            ) : socialGenError ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <AlertCircle size={20} style={{ color: '#ef4444', flexShrink: 0 }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: '#ef4444' }}>
+                                            {isGerman ? 'Generierung fehlgeschlagen' : 'Generation failed'}
+                                        </div>
+                                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                            {socialGenError}
+                                        </div>
+                                    </div>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => setSocialGenError(null)}>
+                                        {isGerman ? 'Erneut versuchen' : 'Try again'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Share2 size={16} style={{ color: '#0ea5e9' }} />
+                                            Social Hub
+                                        </h4>
+                                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
+                                            {isGerman
+                                                ? (task.status === 'approved' || task.status === 'scheduled'
+                                                    ? `Diesen ${task.type} jetzt über den Social Hub auf ${task.platform} veröffentlichen.`
+                                                    : `Erstelle einen KI-generierten ${task.platform}-Post basierend auf dieser Aufgabe.`)
+                                                : (task.status === 'approved' || task.status === 'scheduled'
+                                                    ? `Publish this ${task.type} on ${task.platform} via Social Hub.`
+                                                    : `Generate an AI-powered ${task.platform} post based on this task.`)}
+                                        </p>
+                                    </div>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                        disabled={socialGenerating}
+                                        onClick={async () => {
+                                            setSocialGenerating(true);
+                                            setSocialGenError(null);
+                                            try {
+                                                const campaign = task.campaignId ? campaigns.find(c => c.id === task.campaignId) : null;
+                                                const result = await generateFromTask({
+                                                    companyId: activeCompany?.id || '',
+                                                    taskTitle: task.title,
+                                                    taskDescription: task.description || '',
+                                                    platform: task.platform?.toLowerCase() as 'linkedin' | 'instagram',
+                                                    campaignName: campaign?.name || '',
+                                                });
+                                                setSocialGenResult({ post_id: result.post_id, platform: result.platform });
+                                            } catch (e) {
+                                                const msg = e instanceof Error ? e.message : 'Unknown error';
+                                                setSocialGenError(isGerman
+                                                    ? `Social Hub ist nicht erreichbar oder die Generierung ist fehlgeschlagen. (${msg})`
+                                                    : `Social Hub is unreachable or generation failed. (${msg})`);
+                                            } finally {
+                                                setSocialGenerating(false);
+                                            }
+                                        }}
+                                    >
+                                        {socialGenerating ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />}
+                                        {socialGenerating
+                                            ? (isGerman ? 'Wird generiert…' : 'Generating…')
+                                            : (isGerman ? 'Post generieren' : 'Generate post')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Linked Social Hub Posts (bidirectional sync) */}
+                    {canSocialHub && (task.platform === 'LinkedIn' || task.platform === 'Instagram') && (
+                        <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid #8b5cf6', background: 'rgba(139,92,246,0.03)' }}>
+                            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Radio size={14} style={{ color: '#8b5cf6' }} />
+                                {isGerman ? 'Verknüpfte Social Hub Posts' : 'Linked Social Hub Posts'} ({linkedSocialPosts.length})
+                            </h4>
+                            {linkedSocialPosts.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {linkedSocialPosts.map(sp => (
+                                        <div key={sp.id} style={{
+                                            padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                                            background: 'var(--bg-elevated)', border: '1px solid rgba(139,92,246,0.15)',
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        }}>
+                                            <div>
+                                                <div style={{ fontWeight: 500, fontSize: 'var(--font-size-sm)' }}>{sp.topic || 'Social Post'}</div>
+                                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', display: 'flex', gap: '8px', marginTop: '3px' }}>
+                                                    <span>{sp.platform}</span>
+                                                    <span>·</span>
+                                                    <span style={{
+                                                        color: sp.status === 'published' ? 'var(--color-success)' : sp.status === 'approved' ? '#8b5cf6' : 'var(--text-tertiary)',
+                                                        fontWeight: sp.status === 'published' ? 600 : 400,
+                                                    }}>
+                                                        {sp.status === 'published'
+                                                            ? (isGerman ? 'Veröffentlicht' : 'Published')
+                                                            : sp.status === 'approved'
+                                                            ? (isGerman ? 'Freigegeben' : 'Approved')
+                                                            : sp.status === 'draft' || sp.status === 'generated'
+                                                            ? (isGerman ? 'Entwurf' : 'Draft')
+                                                            : sp.status}
+                                                    </span>
+                                                    {sp.published_at && <><span>·</span><span>{new Date(sp.published_at).toLocaleDateString(isGerman ? 'de-DE' : 'en-US')}</span></>}
+                                                </div>
+                                            </div>
+                                            <Link href={companyPath('/social-hub')} className="btn btn-ghost btn-sm" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <Eye size={12} /> {isGerman ? 'Ansehen' : 'View'}
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '12px', borderRadius: 'var(--radius-sm)',
+                                    background: 'var(--bg-elevated)', border: '1px dashed rgba(139,92,246,0.25)',
+                                    color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)',
+                                }}>
+                                    {isGerman
+                                        ? 'Noch keine Social Hub Posts mit dieser Aufgabe verknüpft. Nutze "Post generieren" oben, um einen Entwurf zu erstellen.'
+                                        : 'No Social Hub posts linked to this task yet. Use "Generate post" above to create a draft.'}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="card">
                         <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '12px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ressourcen</h4>
 
@@ -342,9 +521,22 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                             <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Speichern</button>
                         </>
                     ) : (
-                        <Link href={companyPath(`/campaigns/${task.campaignId}`)} className="btn btn-primary w-full" style={{ justifyContent: 'center' }}>
-                            Zur Kampagne navigieren <ArrowRight size={16} />
-                        </Link>
+                        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                            <Link href={companyPath(`/campaigns/${task.campaignId}`)} className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                                Zur Kampagne navigieren <ArrowRight size={16} />
+                            </Link>
+                            {canSocialHub && (task.platform === 'LinkedIn' || task.platform === 'Instagram') && (
+                                <Link href={companyPath('/social-hub')} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    <Radio size={14} /> {isGerman ? 'Social Hub öffnen' : 'Open Social Hub'}
+                                    {linkedSocialPosts.length > 0 && (
+                                        <span style={{
+                                            background: '#8b5cf6', color: '#fff', borderRadius: 'var(--radius-full)',
+                                            padding: '0 6px', fontSize: '0.6rem', fontWeight: 700, minWidth: '18px', textAlign: 'center',
+                                        }}>{linkedSocialPosts.length}</span>
+                                    )}
+                                </Link>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>

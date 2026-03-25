@@ -28,7 +28,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
-    const { loginWithCredentials, registerWithCredentials } = useAuth();
+    const { login, loginWithCredentials, registerWithCredentials } = useAuth();
     const { language, setLanguage } = useLanguage();
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [name, setName] = useState('');
@@ -47,6 +47,12 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+    const isDevelopmentBuild = process.env.NODE_ENV !== 'production';
+    const devQuickLogins = [
+        { userId: 'u3', companyId: 'c1', label: 'Anna Schmidt', role: 'Managerin' },
+        { userId: 'u1', companyId: 'c1', label: 'Daniel Moretz', role: 'Projekt-Admin' },
+        { userId: 'u4', companyId: 'c1', label: 'Lisa Bauer', role: 'Team-Member' },
+    ] as const;
 
     // Fetch plans for registration plan picker
     useEffect(() => {
@@ -226,6 +232,26 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
         setSuccessMessage('');
     };
 
+    const handleDevLogin = async (userId: string, companyId: string) => {
+        setError('');
+        setSuccessMessage('');
+        setIsLoading(true);
+        try {
+            const user = await api.fetchUserById(userId);
+            if (!user) {
+                setError(isEn ? 'Dev user not found.' : 'Dev-Benutzer wurde nicht gefunden.');
+                return;
+            }
+            localStorage.setItem('momentum_active_company', companyId);
+            login(user);
+            window.location.assign(`/project/${companyId}`);
+        } catch {
+            setError(isEn ? 'Dev quick login failed.' : 'Dev-Schnelllogin ist fehlgeschlagen.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="login-page">
             <div className="login-left">
@@ -280,6 +306,44 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                             {text.register}
                         </button>
                     </div>
+
+                    {isDevelopmentBuild && mode === 'login' && (
+                        <div style={{
+                            marginBottom: '16px',
+                            padding: '12px',
+                            borderRadius: 'var(--radius-lg)',
+                            border: '1px solid rgba(59,130,246,0.18)',
+                            background: 'rgba(59,130,246,0.05)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                        }}>
+                            <div>
+                                <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {isEn ? 'Development quick access' : 'Entwicklungs-Schnellzugang'}
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                                    {isEn ? 'Bootstraps a known demo user and project for QA and smoke tests.' : 'Startet einen bekannten Demo-Benutzer und das Projekt direkt fuer QA und Smoke-Tests.'}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {devQuickLogins.map(option => (
+                                    <button
+                                        key={option.userId}
+                                        type="button"
+                                        className="btn btn-ghost btn-sm"
+                                        disabled={isLoading}
+                                        data-testid={`dev-login-${option.userId}`}
+                                        onClick={() => handleDevLogin(option.userId, option.companyId)}
+                                        style={{ justifyContent: 'space-between', minWidth: '180px', border: '1px solid rgba(59,130,246,0.15)' }}
+                                    >
+                                        <span>{option.label}</span>
+                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.68rem' }}>{option.role}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <form className="login-form" onSubmit={handleSubmit}>
                         {mode === 'register' && (

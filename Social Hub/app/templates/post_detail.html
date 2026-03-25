@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% set active = "posts" %}
+{% block title %}Post #{{ post.id }} &mdash; SocialHub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .editor-layout { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start; }
+    .preview-pane {
+        position: sticky; top: 76px;
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        max-height: calc(100vh - 90px); overflow-y: auto;
+        box-shadow: var(--shadow-sm);
+        transition: box-shadow var(--transition);
+    }
+    .preview-pane:hover { box-shadow: var(--shadow-md); }
+    .preview-inner { padding: 1.25rem; }
+    .preview-header {
+        display: flex; align-items: center; gap: 0.65rem;
+        padding-bottom: 0.85rem; border-bottom: 1px solid var(--border); margin-bottom: 0.85rem;
+    }
+    .preview-avatar {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--red), var(--red-dark));
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: 700; font-size: 1rem;
+    }
+    .preview-body {
+        white-space: pre-wrap; font-size: 0.85rem; line-height: 1.6;
+        color: var(--text); min-height: 100px;
+    }
+    .preview-hashtags { color: var(--red); font-size: 0.82rem; margin-top: 0.75rem; font-weight: 500; }
+    .preview-img { width: 100%; border-radius: var(--radius-sm); margin-top: 1rem; }
+    .preview-label {
+        background: var(--bg); padding: 0.5rem 1.25rem; font-size: 0.72rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+        color: var(--text-light); border-bottom: 1px solid var(--border);
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .regen-box {
+        background: var(--bg); border-radius: var(--radius-sm); padding: 1rem;
+        margin-top: 0.75rem; border: 1px solid var(--border);
+    }
+    .regen-box input { margin-bottom: 0.5rem; }
+    @media (max-width: 900px) {
+        .editor-layout { grid-template-columns: 1fr; }
+        .preview-pane { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex-between" style="margin-bottom:1.5rem;">
+    <div class="flex">
+        <a href="/posts" class="btn btn-ghost btn-sm">&larr;</a>
+        <h1 style="font-size:1.35rem; font-weight:700;">Post #{{ post.id }}</h1>
+        <span class="platform-badge platform-{{ post.platform.value }}">
+            {% if post.platform == 'instagram' %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram{% else %}<svg class="platform-icon" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn{% endif %}
+        </span>
+        <span class="badge badge-{{ post.status.value }}">{{ post.status.value }}</span>
+    </div>
+    <div class="flex">
+        <form method="POST" action="/posts/{{ post.id }}/duplicate" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-outline btn-sm">Duplicate</button>
+        </form>
+        {% if post.status.value in ['draft', 'rejected', 'failed'] %}
+        <form method="POST" action="/posts/{{ post.id }}/delete" style="display:inline"
+              onsubmit="return confirm('Really delete this post?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="editor-layout">
+    <!-- Editor Column -->
+    <div>
+        <div class="card">
+            <form method="POST" action="/posts/{{ post.id }}/update" id="postForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <label>Topic</label>
+                <input type="text" name="topic" value="{{ post.topic }}" id="topicField">
+
+                <div class="flex-between">
+                    <label>Post Body</label>
+                    <span class="char-counter" id="charCount">{{ post.body|length }}/{{ max_chars }}</span>
+                </div>
+                <textarea name="body" rows="14" id="bodyField" maxlength="{{ max_chars }}">{{ post.body }}</textarea>
+
+                <label>Hashtags</label>
+                <input type="text" name="hashtags" value="{{ post.hashtags }}" id="hashtagsField"
+                       placeholder="#AI #Career #Automation">
+
+                <label>Sources</label>
+                <textarea name="sources" rows="3" id="sourcesField" style="min-height:80px;">{{ post.sources }}</textarea>
+
+                <label>Value Comment <span class="text-light" style="font-weight:400;">(posted after publishing)</span></label>
+                <textarea name="value_comment" rows="3" maxlength="500" id="commentField" style="min-height:80px;">{{ post.value_comment or '' }}</textarea>
+                <div class="char-counter" id="commentCount">{{ (post.value_comment or '')|length }}/500</div>
+
+                {% if post.status.value in ['draft', 'approved'] %}
+                <label>Scheduled For</label>
+                <input type="datetime-local" name="scheduled_for"
+                       value="{{ post.scheduled_for.strftime('%Y-%m-%dT%H:%M') if post.scheduled_for else '' }}">
+                <p class="form-hint">Optional: date/time for automatic publishing.</p>
+                {% endif %}
+
+                <label>Notes</label>
+                <textarea name="notes" rows="2" style="min-height:60px;">{{ post.notes }}</textarea>
+
+                <div class="flex flex-wrap mt-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    {% if post.status.value in ['draft', 'rejected'] %}
+                    <button type="submit" formaction="/posts/{{ post.id }}/approve" class="btn btn-success">Approve</button>
+                    {% endif %}
+                    {% if post.status.value in ['draft', 'approved'] %}
+                    <button type="submit" formaction="/posts/{{ post.id }}/reject" class="btn btn-outline">Reject</button>
+                    {% endif %}
+                    {% if post.status.value == 'approved' %}
+                    <button type="submit" formaction="/posts/{{ post.id }}/publish-now" class="btn btn-primary">Publish Now</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- AI Text Rewrite -->
+        {% if post.status.value in ['draft', 'rejected'] %}
+        <div class="card">
+            <h3>AI Rewrite</h3>
+            <p class="text-muted mb-1" style="font-size:0.82rem;">Rewrite the text with a custom instruction</p>
+            <div class="regen-box">
+                <input type="text" id="regenInstruction"
+                       placeholder="e.g. 'Make shorter', 'Add more data', 'More formal'">
+                <div class="flex">
+                    <button class="btn btn-outline btn-sm" id="regenTextBtn">Rewrite Text</button>
+                    <span id="regenStatus" class="text-muted" style="font-size:0.82rem;"></span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Image section -->
+        <div class="card">
+            <div class="flex-between">
+                <h3>Post Image</h3>
+                {% if post.image_prompt %}
+                <form method="POST" action="/posts/{{ post.id }}/regenerate-image" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-outline btn-sm">Regenerate Image</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if post.image_path %}
+            <img src="/images/{{ post.id }}" alt="Post image" style="width:100%; border-radius:var(--radius-sm); margin-top:0.5rem;">
+            {% else %}
+            <p class="text-muted mt-1">No image available.</p>
+            {% endif %}
+            {% if post.image_prompt %}
+            <details class="mt-2">
+                <summary class="text-light" style="cursor:pointer; font-size:0.82rem;">Show image prompt</summary>
+                <p class="text-light" style="margin-top:0.5rem; font-size:0.82rem; line-height:1.5;">{{ post.image_prompt }}</p>
+            </details>
+            {% endif %}
+        </div>
+
+        {% if post.platform_post_id %}
+        <div class="card">
+            <h3>Platform Data</h3>
+            <table>
+                <tr><th>Platform</th><td>{% if post.platform == 'instagram' %}Instagram{% else %}LinkedIn{% endif %}</td></tr>
+                <tr><th>Post ID</th><td class="text-mono text-light" style="font-size:0.78rem; word-break:break-all;">{{ post.platform_post_id }}</td></tr>
+                {% if post.platform_comment_id %}
+                <tr><th>Comment ID</th><td class="text-mono text-light" style="font-size:0.78rem; word-break:break-all;">{{ post.platform_comment_id }}</td></tr>
+                {% endif %}
+                {% if post.published_at %}
+                <tr><th>Published</th><td class="text-mono">{{ post.published_at.strftime('%d.%m.%Y %H:%M') }} UTC</td></tr>
+                {% endif %}
+            </table>
+        </div>
+        {% endif %}
+
+        {% if post.status.value == 'failed' and post.notes %}
+        <div class="card" style="border-color:var(--danger); border-left:3px solid var(--danger);">
+            <h3 style="color:var(--danger);">Error</h3>
+            <p style="font-size:0.875rem;">{{ post.notes }}</p>
+        </div>
+        {% endif %}
+
+        <p class="text-light mt-2" style="font-size:0.78rem;">
+            Created: {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+            {% if post.updated_at != post.created_at %} &middot; Updated: {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+            {% if post.scheduled_for %} &middot; Scheduled: {{ post.scheduled_for.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+        </p>
+    </div>
+
+    <!-- Preview Column -->
+    <div>
+        <div class="preview-pane">
+            <div class="preview-label">{% if post.platform == 'instagram' %}Instagram{% else %}LinkedIn{% endif %} Preview</div>
+            <div class="preview-inner">
+                <div class="preview-header">
+                    <div class="preview-avatar">W</div>
+                    <div>
+                        <strong style="font-size:0.9rem;">Waleri</strong><br>
+                        <span class="text-light" style="font-size:0.72rem;">CEO &middot; Gerade eben</span>
+                    </div>
+                </div>
+                <div class="preview-body" id="previewBody">{{ post.body }}</div>
+                <div class="preview-hashtags" id="previewHashtags">{{ post.hashtags }}</div>
+                {% if post.image_path %}
+                <img src="/images/{{ post.id }}" class="preview-img" alt="Preview">
+                {% endif %}
+            </div>
+        </div>
+
+        {% if post.value_comment %}
+        <div class="preview-pane mt-2">
+            <div class="preview-label">Value Comment Preview</div>
+            <div class="preview-inner">
+                <div class="preview-header" style="padding-bottom:0.5rem; margin-bottom:0.5rem;">
+                    <div class="preview-avatar" style="width:32px; height:32px; font-size:0.75rem;">W</div>
+                    <div>
+                        <strong style="font-size:0.82rem;">Waleri</strong>
+                    </div>
+                </div>
+                <p id="previewComment" style="font-size:0.82rem; line-height:1.5; white-space:pre-wrap;">{{ post.value_comment }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var bodyField = document.getElementById('bodyField');
+    var charCount = document.getElementById('charCount');
+    var commentField = document.getElementById('commentField');
+    var commentCount = document.getElementById('commentCount');
+    var hashtagsField = document.getElementById('hashtagsField');
+    var previewBody = document.getElementById('previewBody');
+    var previewHashtags = document.getElementById('previewHashtags');
+    var previewComment = document.getElementById('previewComment');
+    var maxChars = parseInt(bodyField.getAttribute('maxlength') || '3000', 10);
+
+    function updateBody() {
+        var len = bodyField.value.length;
+        charCount.textContent = len + '/' + maxChars;
+        charCount.className = 'char-counter' + (len > maxChars ? ' over' : '');
+        previewBody.textContent = bodyField.value;
+    }
+    function updateComment() {
+        commentCount.textContent = commentField.value.length + '/500';
+        if (previewComment) previewComment.textContent = commentField.value;
+    }
+    function updateHashtags() {
+        previewHashtags.textContent = hashtagsField.value;
+    }
+    bodyField.addEventListener('input', updateBody);
+    commentField.addEventListener('input', updateComment);
+    hashtagsField.addEventListener('input', updateHashtags);
+
+    var regenBtn = document.getElementById('regenTextBtn');
+    var regenInput = document.getElementById('regenInstruction');
+    var regenStatus = document.getElementById('regenStatus');
+
+    if (regenBtn) {
+        regenBtn.addEventListener('click', async function() {
+            var instruction = regenInput.value.trim();
+            if (!instruction) { regenInput.focus(); return; }
+            regenBtn.disabled = true;
+            regenStatus.textContent = 'Rewriting...';
+            try {
+                var resp = await socialHubFetch('/api/posts/{{ post.id }}/regenerate-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instruction: instruction })
+                });
+                var data = await resp.json();
+                if (data.body) {
+                    bodyField.value = data.body;
+                    updateBody();
+                    regenStatus.textContent = 'Done! Please save.';
+                    regenStatus.style.color = 'var(--success)';
+                    regenInput.value = '';
+                } else {
+                    regenStatus.textContent = data.error || 'Error';
+                    regenStatus.style.color = 'var(--danger)';
+                }
+            } catch(e) {
+                regenStatus.textContent = 'Connection error.';
+                regenStatus.style.color = 'var(--danger)';
+            }
+            regenBtn.disabled = false;
+            setTimeout(function() { regenStatus.textContent = ''; regenStatus.style.color = ''; }, 5000);
+        });
+        regenInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); regenBtn.click(); }
+        });
+    }
+})();
+</script>
+{% endblock %}

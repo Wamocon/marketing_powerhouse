@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% set active = "posts" %}
+{% block title %}Posts &mdash; {{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="flex-between" style="margin-bottom:1.5rem;">
+    <div class="page-header" style="margin-bottom:0;">
+        <h1>Posts <span class="text-mono text-light" style="font-size:1rem;">({{ posts|length }})</span></h1>
+    </div>
+    <a href="{{ sh_url('/project/' ~ project_id ~ '/generate') }}" class="btn btn-primary btn-sm">Generate New</a>
+</div>
+
+<!-- Status filters -->
+<div class="flex flex-wrap mb-2" style="gap: 0.35rem;">
+    <span class="text-light" style="font-size:0.78rem; margin-right:0.25rem; align-self:center;">Status:</span>
+     <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}{% if campaign_filter %}?campaign_id={{ campaign_filter }}{% endif %}"
+       class="btn btn-xs {% if not status_filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+     <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}?status=draft{% if campaign_filter %}&campaign_id={{ campaign_filter }}{% endif %}"
+       class="btn btn-xs {% if status_filter == 'draft' %}btn-primary{% else %}btn-outline{% endif %}">Drafts</a>
+     <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}?status=approved{% if campaign_filter %}&campaign_id={{ campaign_filter }}{% endif %}"
+       class="btn btn-xs {% if status_filter == 'approved' %}btn-primary{% else %}btn-outline{% endif %}">Approved</a>
+     <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}?status=published{% if campaign_filter %}&campaign_id={{ campaign_filter }}{% endif %}"
+       class="btn btn-xs {% if status_filter == 'published' %}btn-primary{% else %}btn-outline{% endif %}">Published</a>
+     <a href="{{ sh_url('/project/' ~ project_id ~ '/posts') }}?status=failed{% if campaign_filter %}&campaign_id={{ campaign_filter }}{% endif %}"
+       class="btn btn-xs {% if status_filter == 'failed' %}btn-primary{% else %}btn-outline{% endif %}">Failed</a>
+</div>
+
+{% if posts %}
+<div class="card" style="padding:0; overflow:hidden;">
+<table>
+    <thead>
+        <tr>
+            <th style="width:55px;">Platform</th>
+            <th>Content</th>
+            <th style="width:100px;">Status</th>
+            <th style="width:95px;">Created</th>
+            <th style="width:100px;">Campaign</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for post in posts %}
+        <tr style="animation: cardIn 0.3s ease both;">
+            <td>
+                <span class="platform-badge platform-{{ post.platform or 'unknown' }}">
+                    {{ post.platform or 'N/A' }}
+                </span>
+            </td>
+            <td>
+                <span style="font-weight:500;">
+                    {{ (post.content or 'Untitled')[:70] }}{% if (post.content or '')|length > 70 %}...{% endif %}
+                </span>
+            </td>
+            <td><span class="badge badge-{{ post.status }}">{{ post.status }}</span></td>
+            <td class="text-light text-mono" style="font-size:0.78rem;">
+                {{ post.created_at.strftime('%d.%m.%Y') if post.created_at else '—' }}
+            </td>
+            <td class="text-light" style="font-size:0.78rem;">
+                {% if post.campaign_id %}
+                <span class="chip chip-ready" style="font-size:0.7rem;padding:2px 8px;">Campaign</span>
+                {% else %}
+                —
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+    <h3>No posts yet</h3>
+    <p class="text-light">Generate your first AI-powered social media post for this project.</p>
+    <a href="{{ sh_url('/project/' ~ project_id ~ '/generate') }}" class="btn btn-primary" style="margin-top:1rem;">Generate Post</a>
+</div>
+{% endif %}
+{% endblock %}

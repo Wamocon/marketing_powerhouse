@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% set active = "generate" %}
+{% block title %}Generate &mdash; {{ project_name }} &mdash; SocialHub{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Generate Post</h1>
+    <p class="subtitle">AI creates a social media post for {{ project_name }}</p>
+</div>
+
+<div class="card card-accent">
+    <form method="POST" action="{{ sh_url('/project/' ~ project_id ~ '/generate') }}" id="genForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label>Platform</label>
+        <div class="flex mb-2" style="gap:0.5rem;">
+            <label class="platform-select-label">
+                <input type="radio" name="platform" value="linkedin" {% if sh_settings.default_platform == 'linkedin' or not sh_settings.default_platform %}checked{% endif %}>
+                <span class="platform-select-btn"><svg class="icon icon-md" aria-hidden="true"><use href="#icon-linkedin"></use></svg> LinkedIn</span>
+            </label>
+            <label class="platform-select-label">
+                <input type="radio" name="platform" value="instagram" {% if sh_settings.default_platform == 'instagram' %}checked{% endif %}>
+                <span class="platform-select-btn"><svg class="icon icon-md" aria-hidden="true"><use href="#icon-instagram"></use></svg> Instagram</span>
+            </label>
+        </div>
+
+        {% if campaigns %}
+        <label>Campaign <span class="text-light" style="font-weight:normal;font-size:0.8rem;">(optional)</span></label>
+        <select name="campaign_id" style="margin-bottom:1rem;">
+            <option value="">— No campaign —</option>
+            {% for c in campaigns %}
+            <option value="{{ c.id }}">{{ c.name }}{% if c.status %} ({{ c.status }}){% endif %}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+
+        <label>Topic</label>
+        <input type="text" name="topic" id="topicInput"
+               placeholder="e.g. AI trends in the job market 2026">
+        <p class="form-hint">
+            Describe what the post should be about. The AI will use your project settings
+            (tone: {{ sh_settings.ai_tone or 'professional' }}, language: {{ sh_settings.ai_language or 'de' }})
+            to generate content.
+        </p>
+
+        {% if sh_settings.content_pillars %}
+        <p class="form-hint" style="margin-top:0;">
+            Content pillars: {{ sh_settings.content_pillars|join(', ') }}
+        </p>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary" id="genBtn">
+            Generate Post
+        </button>
+    </form>
+</div>
+
+<!-- Project AI Settings Summary -->
+<div class="card">
+    <div class="flex-between mb-1">
+        <h3>AI Configuration</h3>
+        <a href="{{ sh_url('/project/' ~ project_id ~ '/settings') }}" class="btn btn-outline btn-sm">Edit Settings</a>
+    </div>
+    <table>
+        <tr><th style="width:35%;">Language</th><td>{{ sh_settings.ai_language or 'de' }}</td></tr>
+        <tr><th>Tone</th><td>{{ sh_settings.ai_tone or 'professional' }}</td></tr>
+        <tr><th>Persona</th><td>{{ sh_settings.ai_persona or '—' }}</td></tr>
+        <tr><th>Hashtag Strategy</th><td>{{ sh_settings.hashtag_strategy or 'moderate' }}</td></tr>
+        <tr><th>Default Platform</th><td>{{ sh_settings.default_platform or 'linkedin' }}</td></tr>
+    </table>
+</div>
+
+{% if accounts %}
+<div class="card">
+    <h3>Connected Accounts</h3>
+    {% for acct in accounts %}
+    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;">
+        <span class="platform-badge platform-{{ acct.platform }}">{{ acct.platform }}</span>
+        <span style="font-size:0.85rem;">{{ acct.account_name or acct.platform_user_id }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var genForm = document.getElementById('genForm');
+    var genBtn = document.getElementById('genBtn');
+    if (genForm) {
+        genForm.addEventListener('submit', function() {
+            genBtn.disabled = true;
+            genBtn.textContent = 'Generating...';
+        });
+    }
+})();
+</script>
+{% endblock %}

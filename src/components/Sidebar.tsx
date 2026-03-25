@@ -3,7 +3,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
-    Target, FileText, HelpCircle, Map, Radio,
+    Target, FileText, HelpCircle, Map, Radio, Share2,
     Building2, Shield, ArrowLeftRight, Compass,
     type LucideIcon,
 } from 'lucide-react';
@@ -48,6 +48,7 @@ const NAV: NavSection[] = [
             { path: '/touchpoints', icon: Radio, label: { de: 'Kanaele & Touchpoints', en: 'Channels & touchpoints' }, badgeKey: 'touchpoints' as const },
             { path: '/content-overview', icon: FileText, label: { de: 'Content-Uebersicht', en: 'Content overview' }, badgeKey: 'contents' as const },
             { path: '/content', icon: Calendar, label: { de: 'Content-Kalender', en: 'Content calendar' } },
+            { path: '/social-hub', icon: Share2, label: { de: 'Social Hub', en: 'Social Hub' }, requiredPermission: 'canUseSocialHub' },
             { path: '/budget', icon: Wallet, label: { de: 'Budget & Controlling', en: 'Budget & controlling' }, requiredPermission: 'canSeeBudget' },
         ],
     },

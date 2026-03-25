@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useProjectPath } from '../hooks/useProjectRouter';
-import { Calendar, FileText, CheckCircle, Plus, Clock, User, Edit2, Save, X, Trash2 } from 'lucide-react';
+import { Calendar, FileText, CheckCircle, Plus, Clock, User, Edit2, Save, X, Trash2, Share2, Eye, Radio } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { ContentLinkedTasks } from './ContentLinkedTasks';
+import { listPosts, type ScheduledPost } from '../lib/socialHub';
 import type { ContentItem, ContentStatus } from '../types';
 
 const CONTENT_TYPE_LABELS: Record<string, string> = {
@@ -21,16 +24,20 @@ interface ContentDetailModalProps {
 
 export default function ContentDetailModal({ content, onClose }: ContentDetailModalProps) {
     const { currentUser, can } = useAuth();
+    const { activeCompany } = useCompany();
     const { updateContent, deleteContent } = useContents();
     const { tasks, addTask } = useTasks();
     const { campaigns, touchpoints } = useData();
+    const { language } = useLanguage();
     const companyPath = useProjectPath();
+    const isGerman = language === 'de';
     const [isEditing, setIsEditing] = useState(false);
     const [edited, setEdited] = useState({ ...content });
     const [showNewTask, setShowNewTask] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskPlatform, setNewTaskPlatform] = useState(content.platform || '');
     const [newTaskAssignee, setNewTaskAssignee] = useState('');
+    const [linkedSocialPosts, setLinkedSocialPosts] = useState<ScheduledPost[]>([]);
     const hasUnsavedEdits = isEditing && JSON.stringify(edited) !== JSON.stringify(content);
     const hasUnsavedNewTask = Boolean(
         newTaskTitle.trim() ||
@@ -69,6 +76,34 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const linkedTasks = tasks.filter(t => content.taskIds && content.taskIds.includes(t.id));
     const hasTasks = linkedTasks.length > 0;
     const st = CONTENT_STATUSES[content.status];
+    const canSocialHub = can('canUseSocialHub');
+    const isSocialContent = content.contentType === 'social'
+        || content.platform === 'linkedin'
+        || content.platform === 'instagram'
+        || content.platform === 'LinkedIn'
+        || content.platform === 'Instagram';
+
+    useEffect(() => {
+        if (!canSocialHub || !activeCompany?.id || !isSocialContent) {
+            setLinkedSocialPosts([]);
+            return;
+        }
+        let cancelled = false;
+        listPosts({ companyId: activeCompany.id, contentItemId: content.id, limit: 50 })
+            .then(posts => {
+                if (!cancelled) {
+                    setLinkedSocialPosts(posts);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLinkedSocialPosts([]);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [activeCompany?.id, canSocialHub, content.id, isSocialContent]);
 
     const handleSave = () => {
         updateContent(content.id, edited);
@@ -274,6 +309,73 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                         setNewTaskAssignee={setNewTaskAssignee}
                         handleAddTask={handleAddTask}
                     />
+
+                    {canSocialHub && isSocialContent && (
+                        <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid #8b5cf6', background: 'rgba(139,92,246,0.03)' }}>
+                            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Radio size={14} style={{ color: '#8b5cf6' }} />
+                                {isGerman ? 'Verknüpfte Social Hub Posts' : 'Linked Social Hub Posts'} ({linkedSocialPosts.length})
+                            </h4>
+                            {linkedSocialPosts.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {linkedSocialPosts.map(post => (
+                                        <div key={post.id} style={{
+                                            padding: '10px 12px',
+                                            borderRadius: 'var(--radius-sm)',
+                                            background: 'var(--bg-elevated)',
+                                            border: '1px solid rgba(139,92,246,0.15)',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                        }}>
+                                            <div>
+                                                <div style={{ fontWeight: 500, fontSize: 'var(--font-size-sm)' }}>{post.topic || 'Social Post'}</div>
+                                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', display: 'flex', gap: '8px', marginTop: '3px', flexWrap: 'wrap' }}>
+                                                    <span>{post.platform || content.platform || 'Social'}</span>
+                                                    <span>·</span>
+                                                    <span style={{
+                                                        color: post.status === 'published' ? 'var(--color-success)' : post.status === 'approved' ? '#8b5cf6' : 'var(--text-tertiary)',
+                                                        fontWeight: post.status === 'published' ? 600 : 400,
+                                                    }}>
+                                                        {post.status === 'published'
+                                                            ? (isGerman ? 'Veröffentlicht' : 'Published')
+                                                            : post.status === 'approved'
+                                                            ? (isGerman ? 'Freigegeben' : 'Approved')
+                                                            : post.status === 'draft'
+                                                            ? (isGerman ? 'Entwurf' : 'Draft')
+                                                            : post.status}
+                                                    </span>
+                                                    {(post.scheduled_at || post.published_at) && <><span>·</span><span>{new Date(post.scheduled_at || post.published_at || '').toLocaleDateString(isGerman ? 'de-DE' : 'en-US')}</span></>}
+                                                </div>
+                                            </div>
+                                            <Link href={companyPath('/social-hub')} className="btn btn-ghost btn-sm" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                <Eye size={12} /> {isGerman ? 'Ansehen' : 'View'}
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '16px',
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: 'var(--bg-elevated)',
+                                    border: '1px dashed rgba(139,92,246,0.25)',
+                                    textAlign: 'center',
+                                }}>
+                                    <div style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', marginBottom: '10px' }}>
+                                        {isGerman
+                                            ? 'Noch keine Social Hub Posts mit diesem Content verknüpft.'
+                                            : 'No Social Hub posts linked to this content yet.'}
+                                    </div>
+                                    <Link href={companyPath('/social-hub')} className="btn btn-ghost btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                        <Radio size={14} style={{ color: '#8b5cf6' }} />
+                                        {isGerman ? 'Im Social Hub erstellen' : 'Create in Social Hub'}
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -281,15 +383,26 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
             <div className="modal-footer" style={{ background: 'var(--bg-surface)' }}>
                 {isEditing ? (
                     <>
-                        <button className="btn btn-ghost" onClick={handleCancelEditing}>Abbrechen</button>
-                        <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> Speichern</button>
+                        <button className="btn btn-ghost" onClick={handleCancelEditing}>{isGerman ? 'Abbrechen' : 'Cancel'}</button>
+                        <button className="btn btn-primary" onClick={handleSave}><Save size={16} /> {isGerman ? 'Speichern' : 'Save'}</button>
                     </>
                 ) : (
                     <>
                         {content.campaignId && (
-                            <Link href={companyPath(`/campaigns/${content.campaignId}`)} className="btn btn-primary">Zur Kampagne →</Link>
+                            <Link href={companyPath(`/campaigns/${content.campaignId}`)} className="btn btn-primary">{isGerman ? 'Zur Kampagne' : 'Go to campaign'} →</Link>
                         )}
-                        <Link href={companyPath('/content')} className="btn btn-secondary">Zum Kalender →</Link>
+                        <Link href={companyPath('/content')} className="btn btn-secondary">{isGerman ? 'Zum Kalender' : 'Calendar'} →</Link>
+                        {canSocialHub && isSocialContent && (
+                            <Link href={companyPath('/social-hub')} className="btn btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Radio size={14} /> {isGerman ? 'Social Hub' : 'Social Hub'}
+                                {linkedSocialPosts.length > 0 && (
+                                    <span style={{
+                                        background: '#8b5cf6', color: '#fff', borderRadius: 'var(--radius-full)',
+                                        padding: '0 6px', fontSize: '0.6rem', fontWeight: 700, minWidth: '18px', textAlign: 'center',
+                                    }}>{linkedSocialPosts.length}</span>
+                                )}
+                            </Link>
+                        )}
                     </>
                 )}
             </div>

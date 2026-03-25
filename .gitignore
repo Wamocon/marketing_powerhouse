@@ -13,6 +13,13 @@ dist-ssr
 .next
 out
 *.local
+.env
+.venv/
+Social Hub/.env
+Social Hub/.venv/
+test-results/
+playwright-report/
+tsconfig.tsbuildinfo
 
 # Editor directories and files
 .vscode/*

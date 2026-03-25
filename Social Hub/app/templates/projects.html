@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set active = "projects" %}
+{% block title %}Projects &mdash; SocialHub{% endblock %}
+{% block content %}
+<section class="hero-shell">
+    <div class="hero-kicker">Multi-project management</div>
+    <h1 class="hero-title">Select a project to manage its social media presence.</h1>
+    <p class="hero-copy">
+        Each project represents a company from your Momentum workspace.
+        Configure AI settings, generate posts, view campaigns, and track analytics per project.
+    </p>
+    <div class="hero-meta">
+        <span class="chip chip-ready">{{ companies|length }} Project{{ 's' if companies|length != 1 else '' }}</span>
+        <span class="chip chip-ready">Connected via shared database</span>
+    </div>
+</section>
+
+{% if companies %}
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    {% for company in companies %}
+    <a href="{{ sh_url('/project/' ~ company.id) }}" class="card stat-card" style="text-decoration:none; color:var(--text); cursor:pointer; transition: transform 0.2s, box-shadow 0.2s;"
+       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'"
+       onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <div style="width:48px;height:48px;border-radius:12px;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;">
+                {{ company.name[:2]|upper }}
+            </div>
+            <div>
+                <h3 style="margin:0;font-size:1rem;">{{ company.name }}</h3>
+                {% if company.industry %}
+                <span class="text-light" style="font-size:0.78rem;">{{ company.industry }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="metric-strip" style="margin-top:auto;">
+            <div class="metric-pill">
+                <strong>{{ company_stats[company.id].posts }}</strong>
+                <span>Posts</span>
+            </div>
+            <div class="metric-pill">
+                <strong>{{ company_stats[company.id].accounts }}</strong>
+                <span>Accounts</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;">
+    <h3>No projects found</h3>
+    <p class="text-light">Create companies in the Momentum app first. They will appear here automatically.</p>
+</div>
+{% endif %}
+{% endblock %}
