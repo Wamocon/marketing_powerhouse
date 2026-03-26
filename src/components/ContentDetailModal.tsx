@@ -8,8 +8,11 @@ import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/
 import { useTasks } from '../context/TaskContext';
 import { useData } from '../context/DataContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
 import { ContentLinkedTasks } from './ContentLinkedTasks';
+import SocialHubUpgradePrompt from './SocialHubUpgradePrompt';
 import { listPosts, type ScheduledPost } from '../lib/socialHub';
 import type { ContentItem, ContentStatus } from '../types';
 
@@ -29,6 +32,7 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const { tasks, addTask } = useTasks();
     const { campaigns, touchpoints } = useData();
     const { language } = useLanguage();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const companyPath = useProjectPath();
     const isGerman = language === 'de';
     const [isEditing, setIsEditing] = useState(false);
@@ -76,12 +80,15 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
     const linkedTasks = tasks.filter(t => content.taskIds && content.taskIds.includes(t.id));
     const hasTasks = linkedTasks.length > 0;
     const st = CONTENT_STATUSES[content.status];
-    const canSocialHub = can('canUseSocialHub');
+    const canSocialHubRole = can('canUseSocialHub');
+    const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
+    const canSocialHub = canSocialHubRole && hasSocialHubPlanAccess;
     const isSocialContent = content.contentType === 'social'
         || content.platform === 'linkedin'
         || content.platform === 'instagram'
         || content.platform === 'LinkedIn'
         || content.platform === 'Instagram';
+    const showSocialHubUpgrade = canSocialHubRole && !subscriptionLoading && !hasSocialHubPlanAccess && isSocialContent;
 
     useEffect(() => {
         if (!canSocialHub || !activeCompany?.id || !isSocialContent) {
@@ -310,6 +317,12 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                         handleAddTask={handleAddTask}
                     />
 
+                    {showSocialHubUpgrade && (
+                        <div style={{ marginBottom: '16px' }}>
+                            <SocialHubUpgradePrompt compact />
+                        </div>
+                    )}
+
                     {canSocialHub && isSocialContent && (
                         <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid #8b5cf6', background: 'rgba(139,92,246,0.03)' }}>
                             <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -401,6 +414,11 @@ export default function ContentDetailModal({ content, onClose }: ContentDetailMo
                                         padding: '0 6px', fontSize: '0.6rem', fontWeight: 700, minWidth: '18px', textAlign: 'center',
                                     }}>{linkedSocialPosts.length}</span>
                                 )}
+                            </Link>
+                        )}
+                        {showSocialHubUpgrade && (
+                            <Link href={companyPath('/settings?tab=subscription')} className="btn btn-ghost" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Radio size={14} /> {isGerman ? 'Social Hub freischalten' : 'Unlock Social Hub'}
                             </Link>
                         )}
                     </>

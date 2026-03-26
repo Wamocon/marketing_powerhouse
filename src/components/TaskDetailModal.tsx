@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react';
+import { AlertCircle, ArrowRight, Calendar, CheckCircle2, CheckSquare, Clock, Edit2, ExternalLink, Eye, FileText, Loader2, Radio, Save, Share2, Sparkles, Trash2, User, X } from 'lucide-react';
 import Link from 'next/link';
-import { useProjectPath } from '../hooks/useProjectRouter';
-import { Calendar, CheckSquare, Clock, ArrowRight, User, ExternalLink, Globe, Edit2, Save, X, FileText, Trash2, Play, Share2, Sparkles, Loader2, CheckCircle2, Eye, Radio, AlertCircle } from 'lucide-react';
-import { generateFromTask, listPosts, type ScheduledPost } from '../lib/socialHub';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
-import { useTasks } from '../context/TaskContext';
-import { TaskAiAgent } from './TaskAiAgent';
-import FeatureGate from './FeatureGate';
-import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
+import { CONTENT_STATUSES, useContents } from '../context/ContentContext';
 import { useData } from '../context/DataContext';
-import { usePublishing } from '../context/PublishingContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePublishing } from '../context/PublishingContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { useTasks } from '../context/TaskContext';
+import { useProjectPath } from '../hooks/useProjectRouter';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
+import { generateFromTask, listPosts, type ScheduledPost } from '../lib/socialHub';
 import type { Task } from '../types';
+import FeatureGate from './FeatureGate';
+import SocialHubUpgradePrompt from './SocialHubUpgradePrompt';
+import { TaskAiAgent } from './TaskAiAgent';
 
 const UI_STATE_LABELS: Record<string, string> = {
     draft: 'Entwurf', ai_generating: 'KI generiert…', ai_ready: 'KI-Vorschlag', review: 'Im Review', revision: 'Überarbeitung',
@@ -32,6 +35,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     const { campaigns, users: testUsers, touchpoints, audiences, positioning, companyKeywords, customerJourneys } = useData();
     const { knowledgeDocuments } = usePublishing();
     const { language } = useLanguage();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const companyPath = useProjectPath();
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
@@ -91,13 +95,85 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     // Permissions: Admin, Manager, or the assigned user can edit
     const canEdit = currentUser?.role === 'company_admin' || currentUser?.role === 'manager' || task?.assignee === currentUser?.name;
     const canDelete = can ? can('canDeleteItems') : (currentUser?.role === 'company_admin' || currentUser?.role === 'manager');
-    const canSocialHub = can('canUseSocialHub');
+    const canSocialHubRole = can('canUseSocialHub');
+    const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
+    const canSocialHub = canSocialHubRole && hasSocialHubPlanAccess;
     const [socialGenerating, setSocialGenerating] = useState(false);
     const [socialGenResult, setSocialGenResult] = useState<{ post_id: string; platform: string } | null>(null);
     const [socialGenError, setSocialGenError] = useState<string | null>(null);
     const [linkedSocialPosts, setLinkedSocialPosts] = useState<ScheduledPost[]>([]);
     const isGerman = language === 'de';
     const linkedContents = contents.filter(c => c.taskIds && c.taskIds.includes(task.id));
+    const isEligibleSocialTask = (task.platform === 'LinkedIn' || task.platform === 'Instagram')
+        && ['Post (Beschreibung)', 'Post (Foto)', 'Videoskript', 'Video', 'Karousell'].includes(task.type);
+    const showSocialHubUpgrade = canSocialHubRole && !subscriptionLoading && !hasSocialHubPlanAccess && isEligibleSocialTask;
+
+    const formatSocialHubError = (message: string) => {
+        const normalized = message.toLowerCase();
+        if (normalized.includes('available on pro and ultimate') || normalized.includes('upgrade to pro')) {
+            return isGerman
+                ? 'Der Social Hub ist in deinem aktuellen Plan noch gesperrt. Upgrade auf Pro oder Ultimate, um Social Posts direkt aus Aufgaben zu erzeugen.'
+                : 'Social Hub is locked on your current plan. Upgrade to Pro or Ultimate to generate social posts directly from tasks.';
+        }
+        if (normalized.includes('authentication required') || normalized.includes('access denied')) {
+            return isGerman
+                ? 'Die Verbindung zum Social Hub konnte nicht verifiziert werden. Bitte lade die Seite neu und versuche es erneut.'
+                : 'The Social Hub session could not be verified. Refresh the page and try again.';
+        }
+        if (normalized.includes('temporarily unavailable') || normalized.includes('draft generation is temporarily unavailable')) {
+            return isGerman
+                ? 'Der Social Hub ist momentan ausgelastet. Bitte versuche es in einem Moment erneut.'
+                : 'The Social Hub is temporarily busy. Please try again in a moment.';
+        }
+        return isGerman
+            ? 'Der Beitrag konnte gerade nicht generiert werden. Bitte prüfe die Social-Hub-Konfiguration und versuche es erneut.'
+            : 'The post could not be generated right now. Check the Social Hub setup and try again.';
+    };
+
+    const handleGenerateSocialPost = async () => {
+        setSocialGenerating(true);
+        setSocialGenError(null);
+        setSocialGenResult(null);
+
+        try {
+            const campaign = task.campaignId ? campaigns.find(c => c.id === task.campaignId) : null;
+            const audience = campaign?.targetAudiences?.[0]
+                ? audiences.find(a => a.id === campaign.targetAudiences[0])
+                : audiences[0] || null;
+            const touchpoint = task.touchpointId ? touchpoints.find(tp => tp.id === task.touchpointId) : null;
+
+            const result = await generateFromTask({
+                companyId: activeCompany?.id || '',
+                taskId: task.id,
+                taskTitle: task.title,
+                taskDescription: task.description || '',
+                platform: task.platform?.toLowerCase() as 'linkedin' | 'instagram',
+                campaignId: campaign?.id || '',
+                campaignName: campaign?.name || '',
+                campaignGoal: campaign?.description || '',
+                taskType: task.type || '',
+                publishDate: task.publishDate,
+                targetAudience: audience?.name || '',
+                tone: positioning.toneOfVoice?.description || '',
+                brandName: positioning.name || '',
+                brandIndustry: positioning.industry || '',
+                brandTagline: positioning.tagline || '',
+                brandTone: (positioning.toneOfVoice?.adjectives ?? []).join(', '),
+                brandDos: positioning.dos ?? [],
+                brandDonts: positioning.donts ?? [],
+                keywords: (companyKeywords ?? []).map(keyword => keyword.term),
+                journeyPhase: touchpoint?.journeyPhase || '',
+                language: isGerman ? 'de' : 'en',
+            });
+
+            setSocialGenResult({ post_id: result.post_id, platform: result.platform });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            setSocialGenError(formatSocialHubError(message));
+        } finally {
+            setSocialGenerating(false);
+        }
+    };
 
     // Fetch social posts linked to this task (bidirectional sync)
     useEffect(() => {
@@ -323,8 +399,13 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                     )}
 
                     {/* ─── Social Hub Publishing CTA ─── */}
-                    {canSocialHub && !isEditing && (task.platform === 'LinkedIn' || task.platform === 'Instagram') &&
-                     ['Post (Beschreibung)', 'Post (Foto)', 'Videoskript', 'Video', 'Karousell'].includes(task.type) && (
+                    {showSocialHubUpgrade && !isEditing && (
+                        <div style={{ marginBottom: '16px' }}>
+                            <SocialHubUpgradePrompt compact />
+                        </div>
+                    )}
+
+                    {canSocialHub && !isEditing && isEligibleSocialTask && (
                         <div className="card" style={{ marginBottom: '16px', borderLeft: '4px solid #0ea5e9', background: 'rgba(14, 165, 233, 0.03)' }}>
                             {/* Workflow indicator */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
@@ -357,6 +438,10 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                                     <Link href={companyPath('/social-hub')} className="btn btn-primary btn-sm" style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                                         <Eye size={14} /> {isGerman ? 'Im Social Hub ansehen' : 'View in Social Hub'}
                                     </Link>
+                                    <button className="btn btn-ghost btn-sm" onClick={handleGenerateSocialPost} disabled={socialGenerating}>
+                                        {socialGenerating ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />}
+                                        {isGerman ? 'Neuen Entwurf generieren' : 'Generate new draft'}
+                                    </button>
                                 </div>
                             ) : socialGenError ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -369,7 +454,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                                             {socialGenError}
                                         </div>
                                     </div>
-                                    <button className="btn btn-ghost btn-sm" onClick={() => setSocialGenError(null)}>
+                                    <button className="btn btn-ghost btn-sm" onClick={handleGenerateSocialPost} disabled={socialGenerating}>
                                         {isGerman ? 'Erneut versuchen' : 'Try again'}
                                     </button>
                                 </div>
@@ -394,28 +479,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                                         className="btn btn-primary btn-sm"
                                         style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                                         disabled={socialGenerating}
-                                        onClick={async () => {
-                                            setSocialGenerating(true);
-                                            setSocialGenError(null);
-                                            try {
-                                                const campaign = task.campaignId ? campaigns.find(c => c.id === task.campaignId) : null;
-                                                const result = await generateFromTask({
-                                                    companyId: activeCompany?.id || '',
-                                                    taskTitle: task.title,
-                                                    taskDescription: task.description || '',
-                                                    platform: task.platform?.toLowerCase() as 'linkedin' | 'instagram',
-                                                    campaignName: campaign?.name || '',
-                                                });
-                                                setSocialGenResult({ post_id: result.post_id, platform: result.platform });
-                                            } catch (e) {
-                                                const msg = e instanceof Error ? e.message : 'Unknown error';
-                                                setSocialGenError(isGerman
-                                                    ? `Social Hub ist nicht erreichbar oder die Generierung ist fehlgeschlagen. (${msg})`
-                                                    : `Social Hub is unreachable or generation failed. (${msg})`);
-                                            } finally {
-                                                setSocialGenerating(false);
-                                            }
-                                        }}
+                                        onClick={handleGenerateSocialPost}
                                     >
                                         {socialGenerating ? <Loader2 size={14} className="spin" /> : <Sparkles size={14} />}
                                         {socialGenerating
@@ -534,6 +598,11 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                                             padding: '0 6px', fontSize: '0.6rem', fontWeight: 700, minWidth: '18px', textAlign: 'center',
                                         }}>{linkedSocialPosts.length}</span>
                                     )}
+                                </Link>
+                            )}
+                            {showSocialHubUpgrade && (
+                                <Link href={companyPath('/settings?tab=subscription')} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    <Sparkles size={14} /> {isGerman ? 'Auf Pro upgraden' : 'Upgrade to Pro'}
                                 </Link>
                             )}
                         </div>

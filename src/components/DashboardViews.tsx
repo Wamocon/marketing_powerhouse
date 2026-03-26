@@ -17,7 +17,9 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { buildDashboardStats, CustomTooltip, getTaskColorLogic, BudgetOverview } from './DashboardComponents';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
 import { checkSocialHubHealth, listPosts, type ScheduledPost } from '../lib/socialHub';
 
 interface DashboardViewProps {
@@ -34,7 +36,12 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
     const { can } = useAuth();
     const { activeCompany } = useCompany();
     const { language } = useLanguage();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const isGerman = language === 'de';
+    const canSocialHubRole = can('canUseSocialHub');
+    const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
+    const canSocialHub = canSocialHubRole && hasSocialHubPlanAccess;
+    const showSocialHubUpgrade = canSocialHubRole && !subscriptionLoading && !hasSocialHubPlanAccess;
     const activeCampaigns = campaigns.filter(c => c.status === 'active');
     const stats = buildDashboardStats(dashboardChartData, budgetData);
 
@@ -42,7 +49,7 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
     const [shOnline, setShOnline] = useState<boolean | null>(null);
     const [shPosts, setShPosts] = useState<ScheduledPost[]>([]);
     useEffect(() => {
-        if (!can('canUseSocialHub') || !activeCompany?.id) return;
+        if (!canSocialHub || !activeCompany?.id) return;
         let cancelled = false;
         (async () => {
             try {
@@ -55,7 +62,7 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
             }
         })();
         return () => { cancelled = true; };
-    }, [activeCompany?.id, can]);
+    }, [activeCompany?.id, canSocialHub]);
     return (
         <>
             <div className="stats-grid">
@@ -213,7 +220,7 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
             <BudgetOverview navigate={navigate} />
 
             {/* Social Hub Quick Access – Live Stats */}
-            {can('canUseSocialHub') && (
+            {canSocialHub && (
             <div className="card">
                 <div className="card-header">
                     <div>
@@ -285,6 +292,35 @@ export function AdminDashboard({ navigate, setSelectedTask: _st, setSelectedCont
                         </div>
                     );
                 })()}
+            </div>
+            )}
+
+            {showSocialHubUpgrade && (
+            <div className="card">
+                <div className="card-header">
+                    <div>
+                        <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Radio size={18} style={{ color: 'var(--color-primary)' }} /> Social Hub
+                        </div>
+                        <div className="card-subtitle">{isGerman ? 'Ab Pro verfuegbar' : 'Available from Pro'}</div>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => navigate('/settings?tab=subscription')}>
+                        {isGerman ? 'Upgrade' : 'Upgrade'} <ArrowUpRight size={14} />
+                    </button>
+                </div>
+                <div style={{
+                    padding: '16px', borderRadius: 'var(--radius-md)', background: 'rgba(193, 41, 46, 0.04)',
+                    border: '1px solid rgba(193, 41, 46, 0.15)', display: 'flex', flexDirection: 'column', gap: '8px',
+                }}>
+                    <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>
+                        {isGerman ? 'KI-Social-Publishing fuer wachsende Teams' : 'AI social publishing for growing teams'}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                        {isGerman
+                            ? 'Mit Pro generierst du Social Drafts aus Momentum, steuerst Freigaben zentral und veroefentlichst direkt aus deinem Workflow.'
+                            : 'With Pro, you generate social drafts from Momentum, manage approvals centrally, and publish inside one workflow.'}
+                    </div>
+                </div>
             </div>
             )}
         </>

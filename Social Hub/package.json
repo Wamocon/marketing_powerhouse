@@ -7,9 +7,11 @@
     "dev": "node scripts/dev-server.mjs",
     "start": ".venv\\Scripts\\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
     "seed": ".venv\\Scripts\\python.exe -m app.seed_test_data --reset",
+    "qa:ai:regression": ".venv\\Scripts\\python.exe -m app.qa_ai_regression",
     "qa": ".venv\\Scripts\\python.exe -m app.qa_live_e2e",
     "qa:smoke": ".venv\\Scripts\\python.exe -m app.qa_live_supabase",
     "qa:live": ".venv\\Scripts\\python.exe -m app.qa_live_supabase",
-    "qa:live:e2e": ".venv\\Scripts\\python.exe -m app.qa_live_e2e"
+    "qa:live:e2e": ".venv\\Scripts\\python.exe -m app.qa_live_e2e",
+    "qa:live:ai": "set QA_ENABLE_LIVE_AI=1&& .venv\\Scripts\\python.exe -m app.qa_live_e2e"
   }
 }

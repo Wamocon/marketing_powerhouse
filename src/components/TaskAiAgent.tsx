@@ -1,6 +1,6 @@
-import type { Task } from '../types';
-import { Sparkles, RefreshCw, MessageSquare } from 'lucide-react';
+import { MessageSquare, RefreshCw, Sparkles } from 'lucide-react';
 import { type ReactNode } from 'react';
+import type { Task } from '../types';
 
 /** Lightweight markdown → JSX for AI output (handles headings, bold, italic, lists, dividers) */
 function renderMarkdown(text: string): ReactNode[] {
@@ -150,6 +150,14 @@ export function TaskAiAgent({
                                 onChange={e => setAiFeedbackText(e.target.value)}
                             />
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                <button
+                                    className="btn btn-ghost btn-sm"
+                                    onClick={() => {
+                                        executeAiAgent(task.id, '', task.type || 'Post (Beschreibung)');
+                                    }}
+                                >
+                                    <RefreshCw size={14} /> Neu generieren
+                                </button>
                                 <button
                                     className="btn btn-secondary btn-sm"
                                     onClick={() => {
