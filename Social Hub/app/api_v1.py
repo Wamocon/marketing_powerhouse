@@ -654,17 +654,87 @@ async def api_regenerate_text(post_id: str, req: RegenerateTextRequest, request:
         if post.company_id != auth.company_id:
             raise HTTPException(403, detail="Access denied.")
         body = post.post_text
+        topic = post.topic
+        existing_hashtags = list(post.hashtags or [])
+        existing_value_comment = post.auto_comment_text or ""
+        existing_image_prompt = post.image_prompt or ""
+        account = session.get(MomentumConnectedAccount, post.connected_account_id)
+        platform = account.platform if account else (post.platform or "linkedin")
+        company = session.exec(
+            select(MomentumCompany).where(MomentumCompany.id == auth.company_id)
+        ).first()
+        settings_row = session.exec(
+            select(SocialHubSettings).where(SocialHubSettings.company_id == auth.company_id)
+        ).first()
+        company_context = ""
+        settings_context = ""
+        hashtag_strategy = "moderate"
+        language = "de"
+        if company:
+            company_context = (
+                f"Unternehmen: {company.name}\n"
+                f"Branche: {getattr(company, 'industry', '')}\n"
+                f"Zielgruppe: {getattr(company, 'target_audience', '')}\n"
+            )
+        if settings_row:
+            if settings_row.ai_tone:
+                settings_context += f"Tonalität: {settings_row.ai_tone}\n"
+            if settings_row.ai_persona:
+                settings_context += f"Persona: {settings_row.ai_persona}\n"
+            if settings_row.content_pillars:
+                settings_context += f"Content-Säulen: {', '.join(settings_row.content_pillars)}\n"
+            if settings_row.hashtag_strategy:
+                settings_context += f"Hashtag-Strategie: {settings_row.hashtag_strategy}\n"
+                hashtag_strategy = settings_row.hashtag_strategy
+            if settings_row.ai_language:
+                language = settings_row.ai_language
+
+        brief_context = "\n".join(part for part in [company_context, settings_context] if part).strip()
 
     try:
-        new_body = await gemini_service.regenerate_text(body, req.instruction)
+        try:
+            regenerated = await gemini_service.regenerate_post(
+                body,
+                req.instruction,
+                platform=platform,
+                topic=topic,
+                brief_context=brief_context,
+                hashtag_strategy=hashtag_strategy,
+                language=language,
+            )
+        except Exception as rewrite_error:
+            logger.warning(
+                "AI package rewrite failed for post %s; falling back to text-only rewrite.",
+                post_id,
+                exc_info=rewrite_error,
+            )
+            regenerated = {
+                "body": await gemini_service.regenerate_text(body, req.instruction),
+                "hashtags": existing_hashtags,
+                "value_comment": existing_value_comment,
+                "image_prompt": existing_image_prompt,
+            }
+        retry_count = 0
         with Session(engine) as session:
             post = session.get(MomentumScheduledPost, pk)
             if post:
-                post.post_text = new_body
+                post.post_text = regenerated["body"]
+                post.hashtags = regenerated["hashtags"]
+                post.auto_comment_text = regenerated["value_comment"]
+                post.image_prompt = regenerated["image_prompt"]
+                post.retry_count = (post.retry_count or 0) + 1
                 post.updated_at = datetime.now(timezone.utc)
                 session.add(post)
                 session.commit()
-        return JSONResponse({"body": new_body, "post_id": post_id})
+                retry_count = post.retry_count or 0
+        return JSONResponse({
+            "body": regenerated["body"],
+            "hashtags": regenerated["hashtags"],
+            "auto_comment_text": regenerated["value_comment"],
+            "image_prompt": regenerated["image_prompt"],
+            "retry_count": retry_count,
+            "post_id": post_id,
+        })
     except Exception as e:
         raise HTTPException(500, detail=public_error_message(e, "Text rewrite failed."))
 
@@ -698,6 +768,7 @@ async def api_regenerate_image(post_id: str, request: Request):
                     post.post_image_url = f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}/images/{post_id}"
                 else:
                     post.post_image_url = f"/images/{post_id}"
+                post.retry_count = (post.retry_count or 0) + 1
                 post.updated_at = datetime.now(timezone.utc)
                 session.add(post)
                 session.commit()
@@ -769,7 +840,9 @@ async def api_list_posts(
 async def api_get_post_detail(company_id: str, post_id: str, request: Request):
     """Return full post detail including text, image, hashtags, value comment."""
     _check_rate_limit(request, "post_detail", 60)
-    auth: AuthContext = get_auth_context(request)
+    auth: AuthContext = await get_auth_context(request)
+    if company_id != auth.company_id:
+        raise HTTPException(403, "Access denied")
 
     with Session(engine) as session:
         post = session.exec(
@@ -834,7 +907,7 @@ class ApproveRejectRequest(BaseModel):
 async def api_approve_post(post_id: str, body: ApproveRejectRequest, request: Request):
     """Approve a draft post so it can be published."""
     _check_rate_limit(request, "approve", 30)
-    auth: AuthContext = get_auth_context(request)
+    auth: AuthContext = await get_auth_context(request)
 
     with Session(engine) as session:
         post = session.exec(
@@ -843,6 +916,8 @@ async def api_approve_post(post_id: str, body: ApproveRejectRequest, request: Re
         ).first()
         if not post:
             raise HTTPException(404, "Post not found")
+        if post.company_id != auth.company_id:
+            raise HTTPException(403, "Access denied")
         if post.status not in ("draft", "rejected"):
             raise HTTPException(400, f"Cannot approve post with status '{post.status}'")
 
@@ -864,7 +939,7 @@ async def api_approve_post(post_id: str, body: ApproveRejectRequest, request: Re
 async def api_reject_post(post_id: str, body: ApproveRejectRequest, request: Request):
     """Reject a draft post."""
     _check_rate_limit(request, "reject", 30)
-    auth: AuthContext = get_auth_context(request)
+    auth: AuthContext = await get_auth_context(request)
 
     with Session(engine) as session:
         post = session.exec(
@@ -873,6 +948,8 @@ async def api_reject_post(post_id: str, body: ApproveRejectRequest, request: Req
         ).first()
         if not post:
             raise HTTPException(404, "Post not found")
+        if post.company_id != auth.company_id:
+            raise HTTPException(403, "Access denied")
         if post.status in ("published",):
             raise HTTPException(400, "Cannot reject a published post")
 
@@ -894,7 +971,9 @@ async def api_reject_post(post_id: str, body: ApproveRejectRequest, request: Req
 async def api_get_accounts(company_id: str, request: Request):
     """Return connected social accounts with health status for a company."""
     _check_rate_limit(request, "accounts", 30)
-    auth: AuthContext = get_auth_context(request)
+    auth: AuthContext = await get_auth_context(request)
+    if company_id != auth.company_id:
+        raise HTTPException(403, "Access denied")
 
     with Session(engine) as session:
         accounts = session.exec(
@@ -931,12 +1010,25 @@ async def api_get_accounts(company_id: str, request: Request):
 
 class GenerateFromTaskRequest(BaseModel):
     company_id: str
+    task_id: str = ""
     task_title: str
     task_description: str = ""
     platform: str = "linkedin"  # linkedin | instagram
+    campaign_id: str = ""
     campaign_name: str = ""
+    campaign_goal: str = ""
+    task_type: str = ""
+    publish_date: str = ""
     target_audience: str = ""
     tone: str = ""
+    brand_name: str = ""
+    brand_industry: str = ""
+    brand_tagline: str = ""
+    brand_tone: str = ""
+    brand_dos: list[str] = []
+    brand_donts: list[str] = []
+    keywords: list[str] = []
+    journey_phase: str = ""
     language: str = "de"
 
 
@@ -948,24 +1040,36 @@ async def api_generate_from_task(body: GenerateFromTaskRequest, request: Request
     standard AI generation pipeline (Gemini text + Imagen image).
     """
     _check_rate_limit(request, "generate_task", 10, window=60)
-    auth: AuthContext = get_auth_context(request)
+    auth: AuthContext = await get_auth_context(request)
+    if body.company_id != auth.company_id:
+        raise HTTPException(403, detail="Access denied.")
 
-    # Build contextual topic from task data
     topic_parts = [body.task_title]
+    if body.task_type:
+        topic_parts.append(f"Typ: {body.task_type}")
     if body.task_description:
         topic_parts.append(body.task_description[:500])
+    rich_topic = " — ".join(part for part in topic_parts if part)
 
-    context_hint = ""
-    if body.campaign_name:
-        context_hint += f"\nKampagne: {body.campaign_name}"
-    if body.target_audience:
-        context_hint += f"\nZielgruppe: {body.target_audience}"
-    if body.tone:
-        context_hint += f"\nTonalität: {body.tone}"
-
-    rich_topic = " — ".join(topic_parts)
-    if context_hint:
-        rich_topic += f"\n\nKontext:{context_hint}"
+    task_brief_lines = [
+        f"Task title: {body.task_title}",
+        f"Task type: {body.task_type}" if body.task_type else "",
+        f"Campaign: {body.campaign_name}" if body.campaign_name else "",
+        f"Campaign goal: {body.campaign_goal}" if body.campaign_goal else "",
+        f"Audience: {body.target_audience}" if body.target_audience else "",
+        f"Brand name: {body.brand_name}" if body.brand_name else "",
+        f"Brand tagline: {body.brand_tagline}" if body.brand_tagline else "",
+        f"Brand industry: {body.brand_industry}" if body.brand_industry else "",
+        f"Brand tone: {body.brand_tone}" if body.brand_tone else "",
+        f"Requested tone: {body.tone}" if body.tone else "",
+        f"Journey phase: {body.journey_phase}" if body.journey_phase else "",
+        f"Publish date: {body.publish_date}" if body.publish_date else "",
+        f"Keywords: {', '.join(body.keywords)}" if body.keywords else "",
+        f"Brand dos: {' | '.join(body.brand_dos)}" if body.brand_dos else "",
+        f"Brand donts: {' | '.join(body.brand_donts)}" if body.brand_donts else "",
+        f"Task description: {body.task_description}" if body.task_description else "",
+    ]
+    task_brief = "\n".join(line for line in task_brief_lines if line)
 
     # Find connected account for the target platform
     with Session(engine) as session:
@@ -978,15 +1082,25 @@ async def api_generate_from_task(body: GenerateFromTaskRequest, request: Request
         connected_account_id = str(acc.id) if acc else None
 
     # Delegate to the internal generation helper
-    result = await _generate_post_internal(
-        company_id=body.company_id,
-        topic=rich_topic,
-        platform=body.platform,
-        connected_account_id=connected_account_id,
-        language=body.language,
-        auth=auth,
-    )
-    return JSONResponse(result)
+    try:
+        result = await _generate_post_internal(
+            company_id=body.company_id,
+            topic=rich_topic,
+            platform=body.platform,
+            connected_account_id=connected_account_id,
+            language=body.language,
+            auth=auth,
+            content_item_id=None,
+            campaign_id=body.campaign_id or None,
+            task_id=body.task_id or None,
+            additional_brief=task_brief,
+        )
+        return JSONResponse(result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Task-based Social Hub generation failed")
+        raise HTTPException(500, detail=public_error_message(e, "Draft generation is temporarily unavailable. Please try again."))
 
 
 async def _generate_post_internal(
@@ -996,8 +1110,10 @@ async def _generate_post_internal(
     connected_account_id: str | None,
     language: str,
     auth: AuthContext,
+    content_item_id: str | None = None,
     campaign_id: str | None = None,
     task_id: str | None = None,
+    additional_brief: str = "",
 ) -> dict:
     """Internal helper: generate AI post (text + image) and persist.
 
@@ -1007,6 +1123,7 @@ async def _generate_post_internal(
     # ── Gather company context + project settings ────────────────────
     company_context = ""
     settings_context = ""
+    hashtag_strategy = "moderate"
     with Session(engine) as session:
         company = session.exec(
             select(MomentumCompany).where(MomentumCompany.id == company_id)
@@ -1032,40 +1149,26 @@ async def _generate_post_internal(
                 settings_context += f"Content-Säulen: {', '.join(proj_settings.content_pillars)}\n"
             if proj_settings.hashtag_strategy:
                 settings_context += f"Hashtag-Strategie: {proj_settings.hashtag_strategy}\n"
+                hashtag_strategy = proj_settings.hashtag_strategy
             # Prefer project language over request language
             if proj_settings.ai_language:
                 language = proj_settings.ai_language
 
-    # ── AI text generation via Gemini ────────────────────────────────
-    language_label = {"de": "Deutsch", "en": "Englisch", "fr": "Französisch"}.get(language, language)
-    text_prompt = (
-        f"Erstelle einen professionellen {platform.capitalize()}-Post zum Thema:\n\n"
-        f"{topic}\n\n"
-        f"{company_context}"
-        f"{settings_context}\n"
-        f"Sprache: {language_label}\n"
-        f"Der Post soll informativ, engagierend und zur Plattform {platform} passend sein.\n"
-        f"Füge passende Hashtags am Ende hinzu.\n"
-        f"Liefere NUR den Post-Text, keine Erklärungen."
+    brief_context = "\n".join(part for part in [company_context, settings_context, additional_brief] if part).strip()
+    generation = await gemini_service.generate_post(
+        topic,
+        platform=platform,
+        language=language,
+        brief_context=brief_context,
+        hashtag_strategy=hashtag_strategy,
     )
-    post_text = await asyncio.to_thread(gemini_service.generate_text, text_prompt)
+    post_text = generation["body"]
     if not post_text:
         raise HTTPException(502, "AI text generation failed")
 
-    # Extract hashtags
-    hashtags = [w for w in post_text.split() if w.startswith("#")]
-
-    # ── Value comment generation ─────────────────────────────────────
-    comment_prompt = (
-        f"Erstelle einen kurzen, wertvollen Kommentar als Ergänzung zu diesem {platform}-Post:\n\n"
-        f"{post_text[:500]}\n\n"
-        f"Der Kommentar soll einen zusätzlichen Mehrwert bieten. "
-        f"Sprache: {language_label}. Maximal 2-3 Sätze."
-    )
-    auto_comment = await asyncio.to_thread(gemini_service.generate_text, comment_prompt)
-
-    # ── AI image generation via Imagen ───────────────────────────────
-    image_prompt = f"Professional {platform} social media image for: {topic[:200]}"
+    hashtags = [tag for tag in generation.get("hashtags", "").split() if tag]
+    auto_comment = generation.get("value_comment") or await gemini_service.generate_value_comment(post_text)
+    image_prompt = generation["image_prompt"]
     image_url = None
     try:
         image_url = await asyncio.to_thread(imagen_service.generate_image, image_prompt)
@@ -1076,9 +1179,26 @@ async def _generate_post_internal(
     post_id = uuid4()
     now = datetime.now(timezone.utc)
     with Session(engine) as session:
+        post_content_item_id = content_item_id
+        if not post_content_item_id:
+            post_content_item_id = str(uuid4())
+            content = MomentumContent(
+                id=post_content_item_id,
+                company_id=company_id,
+                title=f"Social: {topic[:80]}",
+                type="social_post",
+                status="draft",
+                channel=platform,
+                notes="Generated by Social Hub AI",
+                createdAt=now,
+                updatedAt=now,
+            )
+            session.add(content)
+
         new_post = MomentumScheduledPost(
             id=post_id,
             company_id=company_id,
+            content_item_id=post_content_item_id,
             topic=topic[:500],
             post_text=post_text,
             post_image_url=image_url,
@@ -1096,20 +1216,6 @@ async def _generate_post_internal(
             updated_at=now,
         )
         session.add(new_post)
-
-        # Also create a Content entry in Momentum
-        content = MomentumContent(
-            id=str(uuid4()),
-            company_id=company_id,
-            title=f"Social: {topic[:80]}",
-            type="social_post",
-            status="draft",
-            channel=platform,
-            notes=f"Generated by Social Hub AI",
-            createdAt=now,
-            updatedAt=now,
-        )
-        session.add(content)
         session.commit()
 
     return {

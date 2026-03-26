@@ -114,9 +114,18 @@ def run_checks():
         )
 
     env = os.environ.copy()
-    env["GOOGLE_API_KEY"] = ""
-    env["NEXT_PUBLIC_GEMINI_API_KEY"] = ""
+    live_ai_requested = env.get("QA_ENABLE_LIVE_AI", "").strip().lower() in {"1", "true", "yes", "on"}
+    has_live_ai_key = bool(env.get("GOOGLE_API_KEY") or env.get("NEXT_PUBLIC_GEMINI_API_KEY"))
+    live_ai_enabled = live_ai_requested and has_live_ai_key
+    if not live_ai_enabled:
+        env["GOOGLE_API_KEY"] = ""
+        env["NEXT_PUBLIC_GEMINI_API_KEY"] = ""
     env["SOCIAL_HUB_PATH_PREFIX"] = "/"
+
+    if live_ai_requested and not has_live_ai_key:
+        print("QA_ENABLE_LIVE_AI is set, but no Google API key is available. Falling back to controlled-failure mode.")
+    elif live_ai_enabled:
+        print("Live AI rewrite checks are enabled for this QA run.")
 
     print(f"Resetting and seeding live schema '{settings.DATABASE_SCHEMA}' with sample data...")
     seed_database(env)
@@ -238,24 +247,61 @@ def run_checks():
             post_one = next(post for post in updated_posts if post["id"] == 1)
             assert_true(post_one["status"] == "approved", "bulk approve changed post 1 to approved")
 
-            rewrite_response = client.post(
-                "/api/posts/1/regenerate-text",
-                headers={"X-CSRF-Token": csrf_token},
-                json={"instruction": "Shorten this into a punchier version."},
-            )
-            assert_true(rewrite_response.status_code in (200, 500), "rewrite endpoint returned controlled status")
-            rewrite_json = rewrite_response.json()
-            if rewrite_response.status_code == 200:
-                assert_true(bool(rewrite_json.get("body")), "rewrite endpoint returned rewritten body")
+            if live_ai_enabled:
+                print("Skipping legacy dashboard rewrite in live AI mode; the focused happy-path probe runs through /api/v1/regenerate-text.")
             else:
-                assert_true("error" in rewrite_json, "rewrite failure returned JSON error")
+                rewrite_response = client.post(
+                    "/api/posts/1/regenerate-text",
+                    headers={"X-CSRF-Token": csrf_token},
+                    json={"instruction": "Shorten this into a punchier version."},
+                )
+                assert_true(rewrite_response.status_code in (200, 500), "rewrite endpoint returned controlled status")
+                rewrite_json = rewrite_response.json()
+                if rewrite_response.status_code == 200:
+                    assert_true(bool(rewrite_json.get("body")), "rewrite endpoint returned rewritten body")
+                else:
+                    assert_true("error" in rewrite_json, "rewrite failure returned JSON error")
 
-            generate_response = client.post(
-                "/generate",
-                data={"topic": "QA generation topic", "platform": "linkedin", "csrf_token": csrf_token},
+            v1_auth_cookies = {"_session_id": "qa-test-session", "_company_id": "c1"}
+            v1_posts = client.get("/api/v1/posts/c1", cookies=v1_auth_cookies)
+            assert_true(v1_posts.status_code == 200, "API v1 seeded posts endpoint returned 200")
+            v1_posts_json = v1_posts.json()
+            target_post = next(
+                (post for post in v1_posts_json if post["id"] == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
+                None,
             )
-            assert_true(generate_response.status_code in (302, 303), "generate action redirected instead of crashing")
-            assert_true(location_matches(generate_response.headers.get("location"), "/generate"), "generate failure redirected back to /generate")
+            assert_true(target_post is not None, "API v1 exposes the seeded draft used for rewrite regression")
+
+            v1_rewrite = client.post(
+                "/api/v1/regenerate-text/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2",
+                cookies=v1_auth_cookies,
+                json={"instruction": "Mach den Beitrag klarer, konkreter und etwas kürzer."},
+                timeout=120.0,
+            )
+            if live_ai_enabled:
+                if v1_rewrite.status_code != 200:
+                    print(f"API v1 live rewrite failure payload: {v1_rewrite.text}")
+                assert_true(v1_rewrite.status_code == 200, "API v1 rewrite succeeded with live AI enabled")
+                v1_rewrite_json = v1_rewrite.json()
+                assert_true(bool(v1_rewrite_json.get("body")), "API v1 rewrite returned rewritten body")
+                assert_true(v1_rewrite_json.get("body") != target_post.get("post_text"), "API v1 rewrite changed the draft text")
+                assert_true(isinstance(v1_rewrite_json.get("hashtags"), list) and len(v1_rewrite_json["hashtags"]) >= 3, "API v1 rewrite returned normalized hashtags")
+                assert_true(bool(v1_rewrite_json.get("auto_comment_text")), "API v1 rewrite returned a value comment")
+                assert_true(bool(v1_rewrite_json.get("image_prompt")), "API v1 rewrite returned an image prompt")
+                assert_true(isinstance(v1_rewrite_json.get("retry_count"), int) and v1_rewrite_json["retry_count"] >= 1, "API v1 rewrite increments retry_count")
+            else:
+                assert_true(v1_rewrite.status_code == 500, "API v1 rewrite returns controlled failure when live AI is disabled")
+                assert_true("detail" in v1_rewrite.json(), "API v1 rewrite failure returns JSON detail")
+
+            if live_ai_enabled:
+                print("Skipping /generate live AI action in focused rewrite-regression mode.")
+            else:
+                generate_response = client.post(
+                    "/generate",
+                    data={"topic": "QA generation topic", "platform": "linkedin", "csrf_token": csrf_token},
+                )
+                assert_true(generate_response.status_code in (302, 303), "generate action redirected instead of crashing")
+                assert_true(location_matches(generate_response.headers.get("location"), "/generate"), "generate failure redirected back to /generate")
 
             duplicate_response = client.post("/posts/1/duplicate", data={"csrf_token": csrf_token})
             assert_true(duplicate_response.status_code in (302, 303), "duplicate post redirected successfully")

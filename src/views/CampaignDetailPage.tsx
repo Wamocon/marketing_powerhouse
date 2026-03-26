@@ -14,12 +14,14 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import TaskDetailModal from '../components/TaskDetailModal';
 import ContentDetailModal from '../components/ContentDetailModal';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
 import ChannelKpiSection from '../components/ChannelKpiSection';
 import { statusConfig, statusSteps, CREATIVE_STATES, PLATFORM_ICONS, CREATIVE_TYPES, MiniCalendar, CreativeCard } from '../components/CampaignDetailComponents';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
 
 import { CampaignOverviewTab, NewCreativeModal } from '../components/CampaignDetailTabs';
 // ═══════════════════════════════════════════════════════
@@ -30,11 +32,16 @@ export default function CampaignDetailPage() {
     const id = params.id as string;
     const router = useProjectRouter();
     const { can } = useAuth();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const { language } = useLanguage();
     const isGerman = language === 'de';
     const locale = isGerman ? 'de-DE' : 'en-US';
     const { campaigns, audiences, users: testUsers, touchpoints, deleteCampaign, loading } = useData();
     const canDelete = can('canDeleteItems');
+    const canSocialHubRole = can('canUseSocialHub');
+    const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
+    const canSocialHub = canSocialHubRole && hasSocialHubPlanAccess;
+    const showSocialHubUpgrade = canSocialHubRole && !subscriptionLoading && !hasSocialHubPlanAccess;
     const campaign = campaigns.find(c => c.id === id);
     const status = campaign ? statusConfig[campaign.status] : statusConfig.planned;
     const linkedAudiences = audiences.filter(a => campaign?.targetAudiences?.includes(a.id));
@@ -232,7 +239,7 @@ export default function CampaignDetailPage() {
                     </div>
 
                     {/* Social Hub CTA for campaigns with social channels */}
-                    {can('canUseSocialHub') && campaign.channels.some(ch => ch === 'LinkedIn' || ch === 'Instagram') && (
+                    {canSocialHub && campaign.channels.some(ch => ch === 'LinkedIn' || ch === 'Instagram') && (
                         <div style={{
                             marginBottom: '20px', padding: '16px 20px',
                             borderRadius: 'var(--radius-md)', background: 'rgba(14, 165, 233, 0.04)',
@@ -260,6 +267,38 @@ export default function CampaignDetailPage() {
                             </div>
                             <button className="btn btn-ghost btn-sm" onClick={() => router.push('/social-hub')}>
                                 <Radio size={14} /> {isGerman ? 'Social Hub öffnen' : 'Open Social Hub'}
+                            </button>
+                        </div>
+                    )}
+
+                    {showSocialHubUpgrade && campaign.channels.some(ch => ch === 'LinkedIn' || ch === 'Instagram') && (
+                        <div style={{
+                            marginBottom: '20px', padding: '16px 20px',
+                            borderRadius: 'var(--radius-md)', background: 'rgba(193, 41, 46, 0.04)',
+                            border: '1px solid rgba(193, 41, 46, 0.15)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    width: 40, height: 40, borderRadius: 'var(--radius-md)',
+                                    background: 'rgba(193, 41, 46, 0.1)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                }}>
+                                    <Share2 size={20} style={{ color: 'var(--color-primary)' }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)' }}>
+                                        {isGerman ? 'Social Hub ab Pro' : 'Social Hub from Pro'}
+                                    </div>
+                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                                        {isGerman
+                                            ? 'Upgrade auf Pro oder Ultimate, um aus dieser Kampagne direkt Social Posts zu generieren und zu veroeffentlichen.'
+                                            : 'Upgrade to Pro or Ultimate to generate and publish social posts directly from this campaign.'}
+                                    </div>
+                                </div>
+                            </div>
+                            <button className="btn btn-primary btn-sm" onClick={() => router.push('/settings?tab=subscription')}>
+                                <Radio size={14} /> {isGerman ? 'Auf Pro upgraden' : 'Upgrade to Pro'}
                             </button>
                         </div>
                     )}

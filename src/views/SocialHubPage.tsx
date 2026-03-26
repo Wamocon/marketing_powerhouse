@@ -1,34 +1,59 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import {
-    RefreshCw, Zap, Send, Sparkles,
-    CheckCircle2, AlertTriangle, XCircle, Loader2,
-    Linkedin, Instagram, Clock, Image as ImageIcon,
-    Radio, Eye, ThumbsUp, ThumbsDown, X, Hash,
-    MessageSquare, ExternalLink, Filter, Search,
-    Link2, AlertCircle, Shield, PlayCircle,
+    AlertCircle,
+    AlertTriangle,
+    CheckCircle2,
+    Clock,
+    ExternalLink,
+    Eye,
+    Filter,
+    Hash,
+    Image as ImageIcon,
+    Instagram,
+    Link2,
+    Linkedin,
+    Loader2,
+    MessageSquare,
+    PlayCircle,
+    Radio,
+    RefreshCw,
+    Search,
+    Send,
+    Shield,
+    Sparkles,
+    ThumbsDown,
+    ThumbsUp,
+    X,
+    XCircle,
+    Zap,
 } from 'lucide-react';
-import { useCompany } from '../context/CompanyContext';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useCallback, useEffect, useState } from 'react';
 import PageHelp from '../components/PageHelp';
+import SocialHubUpgradePrompt from '../components/SocialHubUpgradePrompt';
+import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
 import {
+    approvePost,
     checkSocialHubHealth,
+    generateAiPost,
+    getConnectedAccounts,
+    getPostDetail,
     getReadiness,
     listPosts,
-    getPostDetail,
-    approvePost,
-    rejectPost,
     publishPost,
-    getConnectedAccounts,
-    generateAiPost,
-    subscribeToPostChanges,
+    regeneratePostImage,
+    regeneratePostText,
+    rejectPost,
     SOCIAL_HUB_URL,
+    subscribeToPostChanges,
+    type ConnectedAccount,
+    type PostDetail,
     type ReadinessResult,
     type ScheduledPost,
-    type PostDetail,
-    type ConnectedAccount,
 } from '../lib/socialHub';
 
 // ─── Constants ─────────────────────────────────────────────
@@ -64,9 +89,14 @@ const TOKEN_STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 export default function SocialHubPage() {
     const { activeCompany } = useCompany();
-    const { currentUser } = useAuth();
+    const { currentUser, can } = useAuth();
     const { language } = useLanguage();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const t = language === 'en';
+    const canUseSocialHubRole = can('canUseSocialHub');
+    const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
+    const canUseSocialHub = canUseSocialHubRole && hasSocialHubPlanAccess;
+    const showUpgradePrompt = canUseSocialHubRole && !subscriptionLoading && !hasSocialHubPlanAccess;
 
     // Data state
     const [health, setHealth] = useState<Record<string, unknown> | null>(null);
@@ -82,6 +112,7 @@ export default function SocialHubPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPost, setSelectedPost] = useState<PostDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
+    const [regenerateInstruction, setRegenerateInstruction] = useState('');
 
     // Generate state
     const [genTopic, setGenTopic] = useState('');
@@ -98,7 +129,7 @@ export default function SocialHubPage() {
     // ─── Data Loading ──────────────────────────────────────
 
     const loadData = useCallback(async () => {
-        if (!companyId) return;
+        if (!companyId || !canUseSocialHub) return;
         setLoading(true);
         setError(null);
         try {
@@ -123,24 +154,37 @@ export default function SocialHubPage() {
         } finally {
             setLoading(false);
         }
-    }, [companyId, t]);
+    }, [canUseSocialHub, companyId, t]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        if (canUseSocialHub) {
+            loadData();
+            return;
+        }
+
+        setLoading(false);
+        setError(null);
+        setHealth(null);
+        setReadiness(null);
+        setPosts([]);
+        setAccounts([]);
+    }, [canUseSocialHub, loadData]);
 
     // Real-time subscription: auto-refresh when scheduled_posts change
     useEffect(() => {
-        if (!companyId) return;
+        if (!companyId || !canUseSocialHub) return;
         const unsubscribe = subscribeToPostChanges(companyId, () => {
             // Refresh posts list silently (no loading spinner)
             listPosts(companyId).then(setPosts).catch(() => {});
         });
         return unsubscribe;
-    }, [companyId]);
+    }, [canUseSocialHub, companyId]);
 
     // ─── Post Detail ───────────────────────────────────────
 
     const openPostDetail = async (postId: string) => {
         setDetailLoading(true);
+        setRegenerateInstruction('');
         try {
             const detail = await getPostDetail(companyId, postId);
             setSelectedPost(detail);
@@ -152,6 +196,11 @@ export default function SocialHubPage() {
     };
 
     const closePostDetail = () => setSelectedPost(null);
+
+    const refreshSelectedPost = useCallback(async (postId: string) => {
+        const detail = await getPostDetail(companyId, postId);
+        setSelectedPost(detail);
+    }, [companyId]);
 
     // ─── Actions ───────────────────────────────────────────
 
@@ -194,6 +243,35 @@ export default function SocialHubPage() {
                 setSelectedPost(updated);
             }
             await loadData();
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleRegenerateText = async () => {
+        if (!selectedPost || !regenerateInstruction.trim()) return;
+        setActionLoading(`regenerate-text:${selectedPost.id}`);
+        try {
+            await regeneratePostText(companyId, selectedPost.id, regenerateInstruction);
+            await refreshSelectedPost(selectedPost.id);
+            await loadData();
+            setRegenerateInstruction('');
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : 'Text regeneration failed');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleRegenerateImage = async () => {
+        if (!selectedPost) return;
+        setActionLoading(`regenerate-image:${selectedPost.id}`);
+        try {
+            await regeneratePostImage(companyId, selectedPost.id);
+            await refreshSelectedPost(selectedPost.id);
+            await loadData();
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : 'Image regeneration failed');
         } finally {
             setActionLoading(null);
         }
@@ -249,6 +327,40 @@ export default function SocialHubPage() {
                         {t ? 'Select a project to use the Social Hub.' : 'Wähle zuerst ein Projekt aus, um den Social Hub zu nutzen.'}
                     </p>
                 </div>
+            </div>
+        );
+    }
+
+    if (!canUseSocialHubRole) {
+        return (
+            <div className="animate-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                <div className="card" style={{ textAlign: 'center', padding: '48px', maxWidth: '460px' }}>
+                    <Shield size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
+                    <h2 style={{ marginBottom: '8px' }}>{t ? 'Access restricted' : 'Zugriff eingeschraenkt'}</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                        {t ? 'Your current project role does not allow Social Hub access.' : 'Deine aktuelle Projektrolle erlaubt keinen Zugriff auf den Social Hub.'}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (showUpgradePrompt) {
+        return (
+            <div className="animate-in">
+                <div className="page-header">
+                    <div className="page-header-left">
+                        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Radio size={24} style={{ color: 'var(--color-primary)' }} />
+                            Social Hub
+                        </h1>
+                        <p className="page-subtitle">
+                            {t ? 'Upgrade to Pro or Ultimate to unlock AI social publishing' : 'Upgrade auf Pro oder Ultimate, um KI-Social-Publishing freizuschalten'}
+                        </p>
+                    </div>
+                </div>
+
+                <SocialHubUpgradePrompt showPricingCards />
             </div>
         );
     }
@@ -1000,6 +1112,41 @@ export default function SocialHubPage() {
                                             {selectedPost.post_text}
                                         </div>
                                     </div>
+
+                                    {selectedPost.status !== 'published' && (
+                                        <div className="card" style={{ marginBottom: '16px', background: 'rgba(14,165,233,0.04)', borderLeft: '3px solid #0ea5e9' }}>
+                                            <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: '#0ea5e9', marginBottom: '8px', textTransform: 'uppercase' }}>
+                                                {t ? 'Retry and Improve' : 'Neu generieren und verbessern'}
+                                            </div>
+                                            <textarea
+                                                className="form-textarea"
+                                                value={regenerateInstruction}
+                                                onChange={e => setRegenerateInstruction(e.target.value)}
+                                                placeholder={t
+                                                    ? 'e.g. Make it sharper, more concrete, and more opinionated for LinkedIn.'
+                                                    : 'z.B. Mach den Text prägnanter, konkreter und pointierter für LinkedIn.'}
+                                                style={{ minHeight: '72px', marginBottom: '10px' }}
+                                            />
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={handleRegenerateText}
+                                                    disabled={actionLoading === `regenerate-text:${selectedPost.id}` || !regenerateInstruction.trim()}
+                                                >
+                                                    {actionLoading === `regenerate-text:${selectedPost.id}` ? <Loader2 size={14} className="spin" /> : <RefreshCw size={14} />}
+                                                    {t ? 'Regenerate Text' : 'Text neu generieren'}
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost btn-sm"
+                                                    onClick={handleRegenerateImage}
+                                                    disabled={actionLoading === `regenerate-image:${selectedPost.id}`}
+                                                >
+                                                    {actionLoading === `regenerate-image:${selectedPost.id}` ? <Loader2 size={14} className="spin" /> : <ImageIcon size={14} />}
+                                                    {t ? 'Regenerate Image' : 'Bild neu generieren'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Hashtags */}
                                     {selectedPost.hashtags.length > 0 && (

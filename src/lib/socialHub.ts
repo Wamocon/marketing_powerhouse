@@ -4,30 +4,47 @@
 import { supabase } from './supabase';
 
 const SOCIAL_HUB_URL = process.env.NEXT_PUBLIC_SOCIAL_HUB_URL || '/social-hub';
+const SOCIAL_HUB_BRIDGE_URL = '/api/social-hub';
+const MOMENTUM_SESSION_KEY = 'momentum_session_user_id';
 
-interface SocialHubHeaders {
-  Authorization: string;
-  'Content-Type': string;
-  'X-Company-Id': string;
+type SocialHubMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+interface SocialHubBridgePayload {
+  userId: string;
+  companyId: string;
+  path: string;
+  method: SocialHubMethod;
+  body?: unknown;
 }
 
-async function getHeaders(companyId: string): Promise<SocialHubHeaders> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token || '';
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-    'X-Company-Id': companyId,
+function getMomentumSessionUserId(): string {
+  if (typeof window === 'undefined') return '';
+  return window.localStorage.getItem(MOMENTUM_SESSION_KEY) ?? '';
+}
+
+async function socialHubFetch<T>(path: string, options: { method: SocialHubMethod; companyId: string; body?: unknown }): Promise<T> {
+  const userId = getMomentumSessionUserId();
+  if (!userId) {
+    throw new Error('Authentication required');
+  }
+
+  const payload: SocialHubBridgePayload = {
+    userId,
+    companyId: options.companyId,
+    path,
+    method: options.method,
   };
-}
 
-async function socialHubFetch<T>(path: string, options: RequestInit & { companyId: string }): Promise<T> {
-  const { companyId, ...fetchOptions } = options;
-  const headers = await getHeaders(companyId);
-  const response = await fetch(`${SOCIAL_HUB_URL}${path}`, {
-    ...fetchOptions,
-    headers: { ...headers, ...fetchOptions.headers as Record<string, string> },
+  if (options.body !== undefined) {
+    payload.body = options.body;
+  }
+
+  const response = await fetch(SOCIAL_HUB_BRIDGE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
+
   if (!response.ok) {
     const body = await response.json().catch(() => ({ detail: response.statusText }));
     throw new Error(body.detail || body.error || `Social Hub error: ${response.status}`);
@@ -57,13 +74,13 @@ export async function generateAiPost(params: GeneratePostParams): Promise<Genera
   return socialHubFetch<GeneratePostResult>('/api/v1/generate', {
     method: 'POST',
     companyId: params.companyId,
-    body: JSON.stringify({
+    body: {
       company_id: params.companyId,
       platform: params.platform,
       topic: params.topic || '',
       content_item_id: params.contentItemId,
       connected_account_id: params.connectedAccountId,
-    }),
+    },
   });
 }
 
@@ -103,20 +120,27 @@ export async function suggestTopics(companyId: string, count = 5): Promise<strin
   const result = await socialHubFetch<{ topics: string[] }>('/api/v1/topics/suggest', {
     method: 'POST',
     companyId,
-    body: JSON.stringify({ company_id: companyId, count }),
+    body: { company_id: companyId, count },
   });
   return result.topics;
 }
 
 // ─── Regenerate Text ───────────────────────────────────────
 
-export async function regeneratePostText(companyId: string, postId: string, instruction: string): Promise<string> {
-  const result = await socialHubFetch<{ body: string }>(`/api/v1/regenerate-text/${postId}`, {
+export interface RegeneratePostTextResult {
+  body: string;
+  hashtags: string[];
+  auto_comment_text: string | null;
+  image_prompt: string | null;
+  retry_count?: number;
+}
+
+export async function regeneratePostText(companyId: string, postId: string, instruction: string): Promise<RegeneratePostTextResult> {
+  return socialHubFetch<RegeneratePostTextResult>(`/api/v1/regenerate-text/${postId}`, {
     method: 'POST',
     companyId,
-    body: JSON.stringify({ instruction }),
+    body: { instruction },
   });
-  return result.body;
 }
 
 // ─── Regenerate Image ──────────────────────────────────────
@@ -241,7 +265,7 @@ export async function approvePost(companyId: string, postId: string, userId: str
   return socialHubFetch<ApproveRejectResult>(`/api/v1/posts/${postId}/approve`, {
     method: 'PUT',
     companyId,
-    body: JSON.stringify({ user_id: userId, notes: notes || '' }),
+    body: { user_id: userId, notes: notes || '' },
   });
 }
 
@@ -249,7 +273,7 @@ export async function rejectPost(companyId: string, postId: string, userId: stri
   return socialHubFetch<ApproveRejectResult>(`/api/v1/posts/${postId}/reject`, {
     method: 'PUT',
     companyId,
-    body: JSON.stringify({ user_id: userId, notes: notes || '' }),
+    body: { user_id: userId, notes: notes || '' },
   });
 }
 
@@ -277,12 +301,25 @@ export async function getConnectedAccounts(companyId: string): Promise<Connected
 
 export interface GenerateFromTaskParams {
   companyId: string;
+  taskId?: string;
   taskTitle: string;
   taskDescription?: string;
   platform?: 'linkedin' | 'instagram';
+  campaignId?: string;
   campaignName?: string;
+  campaignGoal?: string;
+  taskType?: string;
+  publishDate?: string | null;
   targetAudience?: string;
   tone?: string;
+  brandName?: string;
+  brandIndustry?: string;
+  brandTagline?: string;
+  brandTone?: string;
+  brandDos?: string[];
+  brandDonts?: string[];
+  keywords?: string[];
+  journeyPhase?: string;
   language?: string;
 }
 
@@ -301,16 +338,29 @@ export async function generateFromTask(params: GenerateFromTaskParams): Promise<
   return socialHubFetch<GenerateFromTaskResult>('/api/v1/generate-from-task', {
     method: 'POST',
     companyId: params.companyId,
-    body: JSON.stringify({
+    body: {
       company_id: params.companyId,
+      task_id: params.taskId || '',
       task_title: params.taskTitle,
       task_description: params.taskDescription || '',
       platform: params.platform || 'linkedin',
+      campaign_id: params.campaignId || '',
       campaign_name: params.campaignName || '',
+      campaign_goal: params.campaignGoal || '',
+      task_type: params.taskType || '',
+      publish_date: params.publishDate || '',
       target_audience: params.targetAudience || '',
       tone: params.tone || '',
+      brand_name: params.brandName || '',
+      brand_industry: params.brandIndustry || '',
+      brand_tagline: params.brandTagline || '',
+      brand_tone: params.brandTone || '',
+      brand_dos: params.brandDos || [],
+      brand_donts: params.brandDonts || [],
+      keywords: params.keywords || [],
+      journey_phase: params.journeyPhase || '',
       language: params.language || 'de',
-    }),
+    },
   });
 }
 

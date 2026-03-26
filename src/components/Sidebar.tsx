@@ -3,16 +3,18 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, Megaphone, Calendar, Wallet,
     CheckSquare, Settings, LogOut, Users2, BarChart3,
-    Target, FileText, HelpCircle, Map, Radio, Share2,
+    Target, FileText, HelpCircle, Map, Radio, Share2, Lock,
     Building2, Shield, ArrowLeftRight, Compass,
     type LucideIcon,
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useData } from '../context/DataContext';
 import { useTasks } from '../context/TaskContext';
 import { useContents } from '../context/ContentContext';
 import { useLanguage } from '../context/LanguageContext';
+import { hasSocialHubPlanEntitlement } from '../lib/socialHubEntitlements';
 import type { PermissionKey, CompanyRole } from '../types';
 
 type BadgeKey = 'campaigns' | 'audiences' | 'journeys' | 'touchpoints' | 'tasks' | 'contents';
@@ -82,6 +84,7 @@ interface SidebarProps {
 export default function Sidebar({ onLogout }: SidebarProps) {
     const { currentUser, can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { activeCompany, deselectCompany } = useCompany();
+    const { subscription, loading: subscriptionLoading } = useSubscription();
     const { campaigns, audiences, touchpoints, customerJourneys } = useData();
     const { tasks } = useTasks();
     const { contents } = useContents();
@@ -100,6 +103,8 @@ export default function Sidebar({ onLogout }: SidebarProps) {
         contents: contents.length,
     };
     const roleConfig = activeCompanyRole ? ROLE_CONFIG[activeCompanyRole as CompanyRole] : null;
+    const socialHubLockedByPlan = can('canUseSocialHub') && !subscriptionLoading && !hasSocialHubPlanEntitlement(subscription);
+    const subscriptionSettingsHref = activeCompany ? `/project/${activeCompany.id}/settings?tab=subscription` : '/settings?tab=subscription';
 
     /** Resolve nav item path with company prefix */
     const resolveHref = (itemPath: string) => {
@@ -218,6 +223,35 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                                         </div>
                                     );
                                 }
+
+                                if (item.path === '/social-hub' && socialHubLockedByPlan) {
+                                    return (
+                                        <Link
+                                            key={item.path}
+                                            href={subscriptionSettingsHref}
+                                            className="sidebar-link"
+                                            style={{ opacity: 0.9 }}
+                                        >
+                                            <Icon size={18} />
+                                            <span>{item.label[language]}</span>
+                                            <span style={{
+                                                marginLeft: 'auto',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                fontSize: '0.65rem',
+                                                background: 'rgba(193, 41, 46, 0.1)',
+                                                color: 'var(--color-primary)',
+                                                padding: '2px 7px',
+                                                borderRadius: 'var(--radius-full)',
+                                                fontWeight: 700,
+                                            }}>
+                                                <Lock size={10} /> Pro
+                                            </span>
+                                        </Link>
+                                    );
+                                }
+
                                 return (
                                     <Link
                                         key={item.path}

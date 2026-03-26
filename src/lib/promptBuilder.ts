@@ -10,8 +10,8 @@
  * - Concrete quality anchors instead of vague instructions
  */
 
-import type { Campaign, Task, Audience, Touchpoint, CustomerJourney, JourneyStage, KnowledgeDocument } from '../types';
-import type { CompanyPositioning, CompanyKeyword } from '../types/dashboard';
+import type { Audience, Campaign, CustomerJourney, JourneyStage, KnowledgeDocument, Task, Touchpoint } from '../types';
+import type { CompanyKeyword, CompanyPositioning } from '../types/dashboard';
 
 // ─── Types ─────────────────────────────────────────────────
 
@@ -191,7 +191,7 @@ Für JEDE Variante liefere:
 1. **Hook** (erste Zeile — muss Scroll-Stopper sein)
 2. **Haupttext** (exakt in der Zeichengrenze)
 3. **Call-to-Action** (spezifisch, nicht generisch)
-4. **5 Hashtags** (nischenspezifisch, keine Allgemeinplätze wie #Marketing)
+4. **Plattformgerechte Hashtags** (LinkedIn: genau 3, Instagram: 5-8; nischenspezifisch, keine Allgemeinplätze wie #Marketing)
 5. **Begründung** (1 Satz: warum diese Variante für die Persona wirkt)
 
 QUALITÄTS-CHECK — jede Variante muss:

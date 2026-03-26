@@ -17,6 +17,8 @@
     "qa:ai": "node scripts/qa_ai_e2e.cjs",
     "qa:pricing": "node scripts/qa_pricing.mjs",
     "qa:smoke": "playwright test e2e/authenticated-smoke.spec.ts",
+    "qa:backend:ai:regression": "cd \"Social Hub\" && npm run qa:ai:regression",
+    "qa:backend:ai": "cd \"Social Hub\" && npm run qa:live:ai",
     "qa:backend": "cd \"Social Hub\" && npm run qa:live:e2e",
     "qa:backend:smoke": "cd \"Social Hub\" && npm run qa:smoke",
     "qa:full": "npm run qa:seed-shared && npm run typecheck && npm run test:run && npm run qa:db && npm run qa:api && npm run qa:ai && npm run qa:smoke && npm run qa:backend",
