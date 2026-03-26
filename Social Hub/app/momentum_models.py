@@ -4,11 +4,15 @@ SQLModel definitions for tables owned by the Momentum App.
 Social Hub reads and writes to these tables directly via the shared
 Supabase Postgres connection.
 
+Schema usage:
+  - Development: test schema
+  - Production:  public schema (Supabase default, matches frontend)
+
 Tables:
-  - test.scheduled_posts   (owned by Momentum, SH reads/writes)
-  - test.connected_accounts (owned by Momentum, SH reads + writes tokens)
-  - test.engagement_metrics (owned by Momentum, SH writes after publish)
-  - test.contents           (owned by Momentum, SH reads for context)
+  - scheduled_posts   (owned by Momentum, SH reads/writes)
+  - connected_accounts (owned by Momentum, SH reads + writes tokens)
+  - engagement_metrics (owned by Momentum, SH writes after publish)
+  - contents           (owned by Momentum, SH reads for context)
 """
 from datetime import datetime, timezone
 from typing import Optional

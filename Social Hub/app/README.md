@@ -1,6 +1,6 @@
 # SocialHub Cloud Setup
 
-SocialHub laeuft jetzt cloud-first auf Supabase Postgres. Die gemeinsame Team-Entwicklung arbeitet gegen das Schema `test`, und das Live-System gegen `production`.
+SocialHub laeuft jetzt cloud-first auf Supabase Postgres. Die gemeinsame Team-Entwicklung arbeitet gegen das Schema `test`, und das Live-System gegen `public` (Supabase-Standard, identisch zum Frontend).
 
 ## Architektur
 

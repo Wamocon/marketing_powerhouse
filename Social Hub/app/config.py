@@ -56,7 +56,8 @@ def normalize_app_env(raw_value: str, default: str = "test") -> str:
 
 
 def default_schema_for_env(app_env: str) -> str:
-    return "production" if app_env == "production" else "test"
+    # Both frontend and backend use `public` for production (Supabase default)
+    return "public" if app_env == "production" else "test"
 
 
 def is_supabase_database_url(database_url: str) -> bool:

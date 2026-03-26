@@ -1,7 +1,7 @@
 # 🧪 Explorativer Abnahmetest-Plan — Momentum Marketing Dashboard
 
-**Version:** 0.9  
-**Stand:** Januar 2026  
+**Version:** 1.0  
+**Stand:** März 2026  
 **Testziel:** Validierung aller Kernprozesse und des Rollen-Rechte-Konzepts gegen KONZEPT.md  
 **Teststrategie:** Explorativ-strukturiert — alle Kernprozesse für alle 4 Rollen werden manuell durchgeführt
 
