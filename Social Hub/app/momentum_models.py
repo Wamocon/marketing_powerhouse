@@ -39,6 +39,7 @@ def _momentum_table_args() -> dict:
 
 # ── Connected Accounts (Momentum-owned) ──────────────────────────────────
 
+
 class MomentumConnectedAccount(SQLModel, table=True):
     """Maps to Momentum's `connected_accounts` table."""
 
@@ -59,13 +60,16 @@ class MomentumConnectedAccount(SQLModel, table=True):
     token_expires_at: Optional[datetime] = None
     token_scopes: Optional[list] = Field(default=None, sa_column=Column(JSON))
     is_active: bool = True
-    account_metadata: Optional[dict] = Field(default=None, sa_column=Column("metadata", JSON))
+    account_metadata: Optional[dict] = Field(
+        default=None, sa_column=Column("metadata", JSON)
+    )
     connected_by: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ── Scheduled Posts (Momentum-owned, SH reads/writes) ────────────────────
+
 
 class MomentumScheduledPost(SQLModel, table=True):
     """Maps to Momentum's `scheduled_posts` table."""
@@ -86,7 +90,9 @@ class MomentumScheduledPost(SQLModel, table=True):
     post_text: str = ""
     post_image_url: Optional[str] = None
     post_type: str = "text"  # text | image | carousel | video | reel
-    hashtags: Optional[list] = Field(default=None, sa_column=Column("hashtags", ARRAY(Text)))
+    hashtags: Optional[list] = Field(
+        default=None, sa_column=Column("hashtags", ARRAY(Text))
+    )
     scheduled_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     published_at: Optional[datetime] = None
     status: str = "draft"
@@ -120,6 +126,7 @@ class MomentumScheduledPost(SQLModel, table=True):
 
 # ── Engagement Metrics (Momentum-owned, SH writes) ──────────────────────
 
+
 class MomentumEngagementMetric(SQLModel, table=True):
     """Maps to Momentum's `engagement_metrics` table."""
 
@@ -149,6 +156,7 @@ class MomentumEngagementMetric(SQLModel, table=True):
 
 # ── Content Items (Momentum-owned, SH reads) ────────────────────────────
 
+
 class MomentumContent(SQLModel, table=True):
     """Maps to Momentum's `contents` table (read-only for context)."""
 
@@ -172,6 +180,7 @@ class MomentumContent(SQLModel, table=True):
 
 # ── Company (Momentum-owned, SH reads) ──────────────────────────────────
 
+
 class MomentumCompany(SQLModel, table=True):
     """Maps to Momentum's `companies` table (read-only for validation)."""
 
@@ -185,6 +194,7 @@ class MomentumCompany(SQLModel, table=True):
 
 
 # ── Social Hub Settings (per-project config) ────────────────────────────
+
 
 class SocialHubSettings(SQLModel, table=True):
     """Per-project Social Hub configuration."""
@@ -206,7 +216,9 @@ class SocialHubSettings(SQLModel, table=True):
     ai_persona: str = ""
     content_pillars: Optional[list] = Field(default=None, sa_column=Column(ARRAY(Text)))
     auto_approve: bool = False
-    require_approval_from: Optional[list] = Field(default=None, sa_column=Column(ARRAY(Text)))
+    require_approval_from: Optional[list] = Field(
+        default=None, sa_column=Column(ARRAY(Text))
+    )
     default_platform: str = "linkedin"
     value_comments_enabled: bool = True
     image_generation_enabled: bool = True
@@ -216,6 +228,7 @@ class SocialHubSettings(SQLModel, table=True):
 
 
 # ── Social Analytics Snapshots (per-project historical metrics) ─────────
+
 
 class SocialAnalyticsSnapshot(SQLModel, table=True):
     """Daily aggregate social performance per project per platform."""

@@ -30,24 +30,35 @@ from datetime import datetime, timezone, timedelta
 from threading import Lock
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field as PydanticField
 from sqlmodel import Session, select, col, func
 
 from app.config import settings, DATA_DIR
 from app.database import (
-    engine, TopicIdea, AppLog, DynamicSetting,
-    get_setting, get_settings, set_setting,
+    engine,
+    TopicIdea,
+    AppLog,
+    get_setting,
 )
 from app.momentum_models import (
-    MomentumScheduledPost, MomentumConnectedAccount,
-    MomentumEngagementMetric, MomentumContent, MomentumCompany,
-    SocialHubSettings, SocialAnalyticsSnapshot,
+    MomentumScheduledPost,
+    MomentumConnectedAccount,
+    MomentumEngagementMetric,
+    MomentumContent,
+    MomentumCompany,
+    SocialHubSettings,
+    SocialAnalyticsSnapshot,
     _momentum_schema,
 )
 from app.auth import get_auth_context, AuthContext
-from app.services import gemini_service, imagen_service, linkedin_service, instagram_service
+from app.services import (
+    gemini_service,
+    imagen_service,
+    linkedin_service,
+    instagram_service,
+)
 from app.services.resilience import public_error_message
 from app.services.token_encryption import decrypt_token
 
@@ -67,13 +78,16 @@ def _api_client_id(request: Request) -> str:
     if auth_header.startswith("Bearer "):
         # Use a hash of the token to avoid storing it in memory
         import hashlib
+
         return hashlib.sha256(auth_header[7:50].encode()).hexdigest()[:16]
     if request.client and request.client.host:
         return request.client.host
     return "anonymous"
 
 
-def _check_rate_limit(request: Request, scope: str, limit: int, window: int = 60) -> None:
+def _check_rate_limit(
+    request: Request, scope: str, limit: int, window: int = 60
+) -> None:
     """Raise 429 if the caller exceeds the rate limit."""
     key = f"api:{scope}:{_api_client_id(request)}"
     now = time.monotonic()
@@ -95,11 +109,12 @@ def _to_uuid(value: str) -> UUID:
     """Convert a string to UUID, raising HTTPException on invalid format."""
     try:
         return UUID(value)
-    except (ValueError, AttributeError):
-        raise HTTPException(400, detail=f"Invalid UUID format: {value}")
+    except (ValueError, AttributeError) as exc:
+        raise HTTPException(400, detail=f"Invalid UUID format: {value}") from exc
 
 
 # ── Request / Response Models ────────────────────────────────────────────
+
 
 class GenerateRequest(BaseModel):
     company_id: str
@@ -108,6 +123,7 @@ class GenerateRequest(BaseModel):
     content_item_id: str | None = None
     connected_account_id: str | None = None
 
+
 class GenerateResponse(BaseModel):
     post_id: str
     topic: str
@@ -115,30 +131,37 @@ class GenerateResponse(BaseModel):
     status: str
     message: str
 
+
 class PublishResponse(BaseModel):
     post_id: str
     status: str
     platform_post_id: str | None = None
     message: str
 
+
 class TopicSuggestRequest(BaseModel):
     company_id: str
     count: int = 5
 
+
 class TopicSuggestResponse(BaseModel):
     topics: list[str]
 
+
 class RegenerateTextRequest(BaseModel):
     instruction: str
+
 
 class ReadinessItem(BaseModel):
     label: str
     state: str  # ready | warn | issue
     detail: str
 
+
 class ReadinessResponse(BaseModel):
     score: int
     items: list[ReadinessItem]
+
 
 class ErrorResponse(BaseModel):
     error: str
@@ -147,6 +170,7 @@ class ErrorResponse(BaseModel):
 
 class SettingsUpdateRequest(BaseModel):
     """Partial update for project Social Hub settings."""
+
     publishing_cadence: str | None = None
     preferred_days: list[str] | None = None
     preferred_times: list[str] | None = None
@@ -165,6 +189,7 @@ class SettingsUpdateRequest(BaseModel):
 
 class GenerateFromCampaignRequest(BaseModel):
     """Generate a social post from campaign context."""
+
     company_id: str
     campaign_id: str
     platform: str = "linkedin"
@@ -173,6 +198,7 @@ class GenerateFromCampaignRequest(BaseModel):
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
 
 def _db_log_api(level: str, source: str, message: str):
     """Thin wrapper for DB logging from API context."""
@@ -188,13 +214,10 @@ def _get_account_for_platform(
     session: Session, company_id: str, platform: str, account_id: str | None = None
 ) -> MomentumConnectedAccount | None:
     """Find the best connected account for a platform."""
-    query = (
-        select(MomentumConnectedAccount)
-        .where(
-            MomentumConnectedAccount.company_id == company_id,
-            MomentumConnectedAccount.platform == platform,
-            MomentumConnectedAccount.is_active == True,  # noqa: E712
-        )
+    query = select(MomentumConnectedAccount).where(
+        MomentumConnectedAccount.company_id == company_id,
+        MomentumConnectedAccount.platform == platform,
+        MomentumConnectedAccount.is_active == True,  # noqa: E712
     )
     if account_id:
         query = query.where(MomentumConnectedAccount.id == account_id)
@@ -207,7 +230,9 @@ def _account_health(account: MomentumConnectedAccount | None) -> tuple[str, int]
         return "none", 0
     if not account.access_token_encrypted:
         return "disconnected", 0
-    if account.token_expires_at and account.token_expires_at < datetime.now(timezone.utc):
+    if account.token_expires_at and account.token_expires_at < datetime.now(
+        timezone.utc
+    ):
         return "expired", 0
     if account.token_expires_at:
         days = (account.token_expires_at - datetime.now(timezone.utc)).days
@@ -225,30 +250,82 @@ def _build_readiness(company_id: str) -> tuple[list[dict], int]:
     ig_status, ig_days = _account_health(ig_account)
 
     google_api_ready = bool(settings.GOOGLE_API_KEY)
-    linkedin_api_ready = bool(settings.LINKEDIN_CLIENT_ID and settings.LINKEDIN_CLIENT_SECRET)
-    instagram_api_ready = bool(settings.INSTAGRAM_APP_ID and settings.INSTAGRAM_APP_SECRET)
+    linkedin_api_ready = bool(
+        settings.LINKEDIN_CLIENT_ID and settings.LINKEDIN_CLIENT_SECRET
+    )
+    instagram_api_ready = bool(
+        settings.INSTAGRAM_APP_ID and settings.INSTAGRAM_APP_SECRET
+    )
     media_host_ready = bool(settings.MEDIA_PUBLIC_BASE_URL)
 
     def _acc_item(name: str, status: str, days: int) -> dict:
         if status == "ok":
-            return {"label": f"{name} account", "state": "ready", "detail": "Connected and ready."}
+            return {
+                "label": f"{name} account",
+                "state": "ready",
+                "detail": "Connected and ready.",
+            }
         if status == "warning":
-            return {"label": f"{name} account", "state": "warn", "detail": f"Token expires in {days} day(s)."}
+            return {
+                "label": f"{name} account",
+                "state": "warn",
+                "detail": f"Token expires in {days} day(s).",
+            }
         if status == "expired":
-            return {"label": f"{name} account", "state": "issue", "detail": "Token expired. Reconnect."}
+            return {
+                "label": f"{name} account",
+                "state": "issue",
+                "detail": "Token expired. Reconnect.",
+            }
         if status == "disconnected":
-            return {"label": f"{name} account", "state": "issue", "detail": "Not authenticated."}
-        return {"label": f"{name} account", "state": "issue", "detail": "Not configured."}
+            return {
+                "label": f"{name} account",
+                "state": "issue",
+                "detail": "Not authenticated.",
+            }
+        return {
+            "label": f"{name} account",
+            "state": "issue",
+            "detail": "Not configured.",
+        }
 
     items = [
-        {"label": "Google AI services", "state": "ready" if google_api_ready else "issue",
-         "detail": "Gemini + Imagen configured." if google_api_ready else "GOOGLE_API_KEY missing."},
-        {"label": "LinkedIn credentials", "state": "ready" if linkedin_api_ready else "issue",
-         "detail": "App credentials set." if linkedin_api_ready else "LINKEDIN_CLIENT_ID/SECRET missing."},
-        {"label": "Instagram credentials", "state": "ready" if instagram_api_ready else "issue",
-         "detail": "App credentials set." if instagram_api_ready else "INSTAGRAM_APP_ID/SECRET missing."},
-        {"label": "Media hosting", "state": "ready" if media_host_ready else "warn",
-         "detail": "Public URL configured." if media_host_ready else "MEDIA_PUBLIC_BASE_URL missing for IG."},
+        {
+            "label": "Google AI services",
+            "state": "ready" if google_api_ready else "issue",
+            "detail": (
+                "Gemini + Imagen configured."
+                if google_api_ready
+                else "GOOGLE_API_KEY missing."
+            ),
+        },
+        {
+            "label": "LinkedIn credentials",
+            "state": "ready" if linkedin_api_ready else "issue",
+            "detail": (
+                "App credentials set."
+                if linkedin_api_ready
+                else "LINKEDIN_CLIENT_ID/SECRET missing."
+            ),
+        },
+        {
+            "label": "Instagram credentials",
+            "state": "ready" if instagram_api_ready else "issue",
+            "detail": (
+                "App credentials set."
+                if instagram_api_ready
+                else "INSTAGRAM_APP_ID/SECRET missing."
+            ),
+        },
+        {
+            "label": "Media hosting",
+            "state": "ready" if media_host_ready else "warn",
+            "detail": (
+                "Public URL configured."
+                if media_host_ready
+                else "MEDIA_PUBLIC_BASE_URL missing for IG."
+            ),
+        },
         _acc_item("LinkedIn", li_status, li_days),
         _acc_item("Instagram", ig_status, ig_days),
     ]
@@ -259,6 +336,7 @@ def _build_readiness(company_id: str) -> tuple[list[dict], int]:
 
 # ── Endpoints ────────────────────────────────────────────────────────────
 
+
 @router.post("/generate", response_model=GenerateResponse)
 async def api_generate(req: GenerateRequest, request: Request):
     """Generate an AI-powered social media post."""
@@ -266,23 +344,31 @@ async def api_generate(req: GenerateRequest, request: Request):
     auth = await get_auth_context(request)
 
     if not settings.GOOGLE_API_KEY:
-        raise HTTPException(400, detail="Google API Key not configured on Social Hub server.")
+        raise HTTPException(
+            400, detail="Google API Key not configured on Social Hub server."
+        )
 
     platform = req.platform if req.platform in ("linkedin", "instagram") else "linkedin"
     company_id = req.company_id or auth.company_id
 
     # Find connected account for the platform
     with Session(engine) as session:
-        account = _get_account_for_platform(session, company_id, platform, req.connected_account_id)
+        account = _get_account_for_platform(
+            session, company_id, platform, req.connected_account_id
+        )
         if not account:
-            raise HTTPException(400, detail=f"No active {platform} account found for company.")
+            raise HTTPException(
+                400, detail=f"No active {platform} account found for company."
+            )
 
     # Generate topic if not provided
     topic = req.topic.strip() if req.topic else ""
     if not topic:
         with Session(engine) as session:
             queued = session.exec(
-                select(TopicIdea).where(TopicIdea.used == False).order_by(col(TopicIdea.created_at))
+                select(TopicIdea)
+                .where(TopicIdea.used == False)
+                .order_by(col(TopicIdea.created_at))
             ).first()
             if queued:
                 topic = queued.topic
@@ -311,7 +397,9 @@ async def api_generate(req: GenerateRequest, request: Request):
                     title=topic[:200],
                     description=result["body"][:500],
                     status="scheduled",
-                    publish_date=(datetime.now(timezone.utc) + timedelta(hours=24)).strftime("%Y-%m-%d"),
+                    publish_date=(
+                        datetime.now(timezone.utc) + timedelta(hours=24)
+                    ).strftime("%Y-%m-%d"),
                     platform=platform,
                     campaign_id=None,
                     author="Social Hub AI",
@@ -331,7 +419,9 @@ async def api_generate(req: GenerateRequest, request: Request):
                 connected_account_id=account.id,
                 post_text=result["body"],
                 post_type="image",
-                hashtags=result.get("hashtags", "").split() if result.get("hashtags") else [],
+                hashtags=(
+                    result.get("hashtags", "").split() if result.get("hashtags") else []
+                ),
                 scheduled_at=datetime.now(timezone.utc) + timedelta(hours=24),
                 status="draft",
                 auto_comment_text=value_comment,
@@ -348,7 +438,9 @@ async def api_generate(req: GenerateRequest, request: Request):
             # Generate image
             try:
                 image_path = await imagen_service.generate_image(
-                    result["image_prompt"], post_id, platform=platform,
+                    result["image_prompt"],
+                    str(post_id),
+                    platform=platform,
                 )
                 if image_path:
                     if settings.MEDIA_PUBLIC_BASE_URL:
@@ -362,12 +454,16 @@ async def api_generate(req: GenerateRequest, request: Request):
                         session.add(post_record)
                         session.commit()
             except Exception as img_err:
-                logger.warning("Image generation failed for post %s: %s", post_id, img_err)
+                logger.warning(
+                    "Image generation failed for post %s: %s", post_id, img_err
+                )
 
-        _db_log_api("INFO", "generate", f"[{platform}] Post generated: '{topic}' → {post_id}")
+        _db_log_api(
+            "INFO", "generate", f"[{platform}] Post generated: '{topic}' → {post_id}"
+        )
 
         return GenerateResponse(
-            post_id=post_id,
+            post_id=str(post_id),
             topic=topic,
             platform=platform,
             status="draft",
@@ -376,7 +472,9 @@ async def api_generate(req: GenerateRequest, request: Request):
 
     except Exception as e:
         logger.exception("AI generation failed")
-        raise HTTPException(500, detail=public_error_message(e, "Content generation failed."))
+        raise HTTPException(
+            500, detail=public_error_message(e, "Content generation failed.")
+        ) from e
 
 
 @router.post("/publish/{post_id}", response_model=PublishResponse)
@@ -393,11 +491,16 @@ async def api_publish(post_id: str, request: Request):
         if post.company_id != auth.company_id:
             raise HTTPException(403, detail="Access denied.")
         if post.status not in ("approved", "scheduled"):
-            raise HTTPException(400, detail=f"Post must be approved to publish. Current status: {post.status}")
+            raise HTTPException(
+                400,
+                detail=f"Post must be approved to publish. Current status: {post.status}",
+            )
 
         account = session.get(MomentumConnectedAccount, post.connected_account_id)
         if not account or not account.access_token_encrypted:
-            raise HTTPException(400, detail="Connected account not found or not authenticated.")
+            raise HTTPException(
+                400, detail="Connected account not found or not authenticated."
+            )
 
         # Determine platform from account
         platform = account.platform
@@ -410,9 +513,9 @@ async def api_publish(post_id: str, request: Request):
 
     try:
         if platform == "linkedin":
-            result = await _publish_linkedin(pk, access_token, account)
+            result = await _publish_linkedin(str(pk), access_token, account)
         elif platform == "instagram":
-            result = await _publish_instagram(pk, access_token, account)
+            result = await _publish_instagram(str(pk), access_token, account)
         else:
             raise HTTPException(400, detail=f"Unsupported platform: {platform}")
 
@@ -437,12 +540,16 @@ async def api_publish(post_id: str, request: Request):
                 session.add(post)
                 session.commit()
         _db_log_api("ERROR", "publish", f"Publish failed for {post_id}: {e}")
-        raise HTTPException(500, detail=public_error_message(e, "Publishing failed."))
+        raise HTTPException(500, detail=public_error_message(e, "Publishing failed.")) from e
 
 
-async def _publish_linkedin(post_id: str, access_token: str, account: MomentumConnectedAccount) -> dict:
+async def _publish_linkedin(
+    post_id: str, access_token: str, account: MomentumConnectedAccount
+) -> dict:
     """Handle LinkedIn publishing pipeline."""
-    platform_user_id = account.platform_user_id or (account.account_metadata or {}).get("linkedin_user_id", "")
+    platform_user_id = account.platform_user_id or (account.account_metadata or {}).get(
+        "linkedin_user_id", ""
+    )
     if not platform_user_id:
         raise HTTPException(400, detail="LinkedIn account missing platform_user_id.")
 
@@ -458,11 +565,15 @@ async def _publish_linkedin(post_id: str, access_token: str, account: MomentumCo
             # Local image — upload to LinkedIn
             image_path_str = str(DATA_DIR / "images" / f"{post_id}.png")
             try:
-                image_urn = await linkedin_service.upload_image(access_token, person_urn, image_path_str)
+                image_urn = await linkedin_service.upload_image(
+                    access_token, person_urn, image_path_str
+                )
             except Exception as e:
                 logger.warning("LinkedIn image upload failed: %s", e)
 
-        post_urn = await linkedin_service.create_post(access_token, person_urn, post.post_text, image_urn)
+        post_urn = await linkedin_service.create_post(
+            access_token, person_urn, post.post_text, image_urn
+        )
 
         post.platform_post_id = post_urn
         post.status = "published"
@@ -478,11 +589,12 @@ async def _publish_linkedin(post_id: str, access_token: str, account: MomentumCo
             delay_min = int(get_setting("value_comment_delay_min", "60"))
             try:
                 from app.services.scheduler_service_v2 import scheduler
+
                 scheduler.add_job(
                     _post_linkedin_comment,
                     "date",
                     run_date=datetime.now(timezone.utc) + timedelta(minutes=delay_min),
-                    args=[str(pk), access_token, person_urn],
+                    args=[str(post_id), access_token, person_urn],
                     id=f"comment_{post_id}",
                     replace_existing=True,
                 )
@@ -492,14 +604,20 @@ async def _publish_linkedin(post_id: str, access_token: str, account: MomentumCo
         return {"platform_post_id": post_urn}
 
 
-async def _publish_instagram(post_id: str, access_token: str, account: MomentumConnectedAccount) -> dict:
+async def _publish_instagram(
+    post_id: str, access_token: str, account: MomentumConnectedAccount
+) -> dict:
     """Handle Instagram publishing pipeline."""
-    ig_user_id = account.platform_user_id or (account.account_metadata or {}).get("ig_user_id", "")
+    ig_user_id = account.platform_user_id or (account.account_metadata or {}).get(
+        "ig_user_id", ""
+    )
     if not ig_user_id:
         raise HTTPException(400, detail="Instagram account missing ig_user_id.")
 
     if not settings.MEDIA_PUBLIC_BASE_URL:
-        raise HTTPException(400, detail="MEDIA_PUBLIC_BASE_URL required for Instagram publishing.")
+        raise HTTPException(
+            400, detail="MEDIA_PUBLIC_BASE_URL required for Instagram publishing."
+        )
 
     with Session(engine) as session:
         post = session.get(MomentumScheduledPost, post_id)
@@ -511,12 +629,19 @@ async def _publish_instagram(post_id: str, access_token: str, account: MomentumC
 
         caption = post.post_text
         if post.hashtags:
-            hashtag_str = " ".join(post.hashtags) if isinstance(post.hashtags, list) else str(post.hashtags)
+            hashtag_str = (
+                " ".join(post.hashtags)
+                if isinstance(post.hashtags, list)
+                else str(post.hashtags)
+            )
             caption = f"{caption}\n\n{hashtag_str}"
 
         # Create container
         container_id = await instagram_service.create_image_container(
-            access_token, ig_user_id, image_url, caption,
+            access_token,
+            ig_user_id,
+            image_url,
+            caption,
         )
         post.ig_container_id = container_id
         session.add(post)
@@ -525,16 +650,22 @@ async def _publish_instagram(post_id: str, access_token: str, account: MomentumC
         # Poll for container readiness
         for _ in range(12):
             await asyncio.sleep(5)
-            status = await instagram_service.check_container_status(access_token, container_id)
+            status = await instagram_service.check_container_status(
+                access_token, container_id
+            )
             if status == "FINISHED":
                 break
             if status == "ERROR":
-                raise RuntimeError(f"Instagram container {container_id} failed processing.")
+                raise RuntimeError(
+                    f"Instagram container {container_id} failed processing."
+                )
         else:
             raise RuntimeError(f"Instagram container {container_id} timed out.")
 
         # Publish
-        media_id = await instagram_service.publish_container(access_token, ig_user_id, container_id)
+        media_id = await instagram_service.publish_container(
+            access_token, ig_user_id, container_id
+        )
 
         post.platform_post_id = media_id
         post.status = "published"
@@ -550,11 +681,12 @@ async def _publish_instagram(post_id: str, access_token: str, account: MomentumC
             delay_min = int(get_setting("value_comment_delay_min", "60"))
             try:
                 from app.services.scheduler_service_v2 import scheduler
+
                 scheduler.add_job(
                     _post_instagram_comment,
                     "date",
                     run_date=datetime.now(timezone.utc) + timedelta(minutes=delay_min),
-                    args=[str(pk), access_token],
+                    args=[str(post_id), access_token],
                     id=f"comment_{post_id}",
                     replace_existing=True,
                 )
@@ -572,7 +704,10 @@ async def _post_linkedin_comment(post_id: str, access_token: str, person_urn: st
             if not post or not post.platform_post_id or not post.auto_comment_text:
                 return
             comment_urn = await linkedin_service.create_comment(
-                access_token, post.platform_post_id, person_urn, post.auto_comment_text,
+                access_token,
+                post.platform_post_id,
+                person_urn,
+                post.auto_comment_text,
             )
             post.platform_comment_id = comment_urn
             post.auto_comment_posted = True
@@ -593,7 +728,9 @@ async def _post_instagram_comment(post_id: str, access_token: str):
             if not post or not post.platform_post_id or not post.auto_comment_text:
                 return
             comment_id = await instagram_service.post_comment(
-                access_token, post.platform_post_id, post.auto_comment_text,
+                access_token,
+                post.platform_post_id,
+                post.auto_comment_text,
             )
             post.platform_comment_id = comment_id
             post.auto_comment_posted = True
@@ -634,11 +771,15 @@ async def api_suggest_topics(req: TopicSuggestRequest, request: Request):
         topics = await gemini_service.suggest_topics(count=count)
         return TopicSuggestResponse(topics=topics)
     except Exception as e:
-        raise HTTPException(500, detail=public_error_message(e, "Topic suggestion failed."))
+        raise HTTPException(
+            500, detail=public_error_message(e, "Topic suggestion failed.")
+        ) from e
 
 
 @router.post("/regenerate-text/{post_id}")
-async def api_regenerate_text(post_id: str, req: RegenerateTextRequest, request: Request):
+async def api_regenerate_text(
+    post_id: str, req: RegenerateTextRequest, request: Request
+):
     """Rewrite post text using AI instruction."""
     _check_rate_limit(request, "regenerate-text", limit=8, window=300)
     auth = await get_auth_context(request)
@@ -664,7 +805,9 @@ async def api_regenerate_text(post_id: str, req: RegenerateTextRequest, request:
             select(MomentumCompany).where(MomentumCompany.id == auth.company_id)
         ).first()
         settings_row = session.exec(
-            select(SocialHubSettings).where(SocialHubSettings.company_id == auth.company_id)
+            select(SocialHubSettings).where(
+                SocialHubSettings.company_id == auth.company_id
+            )
         ).first()
         company_context = ""
         settings_context = ""
@@ -682,14 +825,20 @@ async def api_regenerate_text(post_id: str, req: RegenerateTextRequest, request:
             if settings_row.ai_persona:
                 settings_context += f"Persona: {settings_row.ai_persona}\n"
             if settings_row.content_pillars:
-                settings_context += f"Content-Säulen: {', '.join(settings_row.content_pillars)}\n"
+                settings_context += (
+                    f"Content-Säulen: {', '.join(settings_row.content_pillars)}\n"
+                )
             if settings_row.hashtag_strategy:
-                settings_context += f"Hashtag-Strategie: {settings_row.hashtag_strategy}\n"
+                settings_context += (
+                    f"Hashtag-Strategie: {settings_row.hashtag_strategy}\n"
+                )
                 hashtag_strategy = settings_row.hashtag_strategy
             if settings_row.ai_language:
                 language = settings_row.ai_language
 
-        brief_context = "\n".join(part for part in [company_context, settings_context] if part).strip()
+        brief_context = "\n".join(
+            part for part in [company_context, settings_context] if part
+        ).strip()
 
     try:
         try:
@@ -727,16 +876,18 @@ async def api_regenerate_text(post_id: str, req: RegenerateTextRequest, request:
                 session.add(post)
                 session.commit()
                 retry_count = post.retry_count or 0
-        return JSONResponse({
-            "body": regenerated["body"],
-            "hashtags": regenerated["hashtags"],
-            "auto_comment_text": regenerated["value_comment"],
-            "image_prompt": regenerated["image_prompt"],
-            "retry_count": retry_count,
-            "post_id": post_id,
-        })
+        return JSONResponse(
+            {
+                "body": regenerated["body"],
+                "hashtags": regenerated["hashtags"],
+                "auto_comment_text": regenerated["value_comment"],
+                "image_prompt": regenerated["image_prompt"],
+                "retry_count": retry_count,
+                "post_id": post_id,
+            }
+        )
     except Exception as e:
-        raise HTTPException(500, detail=public_error_message(e, "Text rewrite failed."))
+        raise HTTPException(500, detail=public_error_message(e, "Text rewrite failed.")) from e
 
 
 @router.post("/regenerate-image/{post_id}")
@@ -760,12 +911,16 @@ async def api_regenerate_image(post_id: str, request: Request):
         platform = account.platform if account else "linkedin"
 
     try:
-        image_path = await imagen_service.generate_image(prompt, post_id, platform=platform)
+        image_path = await imagen_service.generate_image(
+            prompt, str(post_id), platform=platform
+        )
         with Session(engine) as session:
-            post = session.get(MomentumScheduledPost, pk)
+            post = session.get(MomentumScheduledPost, post_id)
             if post and image_path:
                 if settings.MEDIA_PUBLIC_BASE_URL:
-                    post.post_image_url = f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}/images/{post_id}"
+                    post.post_image_url = (
+                        f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}/images/{post_id}"
+                    )
                 else:
                     post.post_image_url = f"/images/{post_id}"
                 post.retry_count = (post.retry_count or 0) + 1
@@ -774,7 +929,9 @@ async def api_regenerate_image(post_id: str, request: Request):
                 session.commit()
         return JSONResponse({"message": "Image regenerated.", "post_id": post_id})
     except Exception as e:
-        raise HTTPException(500, detail=public_error_message(e, "Image regeneration failed."))
+        raise HTTPException(
+            500, detail=public_error_message(e, "Image regeneration failed.")
+        ) from e
 
 
 @router.get("/posts/{company_id}")
@@ -807,34 +964,43 @@ async def api_list_posts(
         if task_id:
             query = query.where(MomentumScheduledPost.task_id == task_id)
         if content_item_id:
-            query = query.where(MomentumScheduledPost.content_item_id == content_item_id)
+            query = query.where(
+                MomentumScheduledPost.content_item_id == content_item_id
+            )
         if platform:
             query = query.where(MomentumScheduledPost.platform == platform)
         posts = session.exec(query).all()
 
-    return JSONResponse([
-        {
-            "id": str(p.id),
-            "topic": p.topic,
-            "status": p.status,
-            "platform": p.platform,
-            "campaign_id": p.campaign_id,
-            "task_id": p.task_id,
-            "content_item_id": p.content_item_id,
-            "connected_account_id": str(p.connected_account_id) if p.connected_account_id else None,
-            "post_text": p.post_text[:200],
-            "post_image_url": p.post_image_url,
-            "hashtags": p.hashtags if isinstance(p.hashtags, list) else [],
-            "auto_comment_text": p.auto_comment_text[:100] if p.auto_comment_text else None,
-            "scheduled_at": p.scheduled_at.isoformat() if p.scheduled_at else None,
-            "published_at": p.published_at.isoformat() if p.published_at else None,
-            "created_at": p.created_at.isoformat() if p.created_at else None,
-        }
-        for p in posts
-    ])
+    return JSONResponse(
+        [
+            {
+                "id": str(p.id),
+                "topic": p.topic,
+                "status": p.status,
+                "platform": p.platform,
+                "campaign_id": p.campaign_id,
+                "task_id": p.task_id,
+                "content_item_id": p.content_item_id,
+                "connected_account_id": (
+                    str(p.connected_account_id) if p.connected_account_id else None
+                ),
+                "post_text": p.post_text[:200],
+                "post_image_url": p.post_image_url,
+                "hashtags": p.hashtags if isinstance(p.hashtags, list) else [],
+                "auto_comment_text": (
+                    p.auto_comment_text[:100] if p.auto_comment_text else None
+                ),
+                "scheduled_at": p.scheduled_at.isoformat() if p.scheduled_at else None,
+                "published_at": p.published_at.isoformat() if p.published_at else None,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in posts
+        ]
+    )
 
 
 # ── Post Detail ──────────────────────────────────────────────────────────
+
 
 @router.get("/posts/{company_id}/{post_id}")
 async def api_get_post_detail(company_id: str, post_id: str, request: Request):
@@ -858,48 +1024,64 @@ async def api_get_post_detail(company_id: str, post_id: str, request: Request):
         account_name = None
         if post.connected_account_id:
             account = session.exec(
-                select(MomentumConnectedAccount)
-                .where(MomentumConnectedAccount.id == post.connected_account_id)
+                select(MomentumConnectedAccount).where(
+                    MomentumConnectedAccount.id == post.connected_account_id
+                )
             ).first()
             if account:
                 resolved_platform = resolved_platform or account.platform
                 account_name = account.account_name
 
-        return JSONResponse({
-            "id": str(post.id),
-            "company_id": post.company_id,
-            "topic": post.topic,
-            "status": post.status,
-            "platform": resolved_platform,
-            "account_name": account_name,
-            "connected_account_id": str(post.connected_account_id) if post.connected_account_id else None,
-            "campaign_id": post.campaign_id,
-            "task_id": post.task_id,
-            "content_item_id": post.content_item_id,
-            "post_text": post.post_text,
-            "post_image_url": post.post_image_url,
-            "post_type": post.post_type,
-            "hashtags": post.hashtags if isinstance(post.hashtags, list) else [],
-            "auto_comment_text": post.auto_comment_text,
-            "image_prompt": post.image_prompt,
-            "sources": post.sources,
-            "notes": post.notes,
-            "platform_post_url": post.platform_post_url,
-            "error_message": post.error_message,
-            "scheduled_at": post.scheduled_at.isoformat() if post.scheduled_at else None,
-            "published_at": post.published_at.isoformat() if post.published_at else None,
-            "approved_at": post.approved_at.isoformat() if post.approved_at else None,
-            "approved_by": post.approved_by,
-            "created_by": post.created_by,
-            "created_at": post.created_at.isoformat() if post.created_at else None,
-            "updated_at": post.updated_at.isoformat() if post.updated_at else None,
-        })
+        return JSONResponse(
+            {
+                "id": str(post.id),
+                "company_id": post.company_id,
+                "topic": post.topic,
+                "status": post.status,
+                "platform": resolved_platform,
+                "account_name": account_name,
+                "connected_account_id": (
+                    str(post.connected_account_id)
+                    if post.connected_account_id
+                    else None
+                ),
+                "campaign_id": post.campaign_id,
+                "task_id": post.task_id,
+                "content_item_id": post.content_item_id,
+                "post_text": post.post_text,
+                "post_image_url": post.post_image_url,
+                "post_type": post.post_type,
+                "hashtags": post.hashtags if isinstance(post.hashtags, list) else [],
+                "auto_comment_text": post.auto_comment_text,
+                "image_prompt": post.image_prompt,
+                "sources": post.sources,
+                "notes": post.notes,
+                "platform_post_url": post.platform_post_url,
+                "error_message": post.error_message,
+                "scheduled_at": (
+                    post.scheduled_at.isoformat() if post.scheduled_at else None
+                ),
+                "published_at": (
+                    post.published_at.isoformat() if post.published_at else None
+                ),
+                "approved_at": (
+                    post.approved_at.isoformat() if post.approved_at else None
+                ),
+                "approved_by": post.approved_by,
+                "created_by": post.created_by,
+                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+            }
+        )
 
 
 # ── Approve / Reject ────────────────────────────────────────────────────
 
+
 class ApproveRejectRequest(BaseModel):
-    user_id: str = PydanticField(..., description="ID of the user performing the action")
+    user_id: str = PydanticField(
+        ..., description="ID of the user performing the action"
+    )
     notes: str = PydanticField("", description="Optional reviewer notes")
 
 
@@ -911,8 +1093,9 @@ async def api_approve_post(post_id: str, body: ApproveRejectRequest, request: Re
 
     with Session(engine) as session:
         post = session.exec(
-            select(MomentumScheduledPost)
-            .where(MomentumScheduledPost.id == UUID(post_id))
+            select(MomentumScheduledPost).where(
+                MomentumScheduledPost.id == UUID(post_id)
+            )
         ).first()
         if not post:
             raise HTTPException(404, "Post not found")
@@ -932,7 +1115,13 @@ async def api_approve_post(post_id: str, body: ApproveRejectRequest, request: Re
         session.refresh(post)
 
         logger.info("Post %s approved by %s", post_id, body.user_id)
-        return JSONResponse({"id": str(post.id), "status": post.status, "approved_at": post.approved_at.isoformat()})
+        return JSONResponse(
+            {
+                "id": str(post.id),
+                "status": post.status,
+                "approved_at": post.approved_at.isoformat(),
+            }
+        )
 
 
 @router.put("/posts/{post_id}/reject")
@@ -943,8 +1132,9 @@ async def api_reject_post(post_id: str, body: ApproveRejectRequest, request: Req
 
     with Session(engine) as session:
         post = session.exec(
-            select(MomentumScheduledPost)
-            .where(MomentumScheduledPost.id == UUID(post_id))
+            select(MomentumScheduledPost).where(
+                MomentumScheduledPost.id == UUID(post_id)
+            )
         ).first()
         if not post:
             raise HTTPException(404, "Post not found")
@@ -966,6 +1156,7 @@ async def api_reject_post(post_id: str, body: ApproveRejectRequest, request: Req
 
 
 # ── Connected Accounts Status ───────────────────────────────────────────
+
 
 @router.get("/accounts/{company_id}")
 async def api_get_accounts(company_id: str, request: Request):
@@ -992,21 +1183,30 @@ async def api_get_accounts(company_id: str, request: Request):
                 elif acc.token_expires_at < now + timedelta(days=7):
                     token_status = "expiring_soon"
 
-            result.append({
-                "id": str(acc.id),
-                "platform": acc.platform,
-                "account_name": acc.account_name,
-                "account_id": acc.account_id,
-                "token_status": token_status,
-                "token_expires_at": acc.token_expires_at.isoformat() if acc.token_expires_at else None,
-                "connected_by": acc.connected_by,
-                "created_at": acc.created_at.isoformat() if acc.created_at else None,
-            })
+            result.append(
+                {
+                    "id": str(acc.id),
+                    "platform": acc.platform,
+                    "account_name": acc.account_name,
+                    "account_id": acc.account_id,
+                    "token_status": token_status,
+                    "token_expires_at": (
+                        acc.token_expires_at.isoformat()
+                        if acc.token_expires_at
+                        else None
+                    ),
+                    "connected_by": acc.connected_by,
+                    "created_at": (
+                        acc.created_at.isoformat() if acc.created_at else None
+                    ),
+                }
+            )
 
         return JSONResponse(result)
 
 
 # ── Generate from Task Context ──────────────────────────────────────────
+
 
 class GenerateFromTaskRequest(BaseModel):
     company_id: str
@@ -1100,7 +1300,12 @@ async def api_generate_from_task(body: GenerateFromTaskRequest, request: Request
         raise
     except Exception as e:
         logger.exception("Task-based Social Hub generation failed")
-        raise HTTPException(500, detail=public_error_message(e, "Draft generation is temporarily unavailable. Please try again."))
+        raise HTTPException(
+            500,
+            detail=public_error_message(
+                e, "Draft generation is temporarily unavailable. Please try again."
+            ),
+        ) from e
 
 
 async def _generate_post_internal(
@@ -1137,8 +1342,7 @@ async def _generate_post_internal(
 
         # Load project Social Hub settings for AI tuning
         proj_settings = session.exec(
-            select(SocialHubSettings)
-            .where(SocialHubSettings.company_id == company_id)
+            select(SocialHubSettings).where(SocialHubSettings.company_id == company_id)
         ).first()
         if proj_settings:
             if proj_settings.ai_tone:
@@ -1146,15 +1350,21 @@ async def _generate_post_internal(
             if proj_settings.ai_persona:
                 settings_context += f"Persona: {proj_settings.ai_persona}\n"
             if proj_settings.content_pillars:
-                settings_context += f"Content-Säulen: {', '.join(proj_settings.content_pillars)}\n"
+                settings_context += (
+                    f"Content-Säulen: {', '.join(proj_settings.content_pillars)}\n"
+                )
             if proj_settings.hashtag_strategy:
-                settings_context += f"Hashtag-Strategie: {proj_settings.hashtag_strategy}\n"
+                settings_context += (
+                    f"Hashtag-Strategie: {proj_settings.hashtag_strategy}\n"
+                )
                 hashtag_strategy = proj_settings.hashtag_strategy
             # Prefer project language over request language
             if proj_settings.ai_language:
                 language = proj_settings.ai_language
 
-    brief_context = "\n".join(part for part in [company_context, settings_context, additional_brief] if part).strip()
+    brief_context = "\n".join(
+        part for part in [company_context, settings_context, additional_brief] if part
+    ).strip()
     generation = await gemini_service.generate_post(
         topic,
         platform=platform,
@@ -1167,17 +1377,29 @@ async def _generate_post_internal(
         raise HTTPException(502, "AI text generation failed")
 
     hashtags = [tag for tag in generation.get("hashtags", "").split() if tag]
-    auto_comment = generation.get("value_comment") or await gemini_service.generate_value_comment(post_text)
+    auto_comment = generation.get(
+        "value_comment"
+    ) or await gemini_service.generate_value_comment(post_text)
     image_prompt = generation["image_prompt"]
-    image_url = None
-    try:
-        image_url = await asyncio.to_thread(imagen_service.generate_image, image_prompt)
-    except Exception as exc:
-        logger.warning("Image generation failed: %s", exc)
 
     # ── Persist to database ──────────────────────────────────────────
     post_id = uuid4()
     now = datetime.now(timezone.utc)
+
+    # Generate image (uses post_id for filename)
+    image_url = None
+    try:
+        image_path = await imagen_service.generate_image(
+            image_prompt, str(post_id), platform=platform
+        )
+        if image_path:
+            if settings.MEDIA_PUBLIC_BASE_URL:
+                image_url = f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}/images/{post_id}"
+            else:
+                image_url = f"/images/{post_id}"
+    except Exception as exc:
+        logger.warning("Image generation failed: %s", exc)
+
     with Session(engine) as session:
         post_content_item_id = content_item_id
         if not post_content_item_id:
@@ -1186,12 +1408,12 @@ async def _generate_post_internal(
                 id=post_content_item_id,
                 company_id=company_id,
                 title=f"Social: {topic[:80]}",
-                type="social_post",
+                description=f"AI-generated {platform} post",
                 status="draft",
-                channel=platform,
-                notes="Generated by Social Hub AI",
-                createdAt=now,
-                updatedAt=now,
+                platform=platform,
+                content_type="social",
+                author="Social Hub AI",
+                created_at=now.isoformat(),
             )
             session.add(content)
 
@@ -1207,7 +1429,9 @@ async def _generate_post_internal(
             auto_comment_text=auto_comment,
             image_prompt=image_prompt,
             status="draft",
-            connected_account_id=UUID(connected_account_id) if connected_account_id else None,
+            connected_account_id=(
+                UUID(connected_account_id) if connected_account_id else None
+            ),
             created_by=auth.user_id,
             campaign_id=campaign_id,
             task_id=task_id,
@@ -1230,6 +1454,288 @@ async def _generate_post_internal(
         "campaign_id": campaign_id,
         "task_id": task_id,
     }
+
+
+# ── Multi-Variant Generation ────────────────────────────────────────────
+
+
+class GenerateVariantsRequest(BaseModel):
+    company_id: str
+    platform: str = "linkedin"
+    topic: str
+    language: str = "de"
+
+
+class VariantItem(BaseModel):
+    tone: str
+    tone_label: str
+    body: str
+    hashtags: list[str]
+    value_comment: str
+    image_prompt: str
+
+
+class GenerateVariantsResponse(BaseModel):
+    topic: str
+    platform: str
+    research_summary: str
+    variants: list[VariantItem]
+
+
+@router.post("/generate-variants", response_model=GenerateVariantsResponse)
+async def api_generate_variants(req: GenerateVariantsRequest, request: Request):
+    """Generate 3 post variants with different tones for the same topic.
+
+    Returns text variants without creating DB records. The user picks one
+    and calls /create-from-variant to persist.
+    """
+    _check_rate_limit(request, "generate_variants", limit=3, window=300)
+    auth = await get_auth_context(request)
+
+    if not settings.GOOGLE_API_KEY:
+        raise HTTPException(400, detail="Google API Key not configured.")
+
+    topic = req.topic.strip()
+    if not topic:
+        raise HTTPException(400, detail="Topic is required.")
+    if len(topic) > 1000:
+        raise HTTPException(400, detail="Topic too long (max 1000 chars).")
+
+    platform = req.platform if req.platform in ("linkedin", "instagram") else "linkedin"
+    company_id = req.company_id or auth.company_id
+
+    # Gather company context
+    company_context = ""
+    hashtag_strategy = "moderate"
+    language = req.language or "de"
+    with Session(engine) as session:
+        company = session.exec(
+            select(MomentumCompany).where(MomentumCompany.id == company_id)
+        ).first()
+        if company:
+            company_context = (
+                f"Unternehmen: {company.name}\n"
+                f"Branche: {getattr(company, 'industry', '')}\n"
+                f"Zielgruppe: {getattr(company, 'target_audience', '')}\n"
+            )
+        proj_settings = session.exec(
+            select(SocialHubSettings).where(SocialHubSettings.company_id == company_id)
+        ).first()
+        if proj_settings:
+            if proj_settings.ai_tone:
+                company_context += f"Tonalität: {proj_settings.ai_tone}\n"
+            if proj_settings.ai_persona:
+                company_context += f"Persona: {proj_settings.ai_persona}\n"
+            if proj_settings.content_pillars:
+                company_context += f"Content-Säulen: {', '.join(proj_settings.content_pillars)}\n"
+            if proj_settings.hashtag_strategy:
+                hashtag_strategy = proj_settings.hashtag_strategy
+            if proj_settings.ai_language:
+                language = proj_settings.ai_language
+
+    try:
+        variants = await gemini_service.generate_post_variants(
+            topic=topic,
+            platform=platform,
+            brief_context=company_context,
+            hashtag_strategy=hashtag_strategy,
+            language=language,
+            variant_count=3,
+        )
+
+        _db_log_api(
+            "INFO",
+            "generate_variants",
+            f"[{platform}] Generated {len(variants)} variants for: '{topic[:80]}'",
+        )
+
+        research_summary = ""
+        try:
+            research_summary = await gemini_service.research_topic(topic)
+        except Exception:
+            pass
+
+        return GenerateVariantsResponse(
+            topic=topic,
+            platform=platform,
+            research_summary=research_summary[:2000],
+            variants=[VariantItem(**v) for v in variants],
+        )
+    except Exception as e:
+        logger.exception("Variant generation failed")
+        raise HTTPException(
+            500, detail=public_error_message(e, "Variant generation failed.")
+        ) from e
+
+
+class CreateFromVariantRequest(BaseModel):
+    company_id: str
+    topic: str
+    platform: str = "linkedin"
+    body: str
+    hashtags: list[str] = []
+    value_comment: str = ""
+    image_prompt: str = ""
+    tone: str = ""
+    connected_account_id: str | None = None
+    campaign_id: str | None = None
+    task_id: str | None = None
+    generate_image: bool = True
+
+
+@router.post("/create-from-variant")
+async def api_create_from_variant(req: CreateFromVariantRequest, request: Request):
+    """Create a draft post from a user-selected variant.
+
+    Called after the user picks their preferred variant from /generate-variants.
+    Optionally generates an AI image for the selected variant.
+    """
+    _check_rate_limit(request, "create_variant", limit=6, window=60)
+    auth = await get_auth_context(request)
+
+    if not req.body.strip():
+        raise HTTPException(400, detail="Post body is required.")
+    if len(req.body) > 5000:
+        raise HTTPException(400, detail="Post body too long (max 5000 chars).")
+
+    platform = req.platform if req.platform in ("linkedin", "instagram") else "linkedin"
+    company_id = req.company_id or auth.company_id
+
+    with Session(engine) as session:
+        account = _get_account_for_platform(
+            session, company_id, platform, req.connected_account_id
+        )
+        connected_account_id = account.id if account else None
+
+    post_id = uuid4()
+    now = datetime.now(timezone.utc)
+
+    image_url = None
+    if req.generate_image and req.image_prompt:
+        try:
+            image_path = await imagen_service.generate_image(
+                req.image_prompt, str(post_id), platform=platform
+            )
+            if image_path:
+                if settings.MEDIA_PUBLIC_BASE_URL:
+                    image_url = f"{settings.MEDIA_PUBLIC_BASE_URL.rstrip('/')}/images/{post_id}"
+                else:
+                    image_url = f"/images/{post_id}"
+        except Exception as img_err:
+            logger.warning("Image generation failed for variant post %s: %s", post_id, img_err)
+
+    with Session(engine) as session:
+        content_item_id = str(uuid4())
+        content = MomentumContent(
+            id=content_item_id,
+            title=req.topic[:200],
+            description=req.body[:500],
+            status="scheduled",
+            publish_date=(now + timedelta(hours=24)).strftime("%Y-%m-%d"),
+            platform=platform,
+            campaign_id=req.campaign_id,
+            author="Social Hub AI",
+            content_type="social",
+            journey_phase="awareness",
+            company_id=company_id,
+            created_at=now.isoformat(),
+        )
+        session.add(content)
+        session.commit()
+
+        new_post = MomentumScheduledPost(
+            id=post_id,
+            company_id=company_id,
+            content_item_id=content_item_id,
+            topic=req.topic[:500],
+            post_text=req.body,
+            post_image_url=image_url,
+            post_type="image" if image_url else "text",
+            hashtags=req.hashtags,
+            auto_comment_text=req.value_comment[:500] if req.value_comment else None,
+            image_prompt=req.image_prompt[:800] if req.image_prompt else None,
+            status="draft",
+            connected_account_id=connected_account_id,
+            created_by=auth.user_id,
+            campaign_id=req.campaign_id,
+            task_id=req.task_id,
+            platform=platform,
+            sources="",
+            notes=f"Tone: {req.tone}" if req.tone else "",
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(new_post)
+        session.commit()
+
+    _db_log_api(
+        "INFO",
+        "create_from_variant",
+        f"[{platform}] Created post from {req.tone} variant: '{req.topic[:60]}' → {post_id}",
+    )
+
+    return JSONResponse({
+        "post_id": str(post_id),
+        "post_text": req.body,
+        "post_image_url": image_url,
+        "hashtags": req.hashtags,
+        "auto_comment_text": req.value_comment,
+        "image_prompt": req.image_prompt,
+        "status": "draft",
+        "platform": platform,
+        "tone": req.tone,
+    })
+
+
+# ── Content Series ───────────────────────────────────────────────────────
+
+
+class ContentSeriesRequest(BaseModel):
+    company_id: str
+    topic: str
+    platform: str = "linkedin"
+    count: int = 5
+    language: str = "de"
+
+
+@router.post("/content-series")
+async def api_content_series(req: ContentSeriesRequest, request: Request):
+    """Generate a content series plan: multiple post angle ideas for a broad topic."""
+    _check_rate_limit(request, "content_series", limit=4, window=300)
+    await get_auth_context(request)  # validates auth
+
+    if not settings.GOOGLE_API_KEY:
+        raise HTTPException(400, detail="Google API Key not configured.")
+
+    topic = req.topic.strip()
+    if not topic:
+        raise HTTPException(400, detail="Topic is required.")
+    if len(topic) > 1000:
+        raise HTTPException(400, detail="Topic too long (max 1000 chars).")
+
+    count = min(max(req.count, 2), 10)
+    platform = req.platform if req.platform in ("linkedin", "instagram") else "linkedin"
+
+    try:
+        series = await gemini_service.suggest_content_series(
+            topic=topic,
+            platform=platform,
+            count=count,
+            language=req.language or "de",
+        )
+
+        _db_log_api(
+            "INFO",
+            "content_series",
+            f"[{platform}] Content series for: '{topic[:80]}' — {len(series.get('ideas', []))} ideas",
+        )
+
+        return JSONResponse(series)
+    except Exception as e:
+        logger.exception("Content series generation failed")
+        raise HTTPException(
+            500, detail=public_error_message(e, "Content series generation failed.")
+        ) from e
 
 
 @router.get("/health")
@@ -1258,6 +1764,7 @@ async def api_health():
     # Scheduler status
     try:
         from app.services.scheduler_service_v2 import scheduler
+
         status["scheduler_running"] = scheduler.running
         jobs = scheduler.get_jobs()
         status["scheduler_jobs"] = [j.id for j in jobs]
@@ -1270,6 +1777,7 @@ async def api_health():
 
 # ── Project Settings ─────────────────────────────────────────────────────
 
+
 @router.get("/settings/{company_id}")
 async def api_get_settings(company_id: str, request: Request):
     """Get Social Hub settings for a project."""
@@ -1280,8 +1788,7 @@ async def api_get_settings(company_id: str, request: Request):
 
     with Session(engine) as session:
         row = session.exec(
-            select(SocialHubSettings)
-            .where(SocialHubSettings.company_id == company_id)
+            select(SocialHubSettings).where(SocialHubSettings.company_id == company_id)
         ).first()
         if not row:
             # Auto-create default settings for this project
@@ -1290,29 +1797,33 @@ async def api_get_settings(company_id: str, request: Request):
             session.commit()
             session.refresh(row)
 
-        return JSONResponse({
-            "id": str(row.id),
-            "company_id": row.company_id,
-            "publishing_cadence": row.publishing_cadence,
-            "preferred_days": row.preferred_days or [],
-            "preferred_times": row.preferred_times or [],
-            "timezone": row.timezone,
-            "ai_language": row.ai_language,
-            "ai_tone": row.ai_tone,
-            "ai_persona": row.ai_persona,
-            "content_pillars": row.content_pillars or [],
-            "auto_approve": row.auto_approve,
-            "require_approval_from": row.require_approval_from or [],
-            "default_platform": row.default_platform,
-            "value_comments_enabled": row.value_comments_enabled,
-            "image_generation_enabled": row.image_generation_enabled,
-            "hashtag_strategy": row.hashtag_strategy,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-        })
+        return JSONResponse(
+            {
+                "id": str(row.id),
+                "company_id": row.company_id,
+                "publishing_cadence": row.publishing_cadence,
+                "preferred_days": row.preferred_days or [],
+                "preferred_times": row.preferred_times or [],
+                "timezone": row.timezone,
+                "ai_language": row.ai_language,
+                "ai_tone": row.ai_tone,
+                "ai_persona": row.ai_persona,
+                "content_pillars": row.content_pillars or [],
+                "auto_approve": row.auto_approve,
+                "require_approval_from": row.require_approval_from or [],
+                "default_platform": row.default_platform,
+                "value_comments_enabled": row.value_comments_enabled,
+                "image_generation_enabled": row.image_generation_enabled,
+                "hashtag_strategy": row.hashtag_strategy,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            }
+        )
 
 
 @router.put("/settings/{company_id}")
-async def api_update_settings(company_id: str, body: SettingsUpdateRequest, request: Request):
+async def api_update_settings(
+    company_id: str, body: SettingsUpdateRequest, request: Request
+):
     """Update Social Hub settings for a project (partial update)."""
     _check_rate_limit(request, "settings", 20)
     auth: AuthContext = await get_auth_context(request)
@@ -1324,16 +1835,21 @@ async def api_update_settings(company_id: str, body: SettingsUpdateRequest, requ
     VALID_PLATFORMS = {"linkedin", "instagram"}
 
     if body.publishing_cadence and body.publishing_cadence not in VALID_CADENCES:
-        raise HTTPException(400, detail=f"Invalid cadence. Must be one of: {VALID_CADENCES}")
+        raise HTTPException(
+            400, detail=f"Invalid cadence. Must be one of: {VALID_CADENCES}"
+        )
     if body.hashtag_strategy and body.hashtag_strategy not in VALID_STRATEGIES:
-        raise HTTPException(400, detail=f"Invalid hashtag_strategy. Must be one of: {VALID_STRATEGIES}")
+        raise HTTPException(
+            400, detail=f"Invalid hashtag_strategy. Must be one of: {VALID_STRATEGIES}"
+        )
     if body.default_platform and body.default_platform not in VALID_PLATFORMS:
-        raise HTTPException(400, detail=f"Invalid default_platform. Must be one of: {VALID_PLATFORMS}")
+        raise HTTPException(
+            400, detail=f"Invalid default_platform. Must be one of: {VALID_PLATFORMS}"
+        )
 
     with Session(engine) as session:
         row = session.exec(
-            select(SocialHubSettings)
-            .where(SocialHubSettings.company_id == company_id)
+            select(SocialHubSettings).where(SocialHubSettings.company_id == company_id)
         ).first()
         if not row:
             row = SocialHubSettings(company_id=company_id)
@@ -1352,28 +1868,31 @@ async def api_update_settings(company_id: str, body: SettingsUpdateRequest, requ
 
         _db_log_api("INFO", "settings", f"Settings updated for company {company_id}")
 
-        return JSONResponse({
-            "id": str(row.id),
-            "company_id": row.company_id,
-            "publishing_cadence": row.publishing_cadence,
-            "preferred_days": row.preferred_days or [],
-            "preferred_times": row.preferred_times or [],
-            "timezone": row.timezone,
-            "ai_language": row.ai_language,
-            "ai_tone": row.ai_tone,
-            "ai_persona": row.ai_persona,
-            "content_pillars": row.content_pillars or [],
-            "auto_approve": row.auto_approve,
-            "require_approval_from": row.require_approval_from or [],
-            "default_platform": row.default_platform,
-            "value_comments_enabled": row.value_comments_enabled,
-            "image_generation_enabled": row.image_generation_enabled,
-            "hashtag_strategy": row.hashtag_strategy,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-        })
+        return JSONResponse(
+            {
+                "id": str(row.id),
+                "company_id": row.company_id,
+                "publishing_cadence": row.publishing_cadence,
+                "preferred_days": row.preferred_days or [],
+                "preferred_times": row.preferred_times or [],
+                "timezone": row.timezone,
+                "ai_language": row.ai_language,
+                "ai_tone": row.ai_tone,
+                "ai_persona": row.ai_persona,
+                "content_pillars": row.content_pillars or [],
+                "auto_approve": row.auto_approve,
+                "require_approval_from": row.require_approval_from or [],
+                "default_platform": row.default_platform,
+                "value_comments_enabled": row.value_comments_enabled,
+                "image_generation_enabled": row.image_generation_enabled,
+                "hashtag_strategy": row.hashtag_strategy,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+            }
+        )
 
 
 # ── Project Analytics ────────────────────────────────────────────────────
+
 
 @router.get("/analytics/{company_id}")
 async def api_get_analytics(company_id: str, request: Request, days: int = 30):
@@ -1392,8 +1911,9 @@ async def api_get_analytics(company_id: str, request: Request, days: int = 30):
     with Session(engine) as session:
         # ── Live post statistics ─────────────────────────────────────
         posts = session.exec(
-            select(MomentumScheduledPost)
-            .where(MomentumScheduledPost.company_id == company_id)
+            select(MomentumScheduledPost).where(
+                MomentumScheduledPost.company_id == company_id
+            )
         ).all()
 
         total = len(posts)
@@ -1404,10 +1924,7 @@ async def api_get_analytics(company_id: str, request: Request, days: int = 30):
         rejected = sum(1 for p in posts if p.status == "rejected")
 
         # Posts in the last N days
-        recent_posts = [
-            p for p in posts
-            if p.created_at and p.created_at >= since
-        ]
+        recent_posts = [p for p in posts if p.created_at and p.created_at >= since]
         recent_published = [p for p in recent_posts if p.status == "published"]
 
         # Platform breakdown
@@ -1433,8 +1950,9 @@ async def api_get_analytics(company_id: str, request: Request, days: int = 30):
 
         if published_ids:
             metrics = session.exec(
-                select(MomentumEngagementMetric)
-                .where(col(MomentumEngagementMetric.scheduled_post_id).in_(published_ids))
+                select(MomentumEngagementMetric).where(
+                    col(MomentumEngagementMetric.scheduled_post_id).in_(published_ids)
+                )
             ).all()
             for m in metrics:
                 total_impressions += m.impressions
@@ -1483,39 +2001,44 @@ async def api_get_analytics(company_id: str, request: Request, days: int = 30):
             .where(MomentumConnectedAccount.is_active == True)  # noqa: E712
         ).all()
 
-        return JSONResponse({
-            "company_id": company_id,
-            "period_days": days,
-            "posts": {
-                "total": total,
-                "published": published,
-                "drafts": drafts,
-                "approved": approved,
-                "failed": failed,
-                "rejected": rejected,
-                "recent_total": len(recent_posts),
-                "recent_published": len(recent_published),
-            },
-            "engagement": {
-                "impressions": total_impressions,
-                "clicks": total_clicks,
-                "likes": total_likes,
-                "comments": total_comments,
-                "shares": total_shares,
-                "reach": total_reach,
-                "avg_engagement_rate": avg_engagement_rate,
-                "best_post_id": best_post_id,
-            },
-            "platform_breakdown": platform_stats,
-            "connected_accounts": len(accounts),
-            "trends": trends,
-        })
+        return JSONResponse(
+            {
+                "company_id": company_id,
+                "period_days": days,
+                "posts": {
+                    "total": total,
+                    "published": published,
+                    "drafts": drafts,
+                    "approved": approved,
+                    "failed": failed,
+                    "rejected": rejected,
+                    "recent_total": len(recent_posts),
+                    "recent_published": len(recent_published),
+                },
+                "engagement": {
+                    "impressions": total_impressions,
+                    "clicks": total_clicks,
+                    "likes": total_likes,
+                    "comments": total_comments,
+                    "shares": total_shares,
+                    "reach": total_reach,
+                    "avg_engagement_rate": avg_engagement_rate,
+                    "best_post_id": best_post_id,
+                },
+                "platform_breakdown": platform_stats,
+                "connected_accounts": len(accounts),
+                "trends": trends,
+            }
+        )
 
 
 # ── Generate from Campaign ───────────────────────────────────────────────
 
+
 @router.post("/generate-from-campaign")
-async def api_generate_from_campaign(body: GenerateFromCampaignRequest, request: Request):
+async def api_generate_from_campaign(
+    body: GenerateFromCampaignRequest, request: Request
+):
     """Generate a social post from campaign context.
 
     Pulls campaign metadata (name, keywords, audience, master_prompt) from
@@ -1527,25 +2050,30 @@ async def api_generate_from_campaign(body: GenerateFromCampaignRequest, request:
     with Session(engine) as session:
         # Load campaign data
         from sqlalchemy import text as sa_text
+
         schema = _momentum_schema()
         result = session.exec(
             sa_text(
-                f'SELECT name, keywords, target_audience, master_prompt, status '
-                f'FROM {schema}.campaigns WHERE id = :cid AND company_id = :company_id'
+                f"SELECT name, keywords, target_audience, master_prompt, status "
+                f"FROM {schema}.campaigns WHERE id = :cid AND company_id = :company_id"
             ),
             params={"cid": body.campaign_id, "company_id": body.company_id},
         ).first()
         if not result:
             raise HTTPException(404, detail="Campaign not found.")
 
-        campaign_name, keywords, target_audience, master_prompt, campaign_status = result
+        campaign_name, keywords, target_audience, master_prompt, campaign_status = (
+            result
+        )
 
         # Build a rich, campaign-aware topic
         topic_parts = [f"Kampagne: {campaign_name}"]
         if body.focus_angle:
             topic_parts.append(f"Schwerpunkt: {body.focus_angle}")
         if keywords:
-            kw_str = ", ".join(keywords) if isinstance(keywords, list) else str(keywords)
+            kw_str = (
+                ", ".join(keywords) if isinstance(keywords, list) else str(keywords)
+            )
             topic_parts.append(f"Keywords: {kw_str}")
         if target_audience:
             topic_parts.append(f"Zielgruppe: {target_audience}")

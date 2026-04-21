@@ -113,12 +113,13 @@ Der Health-Endpoint `/api/health` sollte dann melden:
 
 ## Benötigte API-Keys
 
-| Dienst | Wo beantragen | Was eintragen |
-|--------|--------------|---------------|
-| Google AI (Gemini + Imagen) | [ai.google.dev](https://ai.google.dev) | `GOOGLE_API_KEY` |
-| LinkedIn | [linkedin.com/developers](https://www.linkedin.com/developers/) | `LINKEDIN_CLIENT_ID` + `LINKEDIN_CLIENT_SECRET` |
+| Dienst                      | Wo beantragen                                                   | Was eintragen                                   |
+| --------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| Google AI (Gemini + Imagen) | [ai.google.dev](https://ai.google.dev)                          | `GOOGLE_API_KEY`                                |
+| LinkedIn                    | [linkedin.com/developers](https://www.linkedin.com/developers/) | `LINKEDIN_CLIENT_ID` + `LINKEDIN_CLIENT_SECRET` |
 
 ### LinkedIn-App erstellen:
+
 1. Auf linkedin.com/developers eine neue App anlegen
 2. Produkt **"Sign in with LinkedIn using OpenID Connect"** aktivieren → gibt `openid` + `profile`
 3. Produkt **"Share on LinkedIn"** aktivieren → gibt `w_member_social`
@@ -128,16 +129,16 @@ Hinweis: Dieses Projekt nutzt die offizielle LinkedIn-API fuer Login und Posting
 
 ## Funktionen
 
-| Funktion | Status |
-|----------|--------|
-| KI-Texterstellung (Gemini Pro + Google Search) | ✅ |
-| Bildgenerierung (Imagen 4 Ultra) | ✅ |
-| Dashboard (Übersicht, Bearbeiten, Freigeben) | ✅ |
-| LinkedIn-Veröffentlichung (offizielle API) | ✅ |
-| Wert-Kommentar (1h nach Veröffentlichung) | ✅ |
-| Automatischer Zeitplan (Di + Do, 09:00) | ✅ |
-| OAuth Token-Refresh (automatisch) | ✅ |
-| System-Logs | ✅ |
+| Funktion                                       | Status |
+| ---------------------------------------------- | ------ |
+| KI-Texterstellung (Gemini Pro + Google Search) | ✅     |
+| Bildgenerierung (Imagen 4 Ultra)               | ✅     |
+| Dashboard (Übersicht, Bearbeiten, Freigeben)   | ✅     |
+| LinkedIn-Veröffentlichung (offizielle API)     | ✅     |
+| Wert-Kommentar (1h nach Veröffentlichung)      | ✅     |
+| Automatischer Zeitplan (Di + Do, 09:00)        | ✅     |
+| OAuth Token-Refresh (automatisch)              | ✅     |
+| System-Logs                                    | ✅     |
 
 ## Posting-Zeitplan
 

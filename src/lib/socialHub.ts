@@ -1,13 +1,13 @@
 // Social Hub API client for Momentum App
 // This module provides functions to communicate with the Social Hub microservice.
 
-import { supabase } from './supabase';
+import { supabase } from "./supabase";
 
-const SOCIAL_HUB_URL = process.env.NEXT_PUBLIC_SOCIAL_HUB_URL || '/social-hub';
-const SOCIAL_HUB_BRIDGE_URL = '/api/social-hub';
-const MOMENTUM_SESSION_KEY = 'momentum_session_user_id';
+const SOCIAL_HUB_URL = process.env.NEXT_PUBLIC_SOCIAL_HUB_URL || "/social-hub";
+const SOCIAL_HUB_BRIDGE_URL = "/api/social-hub";
+const MOMENTUM_SESSION_KEY = "momentum_session_user_id";
 
-type SocialHubMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type SocialHubMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface SocialHubBridgePayload {
   userId: string;
@@ -18,14 +18,17 @@ interface SocialHubBridgePayload {
 }
 
 function getMomentumSessionUserId(): string {
-  if (typeof window === 'undefined') return '';
-  return window.localStorage.getItem(MOMENTUM_SESSION_KEY) ?? '';
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(MOMENTUM_SESSION_KEY) ?? "";
 }
 
-async function socialHubFetch<T>(path: string, options: { method: SocialHubMethod; companyId: string; body?: unknown }): Promise<T> {
+async function socialHubFetch<T>(
+  path: string,
+  options: { method: SocialHubMethod; companyId: string; body?: unknown },
+): Promise<T> {
   const userId = getMomentumSessionUserId();
   if (!userId) {
-    throw new Error('Authentication required');
+    throw new Error("Authentication required");
   }
 
   const payload: SocialHubBridgePayload = {
@@ -40,14 +43,18 @@ async function socialHubFetch<T>(path: string, options: { method: SocialHubMetho
   }
 
   const response = await fetch(SOCIAL_HUB_BRIDGE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(body.detail || body.error || `Social Hub error: ${response.status}`);
+    const body = await response
+      .json()
+      .catch(() => ({ detail: response.statusText }));
+    throw new Error(
+      body.detail || body.error || `Social Hub error: ${response.status}`,
+    );
   }
   return response.json();
 }
@@ -56,7 +63,7 @@ async function socialHubFetch<T>(path: string, options: { method: SocialHubMetho
 
 export interface GeneratePostParams {
   companyId: string;
-  platform: 'linkedin' | 'instagram';
+  platform: "linkedin" | "instagram";
   topic?: string;
   contentItemId?: string;
   connectedAccountId?: string;
@@ -70,14 +77,16 @@ export interface GeneratePostResult {
   message: string;
 }
 
-export async function generateAiPost(params: GeneratePostParams): Promise<GeneratePostResult> {
-  return socialHubFetch<GeneratePostResult>('/api/v1/generate', {
-    method: 'POST',
+export async function generateAiPost(
+  params: GeneratePostParams,
+): Promise<GeneratePostResult> {
+  return socialHubFetch<GeneratePostResult>("/api/v1/generate", {
+    method: "POST",
     companyId: params.companyId,
     body: {
       company_id: params.companyId,
       platform: params.platform,
-      topic: params.topic || '',
+      topic: params.topic || "",
       content_item_id: params.contentItemId,
       connected_account_id: params.connectedAccountId,
     },
@@ -93,9 +102,12 @@ export interface PublishResult {
   message: string;
 }
 
-export async function publishPost(companyId: string, postId: string): Promise<PublishResult> {
+export async function publishPost(
+  companyId: string,
+  postId: string,
+): Promise<PublishResult> {
   return socialHubFetch<PublishResult>(`/api/v1/publish/${postId}`, {
-    method: 'POST',
+    method: "POST",
     companyId,
   });
 }
@@ -107,21 +119,29 @@ export interface ReadinessResult {
   items: Array<{ label: string; state: string; detail: string }>;
 }
 
-export async function getReadiness(companyId: string): Promise<ReadinessResult> {
+export async function getReadiness(
+  companyId: string,
+): Promise<ReadinessResult> {
   return socialHubFetch<ReadinessResult>(`/api/v1/readiness/${companyId}`, {
-    method: 'GET',
+    method: "GET",
     companyId,
   });
 }
 
 // ─── Suggest Topics ────────────────────────────────────────
 
-export async function suggestTopics(companyId: string, count = 5): Promise<string[]> {
-  const result = await socialHubFetch<{ topics: string[] }>('/api/v1/topics/suggest', {
-    method: 'POST',
-    companyId,
-    body: { company_id: companyId, count },
-  });
+export async function suggestTopics(
+  companyId: string,
+  count = 5,
+): Promise<string[]> {
+  const result = await socialHubFetch<{ topics: string[] }>(
+    "/api/v1/topics/suggest",
+    {
+      method: "POST",
+      companyId,
+      body: { company_id: companyId, count },
+    },
+  );
   return result.topics;
 }
 
@@ -135,19 +155,29 @@ export interface RegeneratePostTextResult {
   retry_count?: number;
 }
 
-export async function regeneratePostText(companyId: string, postId: string, instruction: string): Promise<RegeneratePostTextResult> {
-  return socialHubFetch<RegeneratePostTextResult>(`/api/v1/regenerate-text/${postId}`, {
-    method: 'POST',
-    companyId,
-    body: { instruction },
-  });
+export async function regeneratePostText(
+  companyId: string,
+  postId: string,
+  instruction: string,
+): Promise<RegeneratePostTextResult> {
+  return socialHubFetch<RegeneratePostTextResult>(
+    `/api/v1/regenerate-text/${postId}`,
+    {
+      method: "POST",
+      companyId,
+      body: { instruction },
+    },
+  );
 }
 
 // ─── Regenerate Image ──────────────────────────────────────
 
-export async function regeneratePostImage(companyId: string, postId: string): Promise<void> {
+export async function regeneratePostImage(
+  companyId: string,
+  postId: string,
+): Promise<void> {
   await socialHubFetch(`/api/v1/regenerate-image/${postId}`, {
-    method: 'POST',
+    method: "POST",
     companyId,
   });
 }
@@ -158,7 +188,9 @@ export async function checkSocialHubHealth(): Promise<Record<string, unknown>> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   try {
-    const response = await fetch(`${SOCIAL_HUB_URL}/api/v1/health`, { signal: controller.signal });
+    const response = await fetch(`${SOCIAL_HUB_URL}/api/v1/health`, {
+      signal: controller.signal,
+    });
     return response.json();
   } finally {
     clearTimeout(timeout);
@@ -195,23 +227,30 @@ export interface ListPostsParams {
   limit?: number;
 }
 
-export async function listPosts(companyIdOrParams: string | ListPostsParams, status?: string): Promise<ScheduledPost[]> {
-  const params = typeof companyIdOrParams === 'string'
-    ? { companyId: companyIdOrParams, status }
-    : companyIdOrParams;
+export async function listPosts(
+  companyIdOrParams: string | ListPostsParams,
+  status?: string,
+): Promise<ScheduledPost[]> {
+  const params =
+    typeof companyIdOrParams === "string"
+      ? { companyId: companyIdOrParams, status }
+      : companyIdOrParams;
 
   const qs = new URLSearchParams();
-  if (params.status) qs.set('status', params.status);
-  if (params.campaignId) qs.set('campaign_id', params.campaignId);
-  if (params.taskId) qs.set('task_id', params.taskId);
-  if (params.contentItemId) qs.set('content_item_id', params.contentItemId);
-  if (params.platform) qs.set('platform', params.platform);
-  if (params.limit) qs.set('limit', String(params.limit));
-  const queryString = qs.toString() ? `?${qs.toString()}` : '';
-  return socialHubFetch<ScheduledPost[]>(`/api/v1/posts/${params.companyId}${queryString}`, {
-    method: 'GET',
-    companyId: params.companyId,
-  });
+  if (params.status) qs.set("status", params.status);
+  if (params.campaignId) qs.set("campaign_id", params.campaignId);
+  if (params.taskId) qs.set("task_id", params.taskId);
+  if (params.contentItemId) qs.set("content_item_id", params.contentItemId);
+  if (params.platform) qs.set("platform", params.platform);
+  if (params.limit) qs.set("limit", String(params.limit));
+  const queryString = qs.toString() ? `?${qs.toString()}` : "";
+  return socialHubFetch<ScheduledPost[]>(
+    `/api/v1/posts/${params.companyId}${queryString}`,
+    {
+      method: "GET",
+      companyId: params.companyId,
+    },
+  );
 }
 
 // ─── Post Detail ───────────────────────────────────────────
@@ -246,9 +285,12 @@ export interface PostDetail {
   updated_at: string | null;
 }
 
-export async function getPostDetail(companyId: string, postId: string): Promise<PostDetail> {
+export async function getPostDetail(
+  companyId: string,
+  postId: string,
+): Promise<PostDetail> {
   return socialHubFetch<PostDetail>(`/api/v1/posts/${companyId}/${postId}`, {
-    method: 'GET',
+    method: "GET",
     companyId,
   });
 }
@@ -261,19 +303,32 @@ export interface ApproveRejectResult {
   approved_at?: string;
 }
 
-export async function approvePost(companyId: string, postId: string, userId: string, notes?: string): Promise<ApproveRejectResult> {
-  return socialHubFetch<ApproveRejectResult>(`/api/v1/posts/${postId}/approve`, {
-    method: 'PUT',
-    companyId,
-    body: { user_id: userId, notes: notes || '' },
-  });
+export async function approvePost(
+  companyId: string,
+  postId: string,
+  userId: string,
+  notes?: string,
+): Promise<ApproveRejectResult> {
+  return socialHubFetch<ApproveRejectResult>(
+    `/api/v1/posts/${postId}/approve`,
+    {
+      method: "PUT",
+      companyId,
+      body: { user_id: userId, notes: notes || "" },
+    },
+  );
 }
 
-export async function rejectPost(companyId: string, postId: string, userId: string, notes?: string): Promise<ApproveRejectResult> {
+export async function rejectPost(
+  companyId: string,
+  postId: string,
+  userId: string,
+  notes?: string,
+): Promise<ApproveRejectResult> {
   return socialHubFetch<ApproveRejectResult>(`/api/v1/posts/${postId}/reject`, {
-    method: 'PUT',
+    method: "PUT",
     companyId,
-    body: { user_id: userId, notes: notes || '' },
+    body: { user_id: userId, notes: notes || "" },
   });
 }
 
@@ -284,15 +339,17 @@ export interface ConnectedAccount {
   platform: string;
   account_name: string;
   account_id: string;
-  token_status: 'ok' | 'expiring_soon' | 'expired';
+  token_status: "ok" | "expiring_soon" | "expired";
   token_expires_at: string | null;
   connected_by: string | null;
   created_at: string | null;
 }
 
-export async function getConnectedAccounts(companyId: string): Promise<ConnectedAccount[]> {
+export async function getConnectedAccounts(
+  companyId: string,
+): Promise<ConnectedAccount[]> {
   return socialHubFetch<ConnectedAccount[]>(`/api/v1/accounts/${companyId}`, {
-    method: 'GET',
+    method: "GET",
     companyId,
   });
 }
@@ -304,7 +361,7 @@ export interface GenerateFromTaskParams {
   taskId?: string;
   taskTitle: string;
   taskDescription?: string;
-  platform?: 'linkedin' | 'instagram';
+  platform?: "linkedin" | "instagram";
   campaignId?: string;
   campaignName?: string;
   campaignGoal?: string;
@@ -334,32 +391,34 @@ export interface GenerateFromTaskResult {
   platform: string;
 }
 
-export async function generateFromTask(params: GenerateFromTaskParams): Promise<GenerateFromTaskResult> {
-  return socialHubFetch<GenerateFromTaskResult>('/api/v1/generate-from-task', {
-    method: 'POST',
+export async function generateFromTask(
+  params: GenerateFromTaskParams,
+): Promise<GenerateFromTaskResult> {
+  return socialHubFetch<GenerateFromTaskResult>("/api/v1/generate-from-task", {
+    method: "POST",
     companyId: params.companyId,
     body: {
       company_id: params.companyId,
-      task_id: params.taskId || '',
+      task_id: params.taskId || "",
       task_title: params.taskTitle,
-      task_description: params.taskDescription || '',
-      platform: params.platform || 'linkedin',
-      campaign_id: params.campaignId || '',
-      campaign_name: params.campaignName || '',
-      campaign_goal: params.campaignGoal || '',
-      task_type: params.taskType || '',
-      publish_date: params.publishDate || '',
-      target_audience: params.targetAudience || '',
-      tone: params.tone || '',
-      brand_name: params.brandName || '',
-      brand_industry: params.brandIndustry || '',
-      brand_tagline: params.brandTagline || '',
-      brand_tone: params.brandTone || '',
+      task_description: params.taskDescription || "",
+      platform: params.platform || "linkedin",
+      campaign_id: params.campaignId || "",
+      campaign_name: params.campaignName || "",
+      campaign_goal: params.campaignGoal || "",
+      task_type: params.taskType || "",
+      publish_date: params.publishDate || "",
+      target_audience: params.targetAudience || "",
+      tone: params.tone || "",
+      brand_name: params.brandName || "",
+      brand_industry: params.brandIndustry || "",
+      brand_tagline: params.brandTagline || "",
+      brand_tone: params.brandTone || "",
       brand_dos: params.brandDos || [],
       brand_donts: params.brandDonts || [],
       keywords: params.keywords || [],
-      journey_phase: params.journeyPhase || '',
-      language: params.language || 'de',
+      journey_phase: params.journeyPhase || "",
+      language: params.language || "de",
     },
   });
 }
@@ -385,11 +444,11 @@ export function subscribeToPostChanges(
   const channel = supabase
     .channel(`scheduled_posts:${companyId}`)
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: '*',
-        schema: '*',
-        table: 'scheduled_posts',
+        event: "*",
+        schema: "*",
+        table: "scheduled_posts",
         filter: `company_id=eq.${companyId}`,
       },
       () => {
@@ -401,4 +460,130 @@ export function subscribeToPostChanges(
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+// ─── Generate Variants ─────────────────────────────────────
+
+export interface PostVariant {
+  tone: string;
+  tone_label: string;
+  body: string;
+  hashtags: string[];
+  value_comment: string;
+  image_prompt: string;
+}
+
+export interface GenerateVariantsParams {
+  companyId: string;
+  platform: "linkedin" | "instagram";
+  topic: string;
+  language?: string;
+}
+
+export interface GenerateVariantsResult {
+  topic: string;
+  platform: string;
+  research_summary: string;
+  variants: PostVariant[];
+}
+
+export async function generateVariants(
+  params: GenerateVariantsParams,
+): Promise<GenerateVariantsResult> {
+  return socialHubFetch<GenerateVariantsResult>("/api/v1/generate-variants", {
+    method: "POST",
+    companyId: params.companyId,
+    body: {
+      company_id: params.companyId,
+      platform: params.platform,
+      topic: params.topic,
+      language: params.language || "de",
+    },
+  });
+}
+
+// ─── Create from Variant ───────────────────────────────────
+
+export interface CreateFromVariantParams {
+  companyId: string;
+  topic: string;
+  platform: "linkedin" | "instagram";
+  body: string;
+  hashtags: string[];
+  valueComment: string;
+  imagePrompt: string;
+  tone: string;
+  connectedAccountId?: string;
+  campaignId?: string;
+  taskId?: string;
+  generateImage?: boolean;
+}
+
+export interface CreateFromVariantResult {
+  post_id: string;
+  post_text: string;
+  post_image_url: string | null;
+  hashtags: string[];
+  auto_comment_text: string;
+  image_prompt: string;
+  status: string;
+  platform: string;
+  tone: string;
+}
+
+export async function createFromVariant(
+  params: CreateFromVariantParams,
+): Promise<CreateFromVariantResult> {
+  return socialHubFetch<CreateFromVariantResult>("/api/v1/create-from-variant", {
+    method: "POST",
+    companyId: params.companyId,
+    body: {
+      company_id: params.companyId,
+      topic: params.topic,
+      platform: params.platform,
+      body: params.body,
+      hashtags: params.hashtags,
+      value_comment: params.valueComment,
+      image_prompt: params.imagePrompt,
+      tone: params.tone,
+      connected_account_id: params.connectedAccountId,
+      campaign_id: params.campaignId,
+      task_id: params.taskId,
+      generate_image: params.generateImage ?? true,
+    },
+  });
+}
+
+// ─── Content Series ────────────────────────────────────────
+
+export interface ContentSeriesIdea {
+  title: string;
+  angle: string;
+  hook: string;
+  platform_fit: string;
+}
+
+export interface ContentSeriesResult {
+  series_title: string;
+  ideas: ContentSeriesIdea[];
+}
+
+export async function suggestContentSeries(
+  companyId: string,
+  topic: string,
+  platform: "linkedin" | "instagram" = "linkedin",
+  count: number = 5,
+  language: string = "de",
+): Promise<ContentSeriesResult> {
+  return socialHubFetch<ContentSeriesResult>("/api/v1/content-series", {
+    method: "POST",
+    companyId,
+    body: {
+      company_id: companyId,
+      topic,
+      platform,
+      count,
+      language,
+    },
+  });
 }

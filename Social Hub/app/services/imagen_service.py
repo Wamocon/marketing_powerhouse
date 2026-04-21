@@ -51,7 +51,7 @@ PLATFORM_IMAGE_CONFIGS = {
 }
 
 
-async def generate_image(prompt: str, post_id: int, platform: str = "linkedin") -> str:
+async def generate_image(prompt: str, post_id: str, platform: str = "linkedin") -> str:
     """
     Generate a post image via Imagen 4 Ultra.
     Returns the relative file path (from DATA_DIR) of the saved image.

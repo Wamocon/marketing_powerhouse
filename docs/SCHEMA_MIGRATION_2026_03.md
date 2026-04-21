@@ -11,11 +11,11 @@
 
 The Supabase project had three PostgreSQL schemas with significant drift:
 
-| Schema | Tables | Purpose |
-|--------|--------|---------|
-| `public` | 28 | Frontend production (Next.js Supabase client) |
-| `test` | 37 | Development/testing (fully up-to-date) |
-| `production` | 7 | Social Hub backend production (vestigial) |
+| Schema       | Tables | Purpose                                       |
+| ------------ | ------ | --------------------------------------------- |
+| `public`     | 28     | Frontend production (Next.js Supabase client) |
+| `test`       | 37     | Development/testing (fully up-to-date)        |
+| `production` | 7      | Social Hub backend production (vestigial)     |
 
 **Critical issues identified:**
 
@@ -73,15 +73,15 @@ Daily aggregated social media analytics per company per platform.
 
 ### 4. Database: Created 7 `socialhub_*` tables in `public`
 
-| Table | Purpose |
-|-------|---------|
-| `socialhub_dynamic_settings` | Key-value runtime settings |
-| `socialhub_app_logs` | Application logs with timestamp index |
-| `socialhub_linkedin_accounts` | LinkedIn OAuth accounts |
-| `socialhub_instagram_accounts` | Instagram OAuth accounts |
-| `socialhub_job_leases` | Distributed scheduling locks |
-| `socialhub_topic_ideas` | AI-generated topic suggestions |
-| `socialhub_posts` | Social Hub native posts (with enum types + 7 indexes) |
+| Table                          | Purpose                                               |
+| ------------------------------ | ----------------------------------------------------- |
+| `socialhub_dynamic_settings`   | Key-value runtime settings                            |
+| `socialhub_app_logs`           | Application logs with timestamp index                 |
+| `socialhub_linkedin_accounts`  | LinkedIn OAuth accounts                               |
+| `socialhub_instagram_accounts` | Instagram OAuth accounts                              |
+| `socialhub_job_leases`         | Distributed scheduling locks                          |
+| `socialhub_topic_ideas`        | AI-generated topic suggestions                        |
+| `socialhub_posts`              | Social Hub native posts (with enum types + 7 indexes) |
 
 ### 5. Database: Fixed Pro plan features
 
@@ -121,12 +121,12 @@ def default_schema_for_env(app_env: str) -> str:
 
 ## Verification Results
 
-| Check | Before | After |
-|-------|--------|-------|
-| `public` table count | 28 | **37** (matches `test`) |
-| `public.scheduled_posts` columns | 24 | **35** (matches `test`) |
-| `public.plans` Pro `max_ai_generations_month` | 200 | **-1** (matches code) |
-| Backend production schema | `production` | **`public`** (matches frontend) |
+| Check                                         | Before       | After                           |
+| --------------------------------------------- | ------------ | ------------------------------- |
+| `public` table count                          | 28           | **37** (matches `test`)         |
+| `public.scheduled_posts` columns              | 24           | **35** (matches `test`)         |
+| `public.plans` Pro `max_ai_generations_month` | 200          | **-1** (matches code)           |
+| Backend production schema                     | `production` | **`public`** (matches frontend) |
 
 ---
 
@@ -151,12 +151,12 @@ Supabase Project (ftbkqtteavvdqmhbmzoy)
 
 ## Impact Assessment
 
-| Component | Impact | Risk |
-|-----------|--------|------|
-| Next.js Frontend | **None** — already uses `public` in production | None |
-| Social Hub Backend | **Low** — config default changed, env var can override | Low |
-| Supabase RLS | **None** — RLS operates on `public` by default | None |
-| Existing data | **None** — `public` tables retained existing data, new tables are empty | None |
+| Component          | Impact                                                                  | Risk |
+| ------------------ | ----------------------------------------------------------------------- | ---- |
+| Next.js Frontend   | **None** — already uses `public` in production                          | None |
+| Social Hub Backend | **Low** — config default changed, env var can override                  | Low  |
+| Supabase RLS       | **None** — RLS operates on `public` by default                          | None |
+| Existing data      | **None** — `public` tables retained existing data, new tables are empty | None |
 
 ---
 

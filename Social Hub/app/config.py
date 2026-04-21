@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 def normalize_database_url(database_url: str) -> str:
     normalized = database_url.strip()
     if normalized.startswith("postgres://"):
-        normalized = "postgresql+psycopg://" + normalized[len("postgres://"):]
+        normalized = "postgresql+psycopg://" + normalized[len("postgres://") :]
     elif normalized.startswith("postgresql://"):
-        normalized = "postgresql+psycopg://" + normalized[len("postgresql://"):]
+        normalized = "postgresql+psycopg://" + normalized[len("postgresql://") :]
 
     if is_supabase_database_url(normalized) and "sslmode=" not in normalized:
         separator = "&" if "?" in normalized else "?"
@@ -61,7 +61,10 @@ def default_schema_for_env(app_env: str) -> str:
 
 
 def is_supabase_database_url(database_url: str) -> bool:
-    return any(host in database_url for host in ("supabase.co", "supabase.com", "pooler.supabase.com"))
+    return any(
+        host in database_url
+        for host in ("supabase.co", "supabase.com", "pooler.supabase.com")
+    )
 
 
 def env_bool(name: str, default: bool) -> bool:
@@ -81,39 +84,55 @@ load_dotenv(REPO_ROOT / ".env")
 
 
 class Settings:
-    APP_ENV: str = normalize_app_env(env_first("APP_ENV", "SOCIALHUB_ENV", default="test"))
+    APP_ENV: str = normalize_app_env(
+        env_first("APP_ENV", "SOCIALHUB_ENV", default="test")
+    )
 
     # Google AI
     GOOGLE_API_KEY: str = env_first("GOOGLE_API_KEY", "NEXT_PUBLIC_GEMINI_API_KEY")
 
     # Supabase public/project configuration
     SUPABASE_URL: str = env_first("SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_URL")
-    SUPABASE_ANON_KEY: str = env_first("SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    SUPABASE_ANON_KEY: str = env_first(
+        "SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    )
     SUPABASE_JWT_SECRET: str = os.getenv("SUPABASE_JWT_SECRET", "")
-    SUPABASE_PUBLISHABLE_KEY: str = env_first("SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY")
-    SOCIAL_HUB_PATH_PREFIX: str = env_first("SOCIAL_HUB_PATH_PREFIX", default="/social-hub")
+    SUPABASE_PUBLISHABLE_KEY: str = env_first(
+        "SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+    )
+    SOCIAL_HUB_PATH_PREFIX: str = env_first(
+        "SOCIAL_HUB_PATH_PREFIX", default="/social-hub"
+    )
     SUPABASE_SCHEMA: str = normalize_identifier(
-        env_first("SUPABASE_SCHEMA", "NEXT_PUBLIC_SUPABASE_SCHEMA", default=default_schema_for_env(APP_ENV)),
+        env_first(
+            "SUPABASE_SCHEMA",
+            "NEXT_PUBLIC_SUPABASE_SCHEMA",
+            default=default_schema_for_env(APP_ENV),
+        ),
         default_schema_for_env(APP_ENV),
     )
     DATABASE_SCHEMA: str = normalize_identifier(
         env_first("DATABASE_SCHEMA", default=SUPABASE_SCHEMA),
         SUPABASE_SCHEMA,
     )
-    DATABASE_TABLE_PREFIX: str = normalize_table_prefix(env_first("DATABASE_TABLE_PREFIX", default="socialhub_"))
+    DATABASE_TABLE_PREFIX: str = normalize_table_prefix(
+        env_first("DATABASE_TABLE_PREFIX", default="socialhub_")
+    )
 
     # LinkedIn OAuth
     LINKEDIN_CLIENT_ID: str = os.getenv("LINKEDIN_CLIENT_ID", "")
     LINKEDIN_CLIENT_SECRET: str = os.getenv("LINKEDIN_CLIENT_SECRET", "")
     LINKEDIN_REDIRECT_URI: str = os.getenv(
-        "LINKEDIN_REDIRECT_URI", "http://localhost:3000/social-hub/auth/linkedin/callback"
+        "LINKEDIN_REDIRECT_URI",
+        "http://localhost:3000/social-hub/auth/linkedin/callback",
     )
 
     # Instagram OAuth
     INSTAGRAM_APP_ID: str = os.getenv("INSTAGRAM_APP_ID", "")
     INSTAGRAM_APP_SECRET: str = os.getenv("INSTAGRAM_APP_SECRET", "")
     INSTAGRAM_REDIRECT_URI: str = os.getenv(
-        "INSTAGRAM_REDIRECT_URI", "http://localhost:3000/social-hub/auth/instagram/callback"
+        "INSTAGRAM_REDIRECT_URI",
+        "http://localhost:3000/social-hub/auth/instagram/callback",
     )
     IG_WEBHOOK_VERIFY_TOKEN: str = os.getenv("IG_WEBHOOK_VERIFY_TOKEN", "")
 
@@ -141,13 +160,21 @@ class Settings:
     DATABASE_URL: str = _NORMALIZED_DATABASE_URL
     DATABASE_POOL_SIZE: int = int(os.getenv("DATABASE_POOL_SIZE", "5"))
     DATABASE_MAX_OVERFLOW: int = int(os.getenv("DATABASE_MAX_OVERFLOW", "10"))
-    DATABASE_POOL_PRE_PING: bool = env_bool("DATABASE_POOL_PRE_PING", not is_supabase_database_url(DATABASE_URL))
+    DATABASE_POOL_PRE_PING: bool = env_bool(
+        "DATABASE_POOL_PRE_PING", not is_supabase_database_url(DATABASE_URL)
+    )
     SETTINGS_CACHE_TTL_SECONDS: int = int(os.getenv("SETTINGS_CACHE_TTL_SECONDS", "15"))
-    READ_VIEW_CACHE_TTL_SECONDS: int = int(os.getenv("READ_VIEW_CACHE_TTL_SECONDS", "5"))
+    READ_VIEW_CACHE_TTL_SECONDS: int = int(
+        os.getenv("READ_VIEW_CACHE_TTL_SECONDS", "5")
+    )
     HTTP_TIMEOUT_SECONDS: float = float(os.getenv("HTTP_TIMEOUT_SECONDS", "30"))
     HTTP_MAX_RETRIES: int = int(os.getenv("HTTP_MAX_RETRIES", "3"))
-    ACTION_RATE_LIMIT_WINDOW_SECONDS: int = int(os.getenv("ACTION_RATE_LIMIT_WINDOW_SECONDS", "60"))
-    SCHEDULER_LOCK_TTL_SECONDS: int = int(os.getenv("SCHEDULER_LOCK_TTL_SECONDS", "900"))
+    ACTION_RATE_LIMIT_WINDOW_SECONDS: int = int(
+        os.getenv("ACTION_RATE_LIMIT_WINDOW_SECONDS", "60")
+    )
+    SCHEDULER_LOCK_TTL_SECONDS: int = int(
+        os.getenv("SCHEDULER_LOCK_TTL_SECONDS", "900")
+    )
 
     # Schedule — Waleri: Dienstag (1) + Donnerstag (3)
     POSTING_DAYS: list[int] = [

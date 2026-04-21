@@ -1107,12 +1107,21 @@ async def serve_image(post_id: int):
 # ── LinkedIn OAuth ───────────────────────────────────────────────────────
 
 @app.get("/auth/linkedin")
-async def auth_linkedin():
+async def auth_linkedin(request: Request):
     if not settings.LINKEDIN_CLIENT_ID or not settings.LINKEDIN_CLIENT_SECRET:
         return _redirect("/settings", "LinkedIn Client ID or Secret missing in .env.", "error")
 
-    state = secrets.token_urlsafe(32)
-    url = linkedin_service.get_authorization_url(state)
+    # Extract company_id and user_id from session/query for post-callback scoping
+    company_id = request.query_params.get("company_id") or request.cookies.get("_company_id", "")
+    user_id = request.query_params.get("user_id") or request.cookies.get("_session_id", "")
+
+    # Encode company_id + user_id into the state (HMAC-protected)
+    raw_state = secrets.token_urlsafe(32)
+    state_payload = f"{raw_state}:{company_id}:{user_id}"
+    state_mac = hmac.new(settings.APP_SECRET_KEY.encode(), state_payload.encode(), hashlib.sha256).hexdigest()[:16]
+    state = f"{state_payload}:{state_mac}"
+
+    url = linkedin_service.get_authorization_url(raw_state)
     response = RedirectResponse(url)
     response.set_cookie(
         "li_oauth_state",
@@ -1138,33 +1147,103 @@ async def auth_linkedin_callback(
         response.delete_cookie("li_oauth_state")
         return response
 
-    if not code or not state or not saved_state or state != saved_state:
+    if not code or not state or not saved_state:
         response = _redirect("/settings", "Invalid or expired OAuth state. Please reconnect.", "error")
         response.delete_cookie("li_oauth_state")
         return response
 
+    # Parse company_id and user_id from the saved state
+    state_parts = saved_state.split(":")
+    if len(state_parts) < 4:
+        response = _redirect("/settings", "Invalid OAuth state format. Please reconnect.", "error")
+        response.delete_cookie("li_oauth_state")
+        return response
+
+    raw_state, company_id, user_id, state_mac = state_parts[0], state_parts[1], state_parts[2], state_parts[3]
+    expected_payload = f"{raw_state}:{company_id}:{user_id}"
+    expected_mac = hmac.new(settings.APP_SECRET_KEY.encode(), expected_payload.encode(), hashlib.sha256).hexdigest()[:16]
+    if not hmac.compare_digest(state_mac, expected_mac):
+        response = _redirect("/settings", "OAuth state tampered. Please reconnect.", "error")
+        response.delete_cookie("li_oauth_state")
+        return response
+
+    # Verify the returned state matches the raw_state we sent to LinkedIn
+    if state != raw_state:
+        response = _redirect("/settings", "OAuth state mismatch. Please reconnect.", "error")
+        response.delete_cookie("li_oauth_state")
+        return response
+
     try:
+        from app.services.token_encryption import encrypt_token
+
         tokens = await linkedin_service.exchange_code_for_token(code)
         profile = await linkedin_service.get_user_profile(tokens["access_token"])
 
-        with Session(engine) as session:
-            account = session.exec(
-                select(LinkedInAccount).where(LinkedInAccount.is_active == True)
-            ).first()
-            if not account:
-                account = LinkedInAccount(name="Hauptaccount")
+        person_sub = profile.get("sub", "")
+        display_name = profile.get("name", "LinkedIn User")
+        token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=tokens["expires_in"])
 
-            account.access_token = tokens["access_token"]
-            account.refresh_token = tokens.get("refresh_token")
-            account.token_expires_at = datetime.now(timezone.utc) + timedelta(
-                seconds=tokens["expires_in"]
-            )
-            account.linkedin_user_id = profile.get("sub", "")
-            account.name = profile.get("name", account.name)
-            session.add(account)
+        with Session(engine) as session:
+            # Save/update in Momentum's connected_accounts table
+            existing = session.exec(
+                select(MomentumConnectedAccount).where(
+                    MomentumConnectedAccount.company_id == company_id,
+                    MomentumConnectedAccount.platform == "linkedin",
+                    MomentumConnectedAccount.is_active == True,  # noqa: E712
+                )
+            ).first()
+
+            if existing:
+                existing.access_token_encrypted = encrypt_token(tokens["access_token"])
+                existing.refresh_token_encrypted = encrypt_token(tokens.get("refresh_token", ""))
+                existing.token_expires_at = token_expires_at
+                existing.token_scopes = ["openid", "profile", "w_member_social"]
+                existing.platform_user_id = person_sub
+                existing.account_name = display_name
+                existing.account_id = person_sub
+                existing.updated_at = datetime.now(timezone.utc)
+                session.add(existing)
+            else:
+                account = MomentumConnectedAccount(
+                    company_id=company_id,
+                    platform="linkedin",
+                    account_name=display_name,
+                    account_id=person_sub,
+                    platform_user_id=person_sub,
+                    access_token_encrypted=encrypt_token(tokens["access_token"]),
+                    refresh_token_encrypted=encrypt_token(tokens.get("refresh_token", "")),
+                    token_expires_at=token_expires_at,
+                    token_scopes=["openid", "profile", "w_member_social"],
+                    is_active=True,
+                    connected_by=user_id,
+                )
+                session.add(account)
+
+            # Also keep the legacy LinkedInAccount in sync for the dashboard
+            legacy = session.exec(
+                select(LinkedInAccount).where(LinkedInAccount.is_active == True)  # noqa: E712
+            ).first()
+            if not legacy:
+                legacy = LinkedInAccount(name=display_name)
+            legacy.access_token = tokens["access_token"]
+            legacy.refresh_token = tokens.get("refresh_token")
+            legacy.token_expires_at = token_expires_at
+            legacy.linkedin_user_id = person_sub
+            legacy.name = display_name
+            session.add(legacy)
+
             session.commit()
 
-        response = _redirect("/settings", f"LinkedIn connected: {account.name}", "success")
+        _db_log("INFO", "linkedin_oauth", f"LinkedIn connected: {display_name} for company {company_id}")
+
+        # Redirect back to Momentum frontend if company_id was present
+        if company_id:
+            response = RedirectResponse(
+                f"{SOCIAL_HUB_PATH_PREFIX}/project/{company_id}?flash=LinkedIn+verbunden:+{display_name}&flash_cat=success",
+                status_code=303,
+            )
+        else:
+            response = _redirect("/settings", f"LinkedIn connected: {display_name}", "success")
         response.delete_cookie("li_oauth_state")
         return response
 

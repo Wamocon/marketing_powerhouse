@@ -397,6 +397,237 @@ async def regenerate_text(post_body: str, instruction: str) -> str:
     return _response_text(response)[:_get_max_chars()]
 
 
+VARIANT_TONES = {
+    "professional": (
+        "Authoritative thought-leader voice. Lead with concrete data or a bold claim. "
+        "Use a structured, insight-driven format. Cite sources. B2B-suitable."
+    ),
+    "storytelling": (
+        "Narrative-driven voice. Open with a scenario, anecdote, or 'imagine this'. "
+        "Use first/second person. Relatable personal angle. Emotional resonance."
+    ),
+    "bold": (
+        "Provocative contrarian take. Challenge a common assumption or myth. "
+        "Pattern-interrupt first line. Strong opinion backed by evidence. "
+        "Polarizing but constructive."
+    ),
+}
+
+VARIANTS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "variants": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "tone": {"type": "string"},
+                    "tone_label": {"type": "string"},
+                    "body": {"type": "string"},
+                    "hashtags": {"type": "array", "items": {"type": "string"}},
+                    "value_comment": {"type": "string"},
+                    "image_prompt": {"type": "string"},
+                },
+                "required": ["tone", "tone_label", "body", "hashtags", "value_comment", "image_prompt"],
+            },
+        },
+    },
+    "required": ["variants"],
+}
+
+CONTENT_SERIES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "series_title": {"type": "string"},
+        "ideas": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "angle": {"type": "string"},
+                    "hook": {"type": "string"},
+                    "platform_fit": {"type": "string"},
+                },
+                "required": ["title", "angle", "hook", "platform_fit"],
+            },
+        },
+    },
+    "required": ["series_title", "ideas"],
+}
+
+
+async def research_topic(topic: str) -> str:
+    """Research a topic using Google Search grounding for factual accuracy."""
+    response = await run_blocking_with_retry(
+        lambda: _get_client().models.generate_content(
+            model=_get_model(),
+            contents=(
+                f"Research the following topic for a social media post. "
+                f"Provide key facts, recent statistics (2024-2026), "
+                f"expert opinions, and source names with years. "
+                f"Focus on verifiable data from reputable German and international sources.\n\n"
+                f"Topic: {topic}"
+            ),
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                max_output_tokens=2048,
+                tools=[types.Tool(google_search=types.GoogleSearch())],
+            ),
+        ),
+        service_name="Google Gemini",
+    )
+    return _response_text(response)
+
+
+async def generate_post_variants(
+    topic: str,
+    platform: str,
+    brief_context: str = "",
+    hashtag_strategy: str = "moderate",
+    language: str = "de",
+    variant_count: int = 3,
+) -> list[dict]:
+    """Generate multiple post variants with different tones.
+
+    First researches the topic with Google Search grounding for factual accuracy,
+    then generates variant_count post variants (professional, storytelling, bold)
+    in a single structured Gemini call.
+    """
+    max_chars = _get_max_chars()
+    if platform == "instagram":
+        from app.database import get_setting
+        max_chars = int(get_setting("ig_post_max_chars", "2200"))
+
+    research = ""
+    try:
+        research = await research_topic(topic)
+    except Exception:
+        pass
+
+    tone_descriptions = "\n".join(
+        f"- **{key}** ({label[:60]}...)" for key, label in VARIANT_TONES.items()
+    )
+    tone_keys = list(VARIANT_TONES.keys())[:variant_count]
+
+    enhanced_brief = brief_context
+    if research:
+        enhanced_brief = f"{brief_context}\n\n## Verified Research (use these facts)\n{research}"
+
+    min_tags, max_tags = _hashtag_bounds(platform, hashtag_strategy)
+    platform_name = platform.lower()
+    hashtag_rule = "Do not return hashtags." if max_tags == 0 else f"Return between {min_tags} and {max_tags} niche-relevant hashtags per variant."
+
+    system_prompt = (
+        f"You are a senior social media strategist creating premium {platform_name} posts. "
+        f"Generate exactly {len(tone_keys)} post variants for the same topic, each with a distinctly different tone. "
+        f"The tones are: {', '.join(tone_keys)}.\n\n"
+        f"For each variant:\n"
+        f"- Keep the post under {max_chars} characters.\n"
+        f"- {hashtag_rule}\n"
+        f"- {_language_instruction(language)}\n"
+        f"- Use only facts from the brief and research. Do not invent statistics.\n"
+        f"- Each variant must feel genuinely different — not just reworded.\n"
+        f"- The image_prompt must be in English, visually concrete, and contain no text overlays.\n"
+        f"- The value_comment adds a fresh angle (max 500 chars).\n"
+        f"- Set tone to the key (professional/storytelling/bold) and tone_label to a short human-readable label.\n\n"
+        f"Tone descriptions:\n{tone_descriptions}"
+    )
+
+    try:
+        response = await run_blocking_with_retry(
+            lambda: _get_client().models.generate_content(
+                model=_get_model(),
+                contents=(
+                    f"Create {len(tone_keys)} premium {platform_name} post variants from this brief.\n\n"
+                    f"## Topic\n{topic}\n\n"
+                    f"## Strategic brief\n{enhanced_brief or 'No additional context.'}\n\n"
+                    f"Return JSON matching the schema with exactly {len(tone_keys)} variants."
+                ),
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.9,
+                    max_output_tokens=6144,
+                    response_mime_type="application/json",
+                    response_schema=VARIANTS_SCHEMA,
+                ),
+            ),
+            service_name="Google Gemini",
+        )
+        parsed = getattr(response, "parsed", None)
+        if parsed:
+            data = parsed
+        else:
+            import json
+            data = json.loads(response.text)
+
+        variants = data.get("variants", [])
+        for v in variants:
+            v["body"] = _clean_optional_text(v.get("body"), max_chars)
+            v["value_comment"] = _clean_optional_text(v.get("value_comment"), 500)
+            v["image_prompt"] = _clean_optional_text(v.get("image_prompt"), 800)
+            v["hashtags"] = _normalize_hashtags(v.get("hashtags", []), platform, hashtag_strategy)
+        return variants[:variant_count]
+    except Exception:
+        single = await _generate_post_package(topic, platform, enhanced_brief, hashtag_strategy, max_chars, language)
+        return [{
+            "tone": "professional",
+            "tone_label": "Professional",
+            "body": single.body,
+            "hashtags": single.hashtags,
+            "value_comment": single.value_comment,
+            "image_prompt": single.image_prompt,
+        }]
+
+
+async def suggest_content_series(topic: str, platform: str = "linkedin", count: int = 5, language: str = "de") -> dict:
+    """Generate a content series plan: multiple post angles for a broad topic."""
+    lang_instruction = _language_instruction(language)
+
+    system_prompt = (
+        f"You are a content strategist planning a {platform} post series. "
+        f"Given a broad topic, suggest {count} distinct post angles that together "
+        f"form a cohesive content series. Each idea should target a different aspect "
+        f"or audience pain point. {lang_instruction} "
+        f"Make each hook attention-grabbing and specific — no generic fillers."
+    )
+
+    try:
+        response = await run_blocking_with_retry(
+            lambda: _get_client().models.generate_content(
+                model=_get_model(),
+                contents=(
+                    f"Plan a {count}-post content series for {platform}.\n\n"
+                    f"## Broad Topic\n{topic}\n\n"
+                    f"Return JSON matching the schema."
+                ),
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.9,
+                    max_output_tokens=3072,
+                    response_mime_type="application/json",
+                    response_schema=CONTENT_SERIES_SCHEMA,
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                ),
+            ),
+            service_name="Google Gemini",
+        )
+        parsed = getattr(response, "parsed", None)
+        if parsed:
+            return parsed
+        import json
+        return json.loads(response.text)
+    except Exception:
+        topics = await suggest_topics(count=count)
+        return {
+            "series_title": topic,
+            "ideas": [
+                {"title": t, "angle": t, "hook": t, "platform_fit": platform}
+                for t in topics
+            ],
+        }
+
+
 async def regenerate_post(post_body: str, instruction: str, platform: str = "linkedin", topic: str = "", brief_context: str = "", hashtag_strategy: str = "moderate", language: str = "de") -> dict:
     max_chars = _get_max_chars()
     if platform == "instagram":

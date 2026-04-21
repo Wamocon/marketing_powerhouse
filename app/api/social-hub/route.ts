@@ -27,12 +27,18 @@ function isAllowedPath(path: string): boolean {
     path === '/api/v1/generate' ||
     path === '/api/v1/topics/suggest' ||
     path === '/api/v1/generate-from-task' ||
+    path === '/api/v1/generate-from-campaign' ||
+    path === '/api/v1/auth/linkedin/url' ||
+    path === '/api/v1/auth/linkedin/disconnect' ||
     path.startsWith('/api/v1/readiness/') ||
     path.startsWith('/api/v1/publish/') ||
     path.startsWith('/api/v1/regenerate-text/') ||
     path.startsWith('/api/v1/regenerate-image/') ||
     path.startsWith('/api/v1/posts/') ||
-    path.startsWith('/api/v1/accounts/')
+    path.startsWith('/api/v1/accounts/') ||
+    path.startsWith('/api/v1/analytics/') ||
+    path.startsWith('/api/v1/stats/sync/') ||
+    path.startsWith('/api/v1/settings/')
   );
 }
 
