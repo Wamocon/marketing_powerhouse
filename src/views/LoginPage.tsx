@@ -3,17 +3,17 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Megaphone, BarChart3, Calendar, Wallet, Eye, EyeOff, Check, Zap, Crown, Rocket } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import * as api from '../lib/api';
-import { formatPrice, getPlanHighlights, PLAN_SLUGS, type PlanSlug } from '../lib/pricing';
+import { formatPrice, PLAN_SLUGS, type PlanSlug } from '../lib/pricing';
 import type { User, Plan } from '../types';
 
-const featureMap = {
+const featureMap: Record<AppLanguage, readonly { icon: typeof Megaphone; title: string; text: string }[]> = {
     de: [
         { icon: Megaphone, title: 'Kampagnen-Steuerung', text: 'Alle Kampagnen zentral planen, steuern und optimieren.' },
         { icon: BarChart3, title: 'Analytics & Reporting', text: 'Cross-Channel-Dashboards mit Echtzeit-KPIs.' },
-        { icon: Calendar, title: 'Content-Kalender', text: 'Redaktionsplanung ueber alle Kanaele hinweg.' },
-        { icon: Wallet, title: 'Budget-Kontrolle', text: 'Plan vs. Ist - immer den Ueberblick behalten.' },
+        { icon: Calendar, title: 'Content-Kalender', text: 'Redaktionsplanung über alle Kanäle hinweg.' },
+        { icon: Wallet, title: 'Budget-Kontrolle', text: 'Plan vs. Ist - immer den Überblick behalten.' },
     ],
     en: [
         { icon: Megaphone, title: 'Campaign Control', text: 'Plan, manage and optimize all campaigns in one place.' },
@@ -21,14 +21,20 @@ const featureMap = {
         { icon: Calendar, title: 'Content Calendar', text: 'Editorial planning across all channels.' },
         { icon: Wallet, title: 'Budget Control', text: 'Planned vs. actual spend at a glance.' },
     ],
-} as const;
+    tr: [
+        { icon: Megaphone, title: 'Kampanya Yönetimi', text: 'Tüm kampanyaları tek bir yerden planlayın, yönetin ve optimize edin.' },
+        { icon: BarChart3, title: 'Analiz & Raporlama', text: 'Gerçek zamanlı KPI\'larla çapraz kanal panoları.' },
+        { icon: Calendar, title: 'İçerik Takvimi', text: 'Tüm kanallarda editöryal planlama.' },
+        { icon: Wallet, title: 'Bütçe Kontrolü', text: 'Planlanan ve gerçekleşen harcamalar bir bakışta.' },
+    ],
+};
 
 interface LoginPageProps {
     onLogin: (user: User) => void;
 }
 
 export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
-    const { login, loginWithCredentials, registerWithCredentials } = useAuth();
+    const { loginWithCredentials, registerWithCredentials } = useAuth();
     const { language, setLanguage } = useLanguage();
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [name, setName] = useState('');
@@ -47,12 +53,6 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-    const isDevelopmentBuild = process.env.NODE_ENV !== 'production';
-    const devQuickLogins = [
-        { userId: 'u3', companyId: 'c1', label: 'Anna Schmidt', role: 'Managerin' },
-        { userId: 'u1', companyId: 'c1', label: 'Daniel Moretz', role: 'Projekt-Admin' },
-        { userId: 'u4', companyId: 'c1', label: 'Lisa Bauer', role: 'Team-Member' },
-    ] as const;
 
     // Fetch plans for registration plan picker
     useEffect(() => {
@@ -66,9 +66,8 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
             .catch(() => {/* plans unavailable - registration proceeds without plan */});
     }, []);
 
-    const isEn = language === 'en';
-    const text = isEn
-        ? {
+    const textMap: Record<AppLanguage, Record<string, string>> = {
+        en: {
             welcome: 'Welcome back',
             subtitleLogin: 'Sign in to bring your marketing to the next level.',
             subtitleRegister: 'Create your account and launch your first workspace right away.',
@@ -106,10 +105,16 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
             assignLanguage: 'Language',
             deutsch: 'German',
             english: 'English',
-        }
-        : {
-            welcome: 'Willkommen zurueck',
-            subtitleLogin: 'Melde dich an, um dein Marketing auf das naechste Level zu bringen.',
+            choosePlan: 'Choose your plan',
+            changePlanNote: 'You can change your plan anytime in settings.',
+            legalNotice: 'Legal notice',
+            privacyShort: 'Privacy',
+            privacyRead: '.',
+            mo: 'mo',
+        },
+        de: {
+            welcome: 'Willkommen zurück',
+            subtitleLogin: 'Melde dich an, um dein Marketing auf das nächste Level zu bringen.',
             subtitleRegister: 'Erstelle deinen Zugang und starte direkt mit deinem ersten Workspace.',
             login: 'Anmelden',
             register: 'Registrieren',
@@ -121,10 +126,10 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
             requiredConsents: 'Pflichtzustimmungen',
             consentTerms: 'Ich akzeptiere die',
             consentPrivacy: 'Ich habe die',
-            consentDsgvo: 'Ich willige in die DSGVO-konforme Verarbeitung meiner Daten fuer die Nutzung der Plattform ein.',
-            consentWhatsapp: 'Ich willige ein, dass zur Verifikation WhatsApp-Nachrichten an meine angegebene Telefonnummer gesendet werden duerfen.',
+            consentDsgvo: 'Ich willige in die DSGVO-konforme Verarbeitung meiner Daten für die Nutzung der Plattform ein.',
+            consentWhatsapp: 'Ich willige ein, dass zur Verifikation WhatsApp-Nachrichten an meine angegebene Telefonnummer gesendet werden dürfen.',
             terms: 'AGB',
-            privacy: 'Datenschutzerklaerung',
+            privacy: 'Datenschutzerklärung',
             loginLoading: 'Wird angemeldet...',
             registerLoading: 'Wird registriert...',
             loginAction: 'Anmelden',
@@ -134,18 +139,71 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
             errorEmailPassword: 'Bitte E-Mail und Passwort eingeben.',
             errorName: 'Bitte Namen eingeben.',
             errorPasswordLength: 'Das Passwort muss mindestens 8 Zeichen lang sein.',
-            errorPasswordMismatch: 'Passwort und Wiederholung stimmen nicht ueberein.',
+            errorPasswordMismatch: 'Passwort und Wiederholung stimmen nicht überein.',
             errorPhone: 'Bitte Telefonnummer eingeben.',
             errorTerms: 'Bitte akzeptiere die AGB.',
-            errorPrivacy: 'Bitte bestaetige die Datenschutzerklaerung.',
+            errorPrivacy: 'Bitte bestätige die Datenschutzerklärung.',
             errorDsgvo: 'Bitte stimme der DSGVO-konformen Datenverarbeitung zu.',
-            errorWhatsapp: 'Bitte bestaetige die WhatsApp-Einwilligung zur Verifikation.',
-            errorInvalidCredentials: 'E-Mail oder Passwort ungueltig.',
+            errorWhatsapp: 'Bitte bestätige die WhatsApp-Einwilligung zur Verifikation.',
+            errorInvalidCredentials: 'E-Mail oder Passwort ungültig.',
             errorConnection: 'Verbindungsfehler. Bitte versuche es erneut.',
             assignLanguage: 'Sprache',
             deutsch: 'Deutsch',
             english: 'English',
-        };
+            choosePlan: 'Wähle deinen Plan',
+            changePlanNote: 'Du kannst deinen Plan jederzeit in den Einstellungen ändern.',
+            legalNotice: 'Impressum',
+            privacyShort: 'Datenschutz',
+            privacyRead: ' gelesen.',
+            mo: 'Mo',
+        },
+        tr: {
+            welcome: 'Tekrar hoş geldiniz',
+            subtitleLogin: 'Pazarlamanızı bir üst seviyeye taşımak için giriş yapın.',
+            subtitleRegister: 'Hesabınızı oluşturun ve ilk çalışma alanınızı hemen başlatın.',
+            login: 'Giriş yap',
+            register: 'Kayıt ol',
+            workspaceName: 'Çalışma alanı adı (isteğe bağlı)',
+            email: 'E-posta adresi',
+            phone: 'Telefon numarası',
+            password: 'Şifre',
+            confirmPassword: 'Şifreyi onayla',
+            requiredConsents: 'Zorunlu onaylar',
+            consentTerms: 'Kabul ediyorum:',
+            consentPrivacy: 'Okudum:',
+            consentDsgvo: 'Verilerimin platform kullanımı için KVKK uyumlu işlenmesine onay veriyorum.',
+            consentWhatsapp: 'Doğrulama için telefon numarama WhatsApp mesajları gönderilmesine onay veriyorum.',
+            terms: 'Kullanım Koşulları',
+            privacy: 'Gizlilik Politikası',
+            loginLoading: 'Giriş yapılıyor...',
+            registerLoading: 'Hesap oluşturuluyor...',
+            loginAction: 'Giriş yap',
+            registerAction: 'Hesap oluştur',
+            registrationSuccess: 'Kayıt başarılı. Giriş yapılıyor...',
+            devBy: 'WAMOCON Academy GmbH tarafından geliştirilmiştir.',
+            errorEmailPassword: 'Lütfen e-posta ve şifre girin.',
+            errorName: 'Lütfen adınızı girin.',
+            errorPasswordLength: 'Şifre en az 8 karakter uzunluğunda olmalıdır.',
+            errorPasswordMismatch: 'Şifre ve onay eşleşmiyor.',
+            errorPhone: 'Lütfen telefon numaranızı girin.',
+            errorTerms: 'Lütfen kullanım koşullarını kabul edin.',
+            errorPrivacy: 'Lütfen gizlilik politikasını onaylayın.',
+            errorDsgvo: 'Lütfen KVKK uyumlu veri işlemeye onay verin.',
+            errorWhatsapp: 'Lütfen doğrulama için WhatsApp onayını verin.',
+            errorInvalidCredentials: 'Geçersiz e-posta veya şifre.',
+            errorConnection: 'Bağlantı hatası. Lütfen tekrar deneyin.',
+            assignLanguage: 'Dil',
+            deutsch: 'Almanca',
+            english: 'İngilizce',
+            choosePlan: 'Planınızı seçin',
+            changePlanNote: 'Planınızı istediğiniz zaman ayarlardan değiştirebilirsiniz.',
+            legalNotice: 'Yasal Bildirim',
+            privacyShort: 'Gizlilik',
+            privacyRead: '.',
+            mo: 'ay',
+        },
+    };
+    const text = textMap[language];
     const features = featureMap[language];
 
     const handleSubmit = async (e: FormEvent) => {
@@ -232,26 +290,6 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
         setSuccessMessage('');
     };
 
-    const handleDevLogin = async (userId: string, companyId: string) => {
-        setError('');
-        setSuccessMessage('');
-        setIsLoading(true);
-        try {
-            const user = await api.fetchUserById(userId);
-            if (!user) {
-                setError(isEn ? 'Dev user not found.' : 'Dev-Benutzer wurde nicht gefunden.');
-                return;
-            }
-            localStorage.setItem('momentum_active_company', companyId);
-            login(user);
-            window.location.assign(`/project/${companyId}`);
-        } catch {
-            setError(isEn ? 'Dev quick login failed.' : 'Dev-Schnelllogin ist fehlgeschlagen.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     return (
         <div className="login-page">
             <div className="login-left">
@@ -262,11 +300,12 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                             <select
                                 className="form-select"
                                 value={language}
-                                onChange={(e) => setLanguage(e.target.value as 'de' | 'en')}
+                                onChange={(e) => setLanguage(e.target.value as AppLanguage)}
                                 style={{ minWidth: '124px' }}
                             >
                                 <option value="de">{text.deutsch}</option>
                                 <option value="en">{text.english}</option>
+                                <option value="tr">Türkçe</option>
                             </select>
                         </label>
                     </div>
@@ -306,44 +345,6 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                             {text.register}
                         </button>
                     </div>
-
-                    {isDevelopmentBuild && mode === 'login' && (
-                        <div style={{
-                            marginBottom: '16px',
-                            padding: '12px',
-                            borderRadius: 'var(--radius-lg)',
-                            border: '1px solid rgba(59,130,246,0.18)',
-                            background: 'rgba(59,130,246,0.05)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px',
-                        }}>
-                            <div>
-                                <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                    {isEn ? 'Development quick access' : 'Entwicklungs-Schnellzugang'}
-                                </div>
-                                <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                                    {isEn ? 'Bootstraps a known demo user and project for QA and smoke tests.' : 'Startet einen bekannten Demo-Benutzer und das Projekt direkt fuer QA und Smoke-Tests.'}
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                {devQuickLogins.map(option => (
-                                    <button
-                                        key={option.userId}
-                                        type="button"
-                                        className="btn btn-ghost btn-sm"
-                                        disabled={isLoading}
-                                        data-testid={`dev-login-${option.userId}`}
-                                        onClick={() => handleDevLogin(option.userId, option.companyId)}
-                                        style={{ justifyContent: 'space-between', minWidth: '180px', border: '1px solid rgba(59,130,246,0.15)' }}
-                                    >
-                                        <span>{option.label}</span>
-                                        <span style={{ color: 'var(--text-tertiary)', fontSize: '0.68rem' }}>{option.role}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                     <form className="login-form" onSubmit={handleSubmit}>
                         {mode === 'register' && (
@@ -457,7 +458,7 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                                         gap: '8px',
                                     }}>
                                         <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                            {isEn ? 'Choose your plan' : 'Wähle deinen Plan'}
+                                            {text.choosePlan}
                                         </div>
                                         <div style={{ display: 'flex', gap: '6px' }}>
                                             {plans.map(plan => {
@@ -486,14 +487,14 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                                                     >
                                                         <PlanIcon size={14} style={{ color: accent }} />
                                                         <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-primary)' }}>{plan.name}</span>
-                                                        <span style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>{formatPrice(plan.priceMonthly)}/{isEn ? 'mo' : 'Mo'}</span>
+                                                        <span style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>{formatPrice(plan.priceMonthly)}/{text.mo}</span>
                                                         {isSelected && <Check size={12} style={{ color: accent }} />}
                                                     </button>
                                                 );
                                             })}
                                         </div>
                                         <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                            {isEn ? 'You can change your plan anytime in settings.' : 'Du kannst deinen Plan jederzeit in den Einstellungen ändern.'}
+                                            {text.changePlanNote}
                                         </div>
                                     </div>
                                 )}
@@ -533,7 +534,7 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                                             style={{ marginTop: '2px' }}
                                         />
                                         <span>
-                                            {text.consentPrivacy} <Link href="/datenschutz" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{text.privacy}</Link>{isEn ? '.' : ' gelesen.'}
+                                            {text.consentPrivacy} <Link href="/datenschutz" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{text.privacy}</Link>{text.privacyRead}
                                         </span>
                                     </label>
 
@@ -609,8 +610,8 @@ export default function LoginPage({ onLogin: _onLogin }: LoginPageProps) {
                         fontSize: 'var(--font-size-xs)',
                         color: 'var(--text-tertiary)',
                     }}>
-                        <Link href="/impressum">{isEn ? 'Legal notice' : 'Impressum'}</Link>
-                        <Link href="/datenschutz">{isEn ? 'Privacy' : 'Datenschutz'}</Link>
+                        <Link href="/impressum">{text.legalNotice}</Link>
+                        <Link href="/datenschutz">{text.privacyShort}</Link>
                         <Link href="/agb">{text.terms}</Link>
                     </div>
                     <div style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>

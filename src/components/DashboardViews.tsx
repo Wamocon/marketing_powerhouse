@@ -64,7 +64,8 @@ export function AdminDashboard({
   const { activeCompany } = useCompany();
   const { language } = useLanguage();
   const { subscription, loading: subscriptionLoading } = useSubscription();
-  const isGerman = language === "de";
+  const t = (tr: { de: string; en: string; tr: string }) => tr[language];
+  const dateLocale = language === "de" ? "de-DE" : language === "tr" ? "tr-TR" : "en-US";
   const canSocialHubRole = can("canUseSocialHub");
   const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
   const canSocialHub = canSocialHubRole && hasSocialHubPlanAccess;
@@ -121,7 +122,7 @@ export function AdminDashboard({
                 ) : (
                   <TrendingDown size={14} />
                 )}
-                {stat.change} vs. Vormonat
+                {stat.change} {t({ de: "vs. Vormonat", en: "vs. last month", tr: "önceki aya göre" })}
               </div>
             </div>
           );
@@ -132,12 +133,12 @@ export function AdminDashboard({
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title">Performance-Trend</div>
-              <div className="card-subtitle">Letzte 7 Wochen</div>
+              <div className="card-title">{t({ de: "Performance-Trend", en: "Performance Trend", tr: "Performans Trendi" })}</div>
+              <div className="card-subtitle">{t({ de: "Letzte 7 Wochen", en: "Last 7 weeks", tr: "Son 7 hafta" })}</div>
             </div>
             <div className="flex gap-sm">
-              <button className="btn btn-ghost btn-sm">Impressionen</button>
-              <button className="btn btn-ghost btn-sm">Klicks</button>
+              <button className="btn btn-ghost btn-sm">{t({ de: "Impressionen", en: "Impressions", tr: "Gösterimler" })}</button>
+              <button className="btn btn-ghost btn-sm">{t({ de: "Klicks", en: "Clicks", tr: "Tıklamalar" })}</button>
             </div>
           </div>
           <div className="chart-container">
@@ -179,7 +180,7 @@ export function AdminDashboard({
                 <Area
                   type="monotone"
                   dataKey="impressions"
-                  name="Impressionen"
+                  name={t({ de: "Impressionen", en: "Impressions", tr: "Gösterimler" })}
                   stroke="#6366f1"
                   strokeWidth={2}
                   fill="url(#gradientImpressions)"
@@ -187,7 +188,7 @@ export function AdminDashboard({
                 <Area
                   type="monotone"
                   dataKey="clicks"
-                  name="Klicks"
+                  name={t({ de: "Klicks", en: "Clicks", tr: "Tıklamalar" })}
                   stroke="#06b6d4"
                   strokeWidth={2}
                   fill="url(#gradientClicks)"
@@ -200,8 +201,8 @@ export function AdminDashboard({
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title">Kanal-Performance</div>
-              <div className="card-subtitle">Anteil am Gesamtergebnis</div>
+              <div className="card-title">{t({ de: "Kanal-Performance", en: "Channel Performance", tr: "Kanal Performansı" })}</div>
+              <div className="card-subtitle">{t({ de: "Anteil am Gesamtergebnis", en: "Share of total results", tr: "Toplam sonuçlardaki pay" })}</div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
@@ -264,16 +265,16 @@ export function AdminDashboard({
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title">Aktive Kampagnen</div>
+              <div className="card-title">{t({ de: "Aktive Kampagnen", en: "Active Campaigns", tr: "Aktif Kampanyalar" })}</div>
               <div className="card-subtitle">
-                {activeCampaigns.length} Kampagnen laufen
+                {activeCampaigns.length} {t({ de: "Kampagnen laufen", en: "campaigns running", tr: "kampanya çalışıyor" })}
               </div>
             </div>
             <button
               className="btn btn-ghost btn-sm"
               onClick={() => navigate("/campaigns")}
             >
-              Alle anzeigen <ArrowUpRight size={14} />
+              {t({ de: "Alle anzeigen", en: "View all", tr: "Tümünü göster" })} <ArrowUpRight size={14} />
             </button>
           </div>
           {activeCampaigns.map((campaign) => (
@@ -308,7 +309,7 @@ export function AdminDashboard({
                 >
                   {campaign.name}
                 </span>
-                <span className="badge badge-success">Aktiv</span>
+                <span className="badge badge-success">{t({ de: "Aktiv", en: "Active", tr: "Aktif" })}</span>
               </div>
               <div className="progress-bar" style={{ marginBottom: "8px" }}>
                 <div
@@ -324,10 +325,10 @@ export function AdminDashboard({
                   color: "var(--text-tertiary)",
                 }}
               >
-                <span>{campaign.progress}% abgeschlossen</span>
+                <span>{campaign.progress}% {t({ de: "abgeschlossen", en: "completed", tr: "tamamlandı" })}</span>
                 <span>
-                  €{campaign.spent.toLocaleString("de-DE")} / €
-                  {campaign.budget.toLocaleString("de-DE")}
+                  €{campaign.spent.toLocaleString(dateLocale)} / €
+                  {campaign.budget.toLocaleString(dateLocale)}
                 </span>
               </div>
             </div>
@@ -337,8 +338,8 @@ export function AdminDashboard({
         <div className="card">
           <div className="card-header">
             <div>
-              <div className="card-title">Aktivitäts-Feed</div>
-              <div className="card-subtitle">Neueste Aktivitäten im Team</div>
+              <div className="card-title">{t({ de: "Aktivitäts-Feed", en: "Activity Feed", tr: "Aktivite Akışı" })}</div>
+              <div className="card-subtitle">{t({ de: "Neueste Aktivitäten im Team", en: "Latest team activities", tr: "Ekipteki son aktiviteler" })}</div>
             </div>
           </div>
           <div>
@@ -402,16 +403,14 @@ export function AdminDashboard({
                 Social Hub
               </div>
               <div className="card-subtitle">
-                {isGerman
-                  ? "KI-gestützte Social-Media-Veröffentlichung"
-                  : "AI-powered social media publishing"}
+                {t({ de: "KI-gestützte Social-Media-Veröffentlichung", en: "AI-powered social media publishing", tr: "Yapay zeka destekli sosyal medya yayıncılığı" })}
               </div>
             </div>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => navigate("/social-hub")}
             >
-              {isGerman ? "Öffnen" : "Open"} <ArrowUpRight size={14} />
+              {t({ de: "Öffnen", en: "Open", tr: "Aç" })} <ArrowUpRight size={14} />
             </button>
           </div>
           {(() => {
@@ -462,16 +461,10 @@ export function AdminDashboard({
                     }}
                   />
                   {shOnline === null
-                    ? isGerman
-                      ? "Verbindung wird geprüft…"
-                      : "Checking connection…"
+                    ? t({ de: "Verbindung wird geprüft\u2026", en: "Checking connection\u2026", tr: "Bağlantı kontrol ediliyor\u2026" })
                     : shOnline
-                      ? isGerman
-                        ? "Social Hub verbunden"
-                        : "Social Hub connected"
-                      : isGerman
-                        ? "Social Hub offline – Momentum läuft weiter"
-                        : "Social Hub offline – Momentum continues"}
+                      ? t({ de: "Social Hub verbunden", en: "Social Hub connected", tr: "Social Hub bağlı" })
+                      : t({ de: "Social Hub offline - Momentum läuft weiter", en: "Social Hub offline - Momentum continues", tr: "Social Hub çevrimdışı - Momentum devam ediyor" })}
                 </div>
                 {/* Stats tiles */}
                 <div
@@ -511,7 +504,7 @@ export function AdminDashboard({
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman ? "Veröffentlicht" : "Published"}
+                      {t({ de: "Veröffentlicht", en: "Published", tr: "Yayınlandı" })}
                     </div>
                   </div>
                   <div
@@ -540,7 +533,7 @@ export function AdminDashboard({
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman ? "Entwürfe" : "Drafts"}
+                      {t({ de: "Entwürfe", en: "Drafts", tr: "Taslaklar" })}
                     </div>
                   </div>
                   <div
@@ -569,7 +562,7 @@ export function AdminDashboard({
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman ? "Geplant" : "Scheduled"}
+                      {t({ de: "Geplant", en: "Scheduled", tr: "Planlanmış" })}
                     </div>
                   </div>
                 </div>
@@ -585,13 +578,13 @@ export function AdminDashboard({
                       background: "var(--bg-elevated)",
                     }}
                   >
-                    {isGerman ? "Letzter Post" : "Last post"}:{" "}
+                    {t({ de: "Letzter Post", en: "Last post", tr: "Son gönderi" })}:{" "}
                     <strong style={{ color: "var(--text-secondary)" }}>
                       {lastPublished.topic}
                     </strong>{" "}
                     ({lastPublished.platform}) –{" "}
                     {new Date(lastPublished.published_at!).toLocaleDateString(
-                      isGerman ? "de-DE" : "en-US",
+                      dateLocale,
                       {
                         day: "2-digit",
                         month: "short",
@@ -619,14 +612,14 @@ export function AdminDashboard({
                 Social Hub
               </div>
               <div className="card-subtitle">
-                {isGerman ? "Ab Pro verfuegbar" : "Available from Pro"}
+                {t({ de: "Ab Pro verfügbar", en: "Available from Pro", tr: "Pro'dan itibaren kullanılabilir" })}
               </div>
             </div>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => navigate("/settings?tab=subscription")}
             >
-              {isGerman ? "Upgrade" : "Upgrade"} <ArrowUpRight size={14} />
+              {t({ de: "Upgrade", en: "Upgrade", tr: "Yükselt" })} <ArrowUpRight size={14} />
             </button>
           </div>
           <div
@@ -641,9 +634,7 @@ export function AdminDashboard({
             }}
           >
             <div style={{ fontSize: "var(--font-size-sm)", fontWeight: 600 }}>
-              {isGerman
-                ? "KI-Social-Publishing fuer wachsende Teams"
-                : "AI social publishing for growing teams"}
+              {t({ de: "KI-Social-Publishing für wachsende Teams", en: "AI social publishing for growing teams", tr: "Büyüyen ekipler için yapay zeka sosyal yayıncılığı" })}
             </div>
             <div
               style={{
@@ -651,9 +642,7 @@ export function AdminDashboard({
                 color: "var(--text-tertiary)",
               }}
             >
-              {isGerman
-                ? "Mit Pro generierst du Social Drafts aus Momentum, steuerst Freigaben zentral und veroefentlichst direkt aus deinem Workflow."
-                : "With Pro, you generate social drafts from Momentum, manage approvals centrally, and publish inside one workflow."}
+              {t({ de: "Mit Pro generierst du Social Drafts aus Momentum, steuerst Freigaben zentral und veröffentlichst direkt aus deinem Workflow.", en: "With Pro, you generate social drafts from Momentum, manage approvals centrally, and publish inside one workflow.", tr: "Pro ile Momentum'dan sosyal taslaklar oluşturur, onayları merkezi olarak yönetir ve iş akışından doğrudan yayınlarsın." })}
             </div>
           </div>
         </div>
@@ -670,15 +659,18 @@ export function ManagerDashboard({
   setSelectedContent,
 }: DashboardViewProps) {
   const { campaigns: mgrCampaigns } = useData();
+  const { language } = useLanguage();
+  const t = (tr: { de: string; en: string; tr: string }) => tr[language];
+  const dateLocale = language === "de" ? "de-DE" : language === "tr" ? "tr-TR" : "en-US";
   const activeCampaigns = mgrCampaigns.filter((c) => c.status === "active");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div className="card">
         <div className="card-header">
           <div>
-            <div className="card-title">Kampagnen & Aufgaben-Übersicht</div>
+            <div className="card-title">{t({ de: "Kampagnen & Aufgaben-Übersicht", en: "Campaigns & Tasks Overview", tr: "Kampanyalar ve Görevlere Genel Bakış" })}</div>
             <div className="card-subtitle">
-              Verfolgung des Content- und Aufgabenstatus für aktive Kampagnen.
+              {t({ de: "Verfolgung des Content- und Aufgabenstatus für aktive Kampagnen.", en: "Tracking content and task status for active campaigns.", tr: "Aktif kampanyalar için içerik ve görev durumunun takibi." })}
             </div>
           </div>
         </div>
@@ -713,7 +705,7 @@ export function ManagerDashboard({
                     color: "var(--text-tertiary)",
                   }}
                 >
-                  Kein Content zugeordnet.
+                  {t({ de: "Kein Content zugeordnet.", en: "No content assigned.", tr: "Atanmış içerik yok." })}
                 </p>
               ) : (
                 <div
@@ -760,7 +752,7 @@ export function ManagerDashboard({
                               fontSize: "var(--font-size-xs)",
                             }}
                           >
-                            Keine Aufgaben verknüpft! (Kritisch)
+                            {t({ de: "Keine Aufgaben verknüpft! (Kritisch)", en: "No tasks linked! (Critical)", tr: "Bağlı görev yok! (Kritik)" })}
                           </div>
                         ) : (
                           <div
@@ -770,13 +762,13 @@ export function ManagerDashboard({
                               gap: "8px",
                             }}
                           >
-                            {cntTasks.map((t) => {
+                            {cntTasks.map((task) => {
                               const { color, label } = getTaskColorLogic(
-                                t.dueDate,
+                                task.dueDate,
                               );
                               return (
                                 <div
-                                  key={t.id}
+                                  key={task.id}
                                   style={{
                                     padding: "12px",
                                     borderLeft: `4px solid ${color}`,
@@ -801,9 +793,9 @@ export function ManagerDashboard({
                                         textDecoration: "underline",
                                         textUnderlineOffset: "2px",
                                       }}
-                                      onClick={() => setSelectedTask(t)}
+                                      onClick={() => setSelectedTask(task)}
                                     >
-                                      {t.title}
+                                      {task.title}
                                     </span>
                                     <span
                                       style={{
@@ -821,12 +813,12 @@ export function ManagerDashboard({
                                       color: "var(--text-secondary)",
                                     }}
                                   >
-                                    {t.assignee} | Fällig:{" "}
-                                    {t.dueDate
-                                      ? new Date(t.dueDate).toLocaleDateString(
-                                          "de-DE",
+                                    {task.assignee} | {t({ de: "Fällig:", en: "Due:", tr: "Teslim:" })}{" "}
+                                    {task.dueDate
+                                      ? new Date(task.dueDate).toLocaleDateString(
+                                          dateLocale,
                                         )
-                                      : "Kein Datum"}
+                                      : t({ de: "Kein Datum", en: "No date", tr: "Tarih yok" })}
                                   </div>
                                 </div>
                               );
@@ -853,6 +845,9 @@ export function MemberDashboard({
   setSelectedTask,
 }: DashboardViewProps) {
   const myTasks = tasks.filter((t) => t.assignee === currentUser?.name);
+  const { language } = useLanguage();
+  const t = (tr: { de: string; en: string; tr: string }) => tr[language];
+  const dateLocale = language === "de" ? "de-DE" : language === "tr" ? "tr-TR" : "en-US";
   const sortedTasks = [...myTasks].sort(
     (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
   );
@@ -861,9 +856,9 @@ export function MemberDashboard({
     <div className="card">
       <div className="card-header" style={{ marginBottom: "16px" }}>
         <div>
-          <div className="card-title">Meine zugewiesenen Aufgaben</div>
+          <div className="card-title">{t({ de: "Meine zugewiesenen Aufgaben", en: "My Assigned Tasks", tr: "Bana Atanan Görevler" })}</div>
           <div className="card-subtitle">
-            Alle To-Dos priorisiert nach Fälligkeit
+            {t({ de: "Alle To-Dos priorisiert nach Fälligkeit", en: "All to-dos prioritized by due date", tr: "Tüm yapılacaklar teslim tarihine göre önceliklendirilmiş" })}
           </div>
         </div>
       </div>
@@ -872,7 +867,7 @@ export function MemberDashboard({
           className="text-secondary"
           style={{ color: "var(--text-secondary)" }}
         >
-          Aktuell stehen keine Aufgaben an.
+          {t({ de: "Aktuell stehen keine Aufgaben an.", en: "No tasks pending at the moment.", tr: "\u015eu anda bekleyen g\u00f6rev yok." })}
         </p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -910,11 +905,11 @@ export function MemberDashboard({
                       color: "var(--text-secondary)",
                     }}
                   >
-                    Fällig am:{" "}
+                    {t({ de: "Fällig am:", en: "Due:", tr: "Teslim tarihi:" })}{" "}
                     {task.dueDate
-                      ? new Date(task.dueDate).toLocaleDateString("de-DE")
-                      : "Kein Datum"}
-                    &nbsp;—&nbsp; Status:{" "}
+                      ? new Date(task.dueDate).toLocaleDateString(dateLocale)
+                      : t({ de: "Kein Datum", en: "No date", tr: "Tarih yok" })}
+                    &nbsp;-&nbsp; {t({ de: "Status:", en: "Status:", tr: "Durum:" })}{" "}
                     <span
                       style={{ textTransform: "uppercase", fontSize: "10px" }}
                     >

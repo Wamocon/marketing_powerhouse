@@ -1,33 +1,35 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HelpCircle, ChevronRight, ArrowUpCircle } from 'lucide-react';
+import { HelpCircle, ChevronRight, ArrowUpCircle, Moon, Sun } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useLanguage, type AppLanguage } from '../context/LanguageContext';
 import { useCompany } from '../context/CompanyContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useTheme } from '../context/ThemeContext';
 import { useProjectRouter } from '../hooks/useProjectRouter';
 
-const sectionTitles: Record<string, { de: string; en: string }> = {
-    'campaigns': { de: 'Kampagnen', en: 'Campaigns' },
-    'audiences': { de: 'Zielgruppen', en: 'Audiences' },
-    'journeys': { de: 'Journey', en: 'Journey' },
-    'touchpoints': { de: 'Touchpoints', en: 'Touchpoints' },
-    'content': { de: 'Content-Kalender', en: 'Content calendar' },
-    'content-overview': { de: 'Content-Uebersicht', en: 'Content overview' },
-    'budget': { de: 'Budget', en: 'Budget' },
-    'tasks': { de: 'Aufgaben', en: 'Tasks' },
-    'positioning': { de: 'Positionierung', en: 'Positioning' },
-    'setup': { de: 'Projekt-Setup', en: 'Project setup' },
-    'settings': { de: 'Einstellungen', en: 'Settings' },
-    'manual': { de: 'Anleitung', en: 'Manual' },
+const sectionTitles: Record<string, { de: string; en: string; tr: string }> = {
+    'campaigns': { de: 'Kampagnen', en: 'Campaigns', tr: 'Kampanyalar' },
+    'audiences': { de: 'Zielgruppen', en: 'Audiences', tr: 'Hedef Kitleler' },
+    'journeys': { de: 'Journey', en: 'Journey', tr: 'Yolculuk' },
+    'touchpoints': { de: 'Touchpoints', en: 'Touchpoints', tr: 'Temas Noktaları' },
+    'content': { de: 'Content-Kalender', en: 'Content calendar', tr: 'İçerik Takvimi' },
+    'content-overview': { de: 'Content-Übersicht', en: 'Content overview', tr: 'İçerik Genel Bakış' },
+    'budget': { de: 'Budget', en: 'Budget', tr: 'Bütçe' },
+    'tasks': { de: 'Aufgaben', en: 'Tasks', tr: 'Görevler' },
+    'positioning': { de: 'Positionierung', en: 'Positioning', tr: 'Konumlandırma' },
+    'setup': { de: 'Projekt-Setup', en: 'Project setup', tr: 'Proje Kurulumu' },
+    'settings': { de: 'Einstellungen', en: 'Settings', tr: 'Ayarlar' },
+    'manual': { de: 'Anleitung', en: 'Manual', tr: 'Kılavuz' },
 };
 
 export default function Header() {
     const pathname = usePathname();
     const router = useProjectRouter();
-    const { language, setLanguage } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
     const { activeCompany } = useCompany();
     const { needsUpgrade, currentPlan, loading: subLoading } = useSubscription();
+    const { theme, toggleTheme } = useTheme();
 
     // Parse breadcrumb segments from /project/[id]/section/[detailId]
     const projectBase = activeCompany ? `/project/${activeCompany.id}` : '/';
@@ -45,15 +47,9 @@ export default function Header() {
         <header className="header">
             <div className="header-left">
                 <nav className="header-breadcrumb" aria-label="Breadcrumb">
-                    {/* Level 1: Projektübersicht */}
-                    <Link href="/" className="header-breadcrumb-link">
-                        {language === 'en' ? 'Project overview' : 'Projektübersicht'}
-                    </Link>
-
-                    {/* Level 2: Project name (= Dashboard) */}
+                    {/* Level 1: Project name */}
                     {activeCompany && (
                         <>
-                            <ChevronRight size={14} className="header-breadcrumb-separator" />
                             {section ? (
                                 <Link href={projectBase} className="header-breadcrumb-link">
                                     {activeCompany.name}
@@ -64,7 +60,7 @@ export default function Header() {
                         </>
                     )}
 
-                    {/* Level 3: Section (Kampagnen, Aufgaben, etc.) */}
+                    {/* Level 2: Section (Kampagnen, Aufgaben, etc.) */}
                     {sectionTitle && (
                         <>
                             <ChevronRight size={14} className="header-breadcrumb-separator" />
@@ -78,7 +74,7 @@ export default function Header() {
                         </>
                     )}
 
-                    {/* Level 4: Detail */}
+                    {/* Level 3: Detail */}
                     {hasDetail && (
                         <>
                             <ChevronRight size={14} className="header-breadcrumb-separator" />
@@ -105,7 +101,7 @@ export default function Header() {
                         }}
                     >
                         <ArrowUpCircle size={14} />
-                        {language === 'en' ? 'Upgrade' : 'Upgraden'}
+                        {t({ de: 'Upgraden', en: 'Upgrade', tr: 'Yükselt' })}
                         {currentPlan && (
                             <span style={{ opacity: 0.8, fontSize: '0.6rem' }}>
                                 ({currentPlan.name})
@@ -114,20 +110,33 @@ export default function Header() {
                     </button>
                 )}
 
+                <button
+                    className="header-icon-btn"
+                    onClick={toggleTheme}
+                    title={theme === 'dark'
+                        ? t({ de: 'Zum hellen Modus wechseln', en: 'Switch to light mode', tr: 'Açık moda geç' })
+                        : t({ de: 'Zum dunklen Modus wechseln', en: 'Switch to dark mode', tr: 'Koyu moda geç' })
+                    }
+                    aria-label={t({ de: theme === 'dark' ? 'Heller Modus' : 'Dunkler Modus', en: theme === 'dark' ? 'Light mode' : 'Dark mode', tr: theme === 'dark' ? 'Açık mod' : 'Koyu mod' })}
+                >
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+
                 <select
                     className="form-select"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value as AppLanguage)}
                     style={{ width: '92px', minWidth: '92px', height: '34px', padding: '0 8px', fontSize: 'var(--font-size-xs)' }}
-                    aria-label={language === 'en' ? 'Select language' : 'Sprache auswaehlen'}
+                    aria-label={t({ de: 'Sprache auswählen', en: 'Select language', tr: 'Dil seçin' })}
                 >
                     <option value="de">DE</option>
                     <option value="en">EN</option>
+                    <option value="tr">TR</option>
                 </select>
 
                 <NotificationBell />
 
-                <button className="header-icon-btn" title={language === 'en' ? 'Open manual' : 'Zur Anleitung'} onClick={() => router.push('/manual')}>
+                <button className="header-icon-btn" title={t({ de: 'Zur Anleitung', en: 'Open manual', tr: 'Kılavuzu aç' })} onClick={() => router.push('/manual')}>
                     <HelpCircle size={20} />
                 </button>
             </div>

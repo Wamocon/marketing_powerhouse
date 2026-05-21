@@ -4,7 +4,6 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useCompany } from '@/context/CompanyContext';
 import Layout from '@/components/Layout';
-import LoginPage from '@/views/LoginPage';
 import { usePathname, useRouter } from 'next/navigation';
 
 /** Extract projectId from /project/[projectId]/... paths */
@@ -14,14 +13,18 @@ function extractProjectId(pathname: string): string | null {
 }
 
 export default function ClientShell({ children }: { children: ReactNode }) {
-    const { currentUser, sessionLoading, login, logout } = useAuth();
+    const { currentUser, sessionLoading, logout } = useAuth();
     const { activeCompany, userCompanies, selectCompany, loading: companyLoading } = useCompany();
     const pathname = usePathname();
     const router = useRouter();
     const isPublicLegalRoute = pathname === '/impressum' || pathname === '/datenschutz' || pathname === '/agb';
+    const isLandingPage = pathname === '/';
+    const isLoginRoute = pathname === '/login';
+    const isDashboardRoute = pathname === '/dashboard';
+    const isPublicRoute = isPublicLegalRoute || isLandingPage || isLoginRoute;
     const isProjectRoute = pathname.startsWith('/project/');
     const isLegacyCompanyRoute = pathname.startsWith('/company/');
-    const isHomeRoute = pathname === '/';
+    const isHomeRoute = isDashboardRoute;
     const isAdminRoute = pathname === '/admin';
     const urlProjectId = extractProjectId(pathname);
 
@@ -45,11 +48,11 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         && urlProjectId !== null && activeCompany?.id !== urlProjectId
         && syncAttemptedRef.current === urlProjectId;
     useEffect(() => {
-        if (syncFailed) router.replace('/');
+        if (syncFailed) router.replace('/dashboard');
     }, [syncFailed, router]);
 
     // Redirect old flat routes (e.g. /campaigns) to company-scoped equivalents
-    const isOldFlatRoute = !isProjectRoute && !isLegacyCompanyRoute && !isHomeRoute && !isAdminRoute && !isPublicLegalRoute;
+    const isOldFlatRoute = !isProjectRoute && !isLegacyCompanyRoute && !isHomeRoute && !isAdminRoute && !isPublicRoute;
     useEffect(() => {
         if (!currentUser || sessionLoading || companyLoading) return;
         if (isOldFlatRoute && activeCompany) {
@@ -72,7 +75,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (shouldRedirectMissingProject) {
-            router.replace('/');
+            router.replace('/dashboard');
         }
     }, [shouldRedirectMissingProject, router]);
 
@@ -99,12 +102,32 @@ export default function ClientShell({ children }: { children: ReactNode }) {
         );
     }
 
-    if (isPublicLegalRoute) {
+    if (isPublicRoute) {
         return <>{children}</>;
     }
 
     if (!currentUser) {
-        return <LoginPage onLogin={login} />;
+        router.replace('/login');
+        return (
+            <div suppressHydrationWarning style={{
+                display: 'flex', height: '100vh', alignItems: 'center',
+                justifyContent: 'center', background: 'var(--bg-base)',
+                flexDirection: 'column', gap: '16px',
+            }}>
+                <div style={{
+                    width: 44, height: 44, borderRadius: 'var(--radius-lg)',
+                    background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.25rem', color: 'white', fontWeight: 700,
+                }}>M</div>
+                <div style={{
+                    width: 32, height: 32, border: '3px solid var(--border-color)',
+                    borderTopColor: 'var(--color-primary)', borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                }} />
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
     }
 
     // Super-Admin panel is independent of company selection

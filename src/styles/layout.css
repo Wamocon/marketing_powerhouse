@@ -3,7 +3,7 @@
   width: var(--sidebar-width);
   height: 100vh;
   background: var(--bg-surface);
-  border-right: 1px solid var(--border-color);
+  border-right: 2px solid var(--border-color);
   display: flex;
   flex-direction: column;
   transition: width var(--transition-normal);
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
   min-height: var(--header-height);
 }
 
@@ -130,7 +130,7 @@
 
 .sidebar-footer {
   padding: var(--space-md);
-  border-top: 1px solid var(--border-color);
+  border-top: 2px solid var(--border-color);
 }
 
 .sidebar-user {
@@ -182,7 +182,7 @@
 .header {
   height: var(--header-height);
   background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;

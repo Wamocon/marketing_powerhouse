@@ -71,7 +71,7 @@ export default function TouchpointDetailModal({ touchpoint, onClose, onDelete, o
         <div className="modal-overlay" onClick={() => { requestClose(); }} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
             <div className="modal animate-in" onClick={e => e.stopPropagation()} style={{
                 margin: 0, maxHeight: '90vh', height: '100%', width: '100%', maxWidth: '600px',
-                borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)',
+                borderRadius: 'var(--radius-lg)', border: '2px solid var(--border-color-strong)', boxShadow: 'var(--shadow-xl)',
                 animation: 'fadeIn 0.2s ease-out', display: 'flex', flexDirection: 'column', overflow: 'hidden'
             }}>
                 <div className="modal-header" style={{ background: 'var(--bg-surface)' }}>

@@ -43,18 +43,18 @@
   --color-role-member: #14b8a6;      /* Teal */
 
   /* Light Theme Backgrounds */
-  --bg-base: #f1f5f9;
-  /* App background */
+  --bg-base: #e8ecf1;
+  /* App background - slightly darker for contrast with cards */
   --bg-surface: #ffffff;
   /* Card backgrounds */
   --bg-elevated: #ffffff;
   /* Modal/Dropdown backgrounds */
-  --bg-hover: #f3f4f6;
-  --bg-active: #e5e7eb;
+  --bg-hover: #f0f1f3;
+  --bg-active: #e0e2e6;
 
-  /* Borders */
-  --border-color: #e2e8f0;
-  --border-color-strong: #cbd5e1;
+  /* Borders - dark enough for clear element distinction */
+  --border-color: #b0b8c4;
+  --border-color-strong: #8b95a5;
 
   /* Text Colors */
   --text-primary: #1f2937;         /* Dark Charcoal */
@@ -103,5 +103,41 @@
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 72px;
   --header-height: 64px;
+}
+
+/* ========== DARK MODE ========== */
+.dark {
+  /* Backgrounds */
+  --bg-base: #0f1117;
+  --bg-surface: #1a1d27;
+  --bg-elevated: #22252f;
+  --bg-hover: #2a2d3a;
+  --bg-active: #353846;
+
+  /* Borders - stronger for visibility on dark backgrounds */
+  --border-color: #2e3241;
+  --border-color-strong: #3d4155;
+
+  /* Text Colors */
+  --text-primary: #e8eaf0;
+  --text-secondary: #9ba1b0;
+  --text-tertiary: #6b7185;
+  --text-inverse: #0f1117;
+
+  /* Shadows - more subtle on dark */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(193, 41, 46, 0.25);
+
+  /* Status backgrounds - slightly more opaque on dark */
+  --color-success-bg: rgba(16, 185, 129, 0.2);
+  --color-warning-bg: rgba(245, 158, 11, 0.2);
+  --color-danger-bg: rgba(239, 68, 68, 0.2);
+  --color-info-bg: rgba(14, 165, 233, 0.2);
+
+  /* Primary adjustments for better dark contrast */
+  --color-primary-50: rgba(193, 41, 46, 0.12);
+  --color-primary-100: rgba(193, 41, 46, 0.2);
 }
 

@@ -197,6 +197,30 @@ export interface ContentItem {
   createdAt: string;
 }
 
+// ─── Content Idea Generator Types ──────────────────────────
+
+export interface ContentIdea {
+  id: string;
+  title: string;
+  description: string;
+  platform: string;
+  contentType: string;
+  journeyPhase: string;
+  taskType: string;
+  rationale: string;
+  selected?: boolean;
+}
+
+export interface ContentIdeaGeneratorConfig {
+  campaignId: string;
+  audienceId: string;
+  channels: string[];
+  journeyPhases: string[];
+  themeKeywords: string;
+  ideaCount: number;
+  language: 'de' | 'en' | 'tr';
+}
+
 export interface ContentStatusConfig {
   label: string;
   color: string;

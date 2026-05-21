@@ -18,10 +18,10 @@ interface ImportExportPanelProps {
   entityLabel?: string;
 }
 
-const LEVEL_LABELS: Record<ImportLevel, { de: string; en: string }> = {
-  project: { de: 'Projekt', en: 'Project' },
-  campaign: { de: 'Kampagne', en: 'Campaign' },
-  audience: { de: 'Zielgruppe', en: 'Audience' },
+const LEVEL_LABELS: Record<ImportLevel, { de: string; en: string; tr: string }> = {
+  project: { de: 'Projekt', en: 'Project', tr: 'Proje' },
+  campaign: { de: 'Kampagne', en: 'Campaign', tr: 'Kampanya' },
+  audience: { de: 'Zielgruppe', en: 'Audience', tr: 'Hedef Kitle' },
 };
 
 export default function ImportExportPanel({
@@ -31,8 +31,7 @@ export default function ImportExportPanel({
   exportDisabled,
   entityLabel,
 }: ImportExportPanelProps) {
-  const { language } = useLanguage();
-  const isDE = language === 'de';
+  const { language, t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [importing, setImporting] = useState(false);
@@ -62,7 +61,7 @@ export default function ImportExportPanel({
         setPendingData(raw);
       }
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Unbekannter Fehler beim Lesen der Datei.');
+      setImportError(err instanceof Error ? err.message : t({ de: 'Unbekannter Fehler beim Lesen der Datei.', en: 'Unknown error reading the file.', tr: 'Dosya okunurken bilinmeyen hata.' }));
     }
 
     // Reset file input so the same file can be re-selected
@@ -78,7 +77,7 @@ export default function ImportExportPanel({
       setValidation(null);
       setPendingData(null);
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : 'Import fehlgeschlagen.');
+      setImportError(err instanceof Error ? err.message : t({ de: 'Import fehlgeschlagen.', en: 'Import failed.', tr: 'İçe aktarma başarısız.' }));
     } finally {
       setImporting(false);
     }
@@ -95,7 +94,7 @@ export default function ImportExportPanel({
       <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <FileJson size={20} />
         <h3 className="card-title" style={{ margin: 0 }}>
-          {isDE ? `Import / Export – ${label}` : `Import / Export – ${label}`}
+          {`${t({ de: 'Import / Export', en: 'Import / Export', tr: 'İçe Aktar / Dışa Aktar' })} – ${label}`}
           {entityLabel && <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: '8px' }}>({entityLabel})</span>}
         </h3>
       </div>
@@ -117,7 +116,7 @@ export default function ImportExportPanel({
             disabled={importing}
           >
             <Upload size={16} />
-            {isDE ? `${label} importieren` : `Import ${label}`}
+            {t({ de: `${label} importieren`, en: `Import ${label}`, tr: `${label} İçe Aktar` })}
           </button>
 
           {/* Export */}
@@ -127,17 +126,17 @@ export default function ImportExportPanel({
             disabled={exportDisabled}
           >
             <Download size={16} />
-            {isDE ? `${label} exportieren` : `Export ${label}`}
+            {t({ de: `${label} exportieren`, en: `Export ${label}`, tr: `${label} Dışa Aktar` })}
           </button>
 
           {/* Template Download */}
           <button
             className="btn btn-ghost"
             onClick={() => downloadTemplate(level)}
-            title={isDE ? 'Leere JSON-Vorlage herunterladen' : 'Download empty JSON template'}
+            title={t({ de: 'Leere JSON-Vorlage herunterladen', en: 'Download empty JSON template', tr: 'Boş JSON şablonu indir' })}
           >
             <FileDown size={16} />
-            {isDE ? 'Vorlage (JSON)' : 'Template (JSON)'}
+            {t({ de: 'Vorlage (JSON)', en: 'Template (JSON)', tr: 'Şablon (JSON)' })}
           </button>
         </div>
 
@@ -154,7 +153,7 @@ export default function ImportExportPanel({
         {importSuccess && (
           <div style={alertStyle('success')}>
             <CheckCircle size={16} style={{ flexShrink: 0 }} />
-            <span>{isDE ? `${label} wurde erfolgreich importiert.` : `${label} imported successfully.`}</span>
+            <span>{t({ de: `${label} wurde erfolgreich importiert.`, en: `${label} imported successfully.`, tr: `${label} başarıyla içe aktarıldı.` })}</span>
             <button onClick={() => setImportSuccess(false)} style={closeStyle}>×</button>
           </div>
         )}
@@ -163,7 +162,7 @@ export default function ImportExportPanel({
         {validation && (
           <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
             <h4 style={{ margin: '0 0 8px', fontSize: '0.9rem' }}>
-              {isDE ? 'Validierungsergebnis' : 'Validation Result'}
+              {t({ de: 'Validierungsergebnis', en: 'Validation Result', tr: 'Doğrulama Sonucu' })}
             </h4>
 
             {validation.errors.length > 0 && (
@@ -192,19 +191,21 @@ export default function ImportExportPanel({
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                 <button className="btn btn-primary" onClick={handleConfirmImport} disabled={importing}>
                   {importing
-                    ? (isDE ? 'Importiere...' : 'Importing...')
-                    : (isDE ? 'Import bestätigen' : 'Confirm Import')
+                    ? t({ de: 'Importiere...', en: 'Importing...', tr: 'İçe aktarılıyor...' })
+                    : t({ de: 'Import bestätigen', en: 'Confirm Import', tr: 'İçe aktarmayı onayla' })
                   }
                 </button>
                 <button className="btn btn-ghost" onClick={handleCancelImport} disabled={importing}>
-                  {isDE ? 'Abbrechen' : 'Cancel'}
+                  {t({ de: 'Abbrechen', en: 'Cancel', tr: 'İptal' })}
                 </button>
               </div>
             ) : (
               <p style={{ marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                {isDE
-                  ? 'Bitte behebe die Fehler und lade die Datei erneut hoch.'
-                  : 'Please fix the errors and re-upload the file.'}
+                {t({
+                  de: 'Bitte behebe die Fehler und lade die Datei erneut hoch.',
+                  en: 'Please fix the errors and re-upload the file.',
+                  tr: 'Lütfen hataları düzeltin ve dosyayı tekrar yükleyin.',
+                })}
               </p>
             )}
           </div>
@@ -212,9 +213,11 @@ export default function ImportExportPanel({
 
         {/* Info hint */}
         <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', margin: 0 }}>
-          {isDE
-            ? 'Importdateien müssen dem Momentum-JSON-Schema entsprechen. Lade die Vorlage herunter, um das erwartete Format zu sehen.'
-            : 'Import files must conform to the Momentum JSON schema. Download the template to see the expected format.'}
+          {t({
+            de: 'Importdateien müssen dem Momentum-JSON-Schema entsprechen. Lade die Vorlage herunter, um das erwartete Format zu sehen.',
+            en: 'Import files must conform to the Momentum JSON schema. Download the template to see the expected format.',
+            tr: 'İçe aktarma dosyaları Momentum JSON şemasına uygun olmalıdır. Beklenen formatı görmek için şablonu indirin.',
+          })}
         </p>
       </div>
     </div>

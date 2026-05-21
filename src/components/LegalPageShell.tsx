@@ -11,7 +11,7 @@ interface LegalPageShellProps {
 }
 
 export default function LegalPageShell({ title, subtitle, children }: LegalPageShellProps) {
-    const { language } = useLanguage();
+    const { t } = useLanguage();
 
     return (
         <div style={{
@@ -26,7 +26,7 @@ export default function LegalPageShell({ title, subtitle, children }: LegalPageS
                         display: 'inline-flex', alignItems: 'center', gap: 8,
                         textDecoration: 'none', color: 'var(--text-secondary)', fontSize: '0.9rem',
                     }}>
-                        <span aria-hidden="true">&larr;</span> {language === 'en' ? 'Back to app' : 'Zurueck zur App'}
+                        <span aria-hidden="true">&larr;</span> {t({ de: 'Zurück zur App', en: 'Back to app', tr: 'Uygulamaya dön' })}
                     </Link>
                     <h1 style={{ margin: '14px 0 8px', fontSize: 'clamp(1.7rem, 2.8vw, 2.3rem)', lineHeight: 1.2 }}>{title}</h1>
                     {subtitle ? (
@@ -46,20 +46,20 @@ export default function LegalPageShell({ title, subtitle, children }: LegalPageS
                     </div>
                 </div>
 
-                <nav aria-label={language === 'en' ? 'Legal pages' : 'Rechtliche Seiten'} style={{
+                <nav aria-label={t({ de: 'Rechtliche Seiten', en: 'Legal pages', tr: 'Yasal sayfalar' })} style={{
                     marginTop: 16,
                     display: 'flex',
                     gap: 16,
                     flexWrap: 'wrap',
                     color: 'var(--text-secondary)',
                 }}>
-                    <Link href="/impressum">{language === 'en' ? 'Legal notice' : 'Impressum'}</Link>
-                    <Link href="/datenschutz">{language === 'en' ? 'Privacy' : 'Datenschutz'}</Link>
-                    <Link href="/agb">{language === 'en' ? 'Terms' : 'AGB'}</Link>
+                    <Link href="/impressum">{t({ de: 'Impressum', en: 'Legal notice', tr: 'Yasal Bildirim' })}</Link>
+                    <Link href="/datenschutz">{t({ de: 'Datenschutz', en: 'Privacy', tr: 'Gizlilik' })}</Link>
+                    <Link href="/agb">{t({ de: 'AGB', en: 'Terms', tr: 'Kullanım Koşulları' })}</Link>
                 </nav>
 
                 <p style={{ marginTop: 14, fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>
-                    {language === 'en' ? 'Developed by WAMOCON Academy GmbH in Germany.' : 'Entwickelt von WAMOCON Academy GmbH in Deutschland.'}
+                    {t({ de: 'Entwickelt von WAMOCON Academy GmbH in Deutschland.', en: 'Developed by WAMOCON Academy GmbH in Germany.', tr: 'WAMOCON Academy GmbH tarafından Almanya\'da geliştirilmiştir.' })}
                 </p>
             </div>
         </div>

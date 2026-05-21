@@ -1,7 +1,5 @@
-'use client';
-
-import CompanySelectPage from '@/views/CompanySelectPage';
+import LandingPage from '@/components/LandingPage';
 
 export default function Page() {
-    return <CompanySelectPage />;
+    return <LandingPage />;
 }

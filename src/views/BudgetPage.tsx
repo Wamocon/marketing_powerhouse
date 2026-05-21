@@ -37,16 +37,14 @@ const CustomTooltip = ({ active, payload, label, locale }: any) => {
 
 export default function BudgetPage() {
     const { can } = useAuth();
-    const { language } = useLanguage();
-    const isGerman = language === 'de';
-    const locale = isGerman ? 'de-DE' : 'en-US';
+    const { t, locale } = useLanguage();
     const { activeCompany } = useCompany();
     const { budgetData, refreshData } = useData();
     const [showExpenseForm, setShowExpenseForm] = useState(false);
     const [expenseCategory, setExpenseCategory] = useState('');
     const [expenseAmount, setExpenseAmount] = useState('');
     const [expenseSaving, setExpenseSaving] = useState(false);
-    if (!budgetData) return <div className="animate-in"><p>{isGerman ? 'Lade Budget-Daten...' : 'Loading budget data...'}</p></div>;
+    if (!budgetData) return <div className="animate-in"><p>{t({ de: 'Lade Budget-Daten...', en: 'Loading budget data...', tr: 'Bütçe verileri yükleniyor...' })}</p></div>;
     const percentSpent = budgetData.total > 0 ? Math.round(budgetData.spent / budgetData.total * 100) : 0;
     const isOverBudget = percentSpent > 90;
 
@@ -84,18 +82,20 @@ export default function BudgetPage() {
                 }}>
                     <Lock size={28} style={{ color: '#ef4444' }} />
                 </div>
-                <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{isGerman ? 'Kein Zugriff' : 'No Access'}</h2>
+                <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700 }}>{t({ de: 'Kein Zugriff', en: 'No Access', tr: 'Erişim Yok' })}</h2>
                 <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '360px', lineHeight: 1.6 }}>
-                    {isGerman
-                        ? 'Budget-Daten sind vertraulich und nur fuer Manager und Administratoren sichtbar. Wende dich an deinen Marketing Manager fuer Rueckfragen.'
-                        : 'Budget data is confidential and only visible to managers and administrators. Contact your marketing manager for access questions.'}
+                    {t({
+                        de: 'Budget-Daten sind vertraulich und nur für Manager und Administratoren sichtbar. Wende dich an deinen Marketing Manager für Rückfragen.',
+                        en: 'Budget data is confidential and only visible to managers and administrators. Contact your marketing manager for access questions.',
+                        tr: 'Bütçe verileri gizlidir ve yalnızca yöneticiler tarafından görüntülenebilir. Erişim soruları için pazarlama yöneticinize başvurun.',
+                    })}
                 </p>
                 <span style={{
                     padding: '4px 14px', borderRadius: 'var(--radius-full)',
                     background: 'rgba(239,68,68,0.1)', color: '#ef4444',
                     fontSize: 'var(--font-size-xs)', fontWeight: 600,
                 }}>
-                    {isGerman ? 'Berechtigung erforderlich: Manager oder Admin' : 'Permission required: Manager or Admin'}
+                    {t({ de: 'Berechtigung erforderlich: Manager oder Admin', en: 'Permission required: Manager or Admin', tr: 'Yetki gerekli: Yönetici veya Admin' })}
                 </span>
             </div>
         );
@@ -106,22 +106,22 @@ export default function BudgetPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">Budget & Controlling</h1>
-                    <p className="page-subtitle">{isGerman ? 'Gesamtuebersicht' : 'Overview'} - {new Date().getFullYear()}</p>
+                    <p className="page-subtitle">{t({ de: 'Gesamtübersicht', en: 'Overview', tr: 'Genel Bakış' })} - {new Date().getFullYear()}</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title={isGerman ? 'Budget & Controlling' : 'Budget & Controlling'}>
-                        <p style={{ marginBottom: '12px' }}>{isGerman ? 'Behalte die volle Kontrolle ueber deine Investitionen. Dieses Modul ist das zentrale Controlling-Instrument.' : 'Keep full control over your investments. This module is your central controlling cockpit.'}</p>
+                    <PageHelp title="Budget & Controlling">
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Behalte die volle Kontrolle über deine Investitionen. Dieses Modul ist das zentrale Controlling-Instrument.', en: 'Keep full control over your investments. This module is your central controlling cockpit.', tr: 'Yatırımlarınız üzerinde tam kontrol sağlayın. Bu modül merkezi kontrol aracınızdır.' })}</p>
                         <ul className="help-list">
-                            <li><strong>{isGerman ? 'Entwicklungs-Charts:' : 'Trend charts:'}</strong> {isGerman ? 'Sieh genau, wann wie viel Budget eingesetzt wurde und welche Kategorien den groessten Anteil haben.' : 'See exactly when budget was spent and which categories take the biggest share.'}</li>
-                            <li><strong>{isGerman ? 'Ausgaben erfassen:' : 'Track expenses:'}</strong> {isGerman ? 'Wenn nicht alle Plattformen per API verbunden sind, kannst du Ausgaben manuell erfassen.' : 'If not every platform is connected via API, you can log expenses manually.'}</li>
-                            <li><strong>{isGerman ? 'Budget-Alerts:' : 'Budget alerts:'}</strong> {isGerman ? 'Ab 80% Auslastung erscheint eine Warnung, ab 100% ein dringender Alert.' : 'At 80% utilization the app raises a warning, at 100% an urgent alert.'}</li>
-                            <li><strong>{isGerman ? 'Berechtigung:' : 'Permissions:'}</strong> {isGerman ? 'Nur Manager/Admins koennen diese Seite sehen.' : 'Only manager/admin roles can access this page.'}</li>
+                            <li><strong>{t({ de: 'Entwicklungs-Charts:', en: 'Trend charts:', tr: 'Trend grafikleri:' })}</strong> {t({ de: 'Sieh genau, wann wie viel Budget eingesetzt wurde und welche Kategorien den größten Anteil haben.', en: 'See exactly when budget was spent and which categories take the biggest share.', tr: 'Bütçenin ne zaman harcandığını ve hangi kategorilerin en büyük paya sahip olduğunu görün.' })}</li>
+                            <li><strong>{t({ de: 'Ausgaben erfassen:', en: 'Track expenses:', tr: 'Harcama kaydet:' })}</strong> {t({ de: 'Wenn nicht alle Plattformen per API verbunden sind, kannst du Ausgaben manuell erfassen.', en: 'If not every platform is connected via API, you can log expenses manually.', tr: 'Tüm platformlar API ile bağlı değilse harcamaları manuel olarak kaydedebilirsiniz.' })}</li>
+                            <li><strong>{t({ de: 'Budget-Alerts:', en: 'Budget alerts:', tr: 'Bütçe uyarıları:' })}</strong> {t({ de: 'Ab 80% Auslastung erscheint eine Warnung, ab 100% ein dringender Alert.', en: 'At 80% utilization the app raises a warning, at 100% an urgent alert.', tr: '%80 kullanımda uyarı, %100 kullanımda acil alarm verilir.' })}</li>
+                            <li><strong>{t({ de: 'Berechtigung:', en: 'Permissions:', tr: 'Yetki:' })}</strong> {t({ de: 'Nur Manager/Admins können diese Seite sehen.', en: 'Only manager/admin roles can access this page.', tr: 'Bu sayfayı yalnızca yöneticiler/adminler görebilir.' })}</li>
                         </ul>
                     </PageHelp>
                     <button className="btn btn-secondary" onClick={handleExport}>Export</button>
                     {can('canEditBudget') && (
                         <button className="btn btn-primary" onClick={() => setShowExpenseForm(true)}>
-                            <Wallet size={16} /> {isGerman ? 'Ausgabe erfassen' : 'Add Expense'}
+                            <Wallet size={16} /> {t({ de: 'Ausgabe erfassen', en: 'Add Expense', tr: 'Harcama Ekle' })}
                         </button>
                     )}
                 </div>
@@ -131,27 +131,27 @@ export default function BudgetPage() {
             {showExpenseForm && (
                 <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
                     <div className="card-header">
-                        <div className="card-title">{isGerman ? 'Neue Ausgabe erfassen' : 'Add New Expense'}</div>
+                        <div className="card-title">{t({ de: 'Neue Ausgabe erfassen', en: 'Add New Expense', tr: 'Yeni Harcama Ekle' })}</div>
                         <button className="btn btn-ghost btn-sm" onClick={() => setShowExpenseForm(false)}><X size={16} /></button>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'end', marginTop: '12px' }}>
                         <div>
-                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>{isGerman ? 'Kategorie' : 'Category'}</label>
+                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>{t({ de: 'Kategorie', en: 'Category', tr: 'Kategori' })}</label>
                             <select className="form-select" value={expenseCategory} onChange={e => setExpenseCategory(e.target.value)}>
-                                <option value="">{isGerman ? 'Kategorie waehlen...' : 'Choose category...'}</option>
+                                <option value="">{t({ de: 'Kategorie wählen...', en: 'Choose category...', tr: 'Kategori seçin...' })}</option>
                                 {budgetData.categories.map(cat => (
                                     <option key={cat.name} value={cat.name}>{cat.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>{isGerman ? 'Betrag (€)' : 'Amount (€)'}</label>
+                            <label style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>{t({ de: 'Betrag (€)', en: 'Amount (€)', tr: 'Tutar (€)' })}</label>
                             <input
                                 className="form-input"
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                placeholder={isGerman ? 'z.B. 500' : 'e.g. 500'}
+                                placeholder={t({ de: 'z.B. 500', en: 'e.g. 500', tr: 'örn. 500' })}
                                 value={expenseAmount}
                                 onChange={e => setExpenseAmount(e.target.value)}
                             />
@@ -181,7 +181,7 @@ export default function BudgetPage() {
                                 }
                             }}
                         >
-                            {expenseSaving ? (isGerman ? 'Speichere...' : 'Saving...') : (isGerman ? 'Erfassen' : 'Save')}
+                            {expenseSaving ? t({ de: 'Speichere...', en: 'Saving...', tr: 'Kaydediliyor...' }) : t({ de: 'Erfassen', en: 'Save', tr: 'Kaydet' })}
                         </button>
                     </div>
                 </div>
@@ -189,29 +189,29 @@ export default function BudgetPage() {
             <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                 <div className="stat-card primary">
                     <div className="stat-card-header">
-                        <span className="stat-card-label">{isGerman ? 'Gesamtbudget' : 'Total Budget'}</span>
+                        <span className="stat-card-label">{t({ de: 'Gesamtbudget', en: 'Total Budget', tr: 'Toplam Bütçe' })}</span>
                         <div className="stat-card-icon primary"><Wallet size={20} /></div>
                     </div>
                     <div className="stat-card-value">€{budgetData.total.toLocaleString(locale)}</div>
-                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? 'Saison 2026' : 'Season 2026'}</span>
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{t({ de: 'Saison 2026', en: 'Season 2026', tr: 'Sezon 2026' })}</span>
                 </div>
                 <div className="stat-card success">
                     <div className="stat-card-header">
-                        <span className="stat-card-label">{isGerman ? 'Ausgegeben' : 'Spent'}</span>
+                        <span className="stat-card-label">{t({ de: 'Ausgegeben', en: 'Spent', tr: 'Harcanan' })}</span>
                         <div className="stat-card-icon success"><TrendingUp size={20} /></div>
                     </div>
                     <div className="stat-card-value">€{budgetData.spent.toLocaleString(locale)}</div>
-                    <div className="stat-card-change positive">{isGerman ? `${percentSpent}% des Budgets` : `${percentSpent}% of budget`}</div>
+                    <div className="stat-card-change positive">{t({ de: `${percentSpent}% des Budgets`, en: `${percentSpent}% of budget`, tr: `Bütçenin %${percentSpent}'i` })}</div>
                 </div>
                 <div className={`stat-card ${isOverBudget ? 'warning' : 'info'}`}>
                     <div className="stat-card-header">
-                        <span className="stat-card-label">{isGerman ? 'Verbleibend' : 'Remaining'}</span>
+                        <span className="stat-card-label">{t({ de: 'Verbleibend', en: 'Remaining', tr: 'Kalan' })}</span>
                         <div className={`stat-card-icon ${isOverBudget ? 'warning' : 'info'}`}>
                             {isOverBudget ? <AlertTriangle size={20} /> : <TrendingDown size={20} />}
                         </div>
                     </div>
                     <div className="stat-card-value">€{budgetData.remaining.toLocaleString(locale)}</div>
-                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{isGerman ? `${100 - percentSpent}% verbleibend` : `${100 - percentSpent}% remaining`}</span>
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{t({ de: `${100 - percentSpent}% verbleibend`, en: `${100 - percentSpent}% remaining`, tr: `%${100 - percentSpent} kalan` })}</span>
                 </div>
             </div>
 
@@ -221,8 +221,8 @@ export default function BudgetPage() {
                 <div className="card">
                     <div className="card-header">
                         <div>
-                            <div className="card-title">{isGerman ? 'Monatlicher Vergleich' : 'Monthly Comparison'}</div>
-                            <div className="card-subtitle">{isGerman ? 'Plan vs. tatsaechliche Ausgaben' : 'Planned vs. actual spend'}</div>
+                            <div className="card-title">{t({ de: 'Monatlicher Vergleich', en: 'Monthly Comparison', tr: 'Aylık Karşılaştırma' })}</div>
+                            <div className="card-subtitle">{t({ de: 'Plan vs. tatsächliche Ausgaben', en: 'Planned vs. actual spend', tr: 'Planlanan ve gerçekleşen harcamalar' })}</div>
                         </div>
                     </div>
                     <div className="chart-container">
@@ -232,8 +232,8 @@ export default function BudgetPage() {
                                 <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
                                 <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                                 <Tooltip content={<CustomTooltip locale={locale} />} />
-                                <Bar dataKey="planned" name={isGerman ? 'Geplant' : 'Planned'} fill="#6366f1" radius={[4, 4, 0, 0]} opacity={0.4} />
-                                <Bar dataKey="actual" name={isGerman ? 'Tatsaechlich' : 'Actual'} fill="#6366f1" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="planned" name={t({ de: 'Geplant', en: 'Planned', tr: 'Planlanan' })} fill="#6366f1" radius={[4, 4, 0, 0]} opacity={0.4} />
+                                <Bar dataKey="actual" name={t({ de: 'Tatsächlich', en: 'Actual', tr: 'Gerçekleşen' })} fill="#6366f1" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -243,8 +243,8 @@ export default function BudgetPage() {
                 <div className="card">
                     <div className="card-header">
                         <div>
-                            <div className="card-title">{isGerman ? 'Verteilung nach Kategorie' : 'Category Breakdown'}</div>
-                            <div className="card-subtitle">{isGerman ? 'Anteil der geplanten Ausgaben' : 'Share of planned spend'}</div>
+                            <div className="card-title">{t({ de: 'Verteilung nach Kategorie', en: 'Category Breakdown', tr: 'Kategoriye Göre Dağılım' })}</div>
+                            <div className="card-subtitle">{t({ de: 'Anteil der geplanten Ausgaben', en: 'Share of planned spend', tr: 'Planlanan harcamaların payı' })}</div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
@@ -284,17 +284,17 @@ export default function BudgetPage() {
             {/* Detailed Table */}
             <div className="card" style={{ marginTop: '24px' }}>
                 <div className="card-header">
-                    <div className="card-title">{isGerman ? 'Kategorien-Detail' : 'Category Details'}</div>
+                    <div className="card-title">{t({ de: 'Kategorien-Detail', en: 'Category Details', tr: 'Kategori Detayları' })}</div>
                 </div>
                 <div className="table-container">
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>{isGerman ? 'Kategorie' : 'Category'}</th>
-                                <th>{isGerman ? 'Geplant' : 'Planned'}</th>
-                                <th>{isGerman ? 'Ausgegeben' : 'Spent'}</th>
-                                <th>{isGerman ? 'Verbleibend' : 'Remaining'}</th>
-                                <th>{isGerman ? 'Auslastung' : 'Utilization'}</th>
+                                <th>{t({ de: 'Kategorie', en: 'Category', tr: 'Kategori' })}</th>
+                                <th>{t({ de: 'Geplant', en: 'Planned', tr: 'Planlanan' })}</th>
+                                <th>{t({ de: 'Ausgegeben', en: 'Spent', tr: 'Harcanan' })}</th>
+                                <th>{t({ de: 'Verbleibend', en: 'Remaining', tr: 'Kalan' })}</th>
+                                <th>{t({ de: 'Auslastung', en: 'Utilization', tr: 'Kullanım' })}</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -326,7 +326,7 @@ export default function BudgetPage() {
                                         </td>
                                         <td>
                                             <span className={`badge ${pct > 80 ? 'badge-danger' : pct > 60 ? 'badge-warning' : 'badge-success'}`}>
-                                                {pct > 80 ? (isGerman ? 'Kritisch' : 'Critical') : pct > 60 ? (isGerman ? 'Aufpassen' : 'Watch') : 'OK'}
+                                                {pct > 80 ? t({ de: 'Kritisch', en: 'Critical', tr: 'Kritik' }) : pct > 60 ? t({ de: 'Aufpassen', en: 'Watch', tr: 'Dikkat' }) : 'OK'}
                                             </span>
                                         </td>
                                     </tr>

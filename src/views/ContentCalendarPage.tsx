@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ContentItem } from '../types';
-import { ChevronLeft, ChevronRight, Plus, AlertTriangle, Radio } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, AlertTriangle, Radio, Wand2 } from 'lucide-react';
 import { useContents, CONTENT_STATUSES } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
@@ -8,15 +8,21 @@ import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import ContentDetailModal from '../components/ContentDetailModal';
+import ContentIdeaWizard from '../components/ContentIdeaWizard';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
 import { listPosts, type ScheduledPost } from '../lib/socialHub';
 
-const daysOfWeek = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-const monthNames = [
-    'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-    'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
-];
+const daysOfWeekByLang = {
+    de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+    en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    tr: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+};
+const monthNamesByLang = {
+    de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+    en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    tr: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+};
 
 function getDaysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year, month) { const d = new Date(year, month, 1).getDay(); return d === 0 ? 6 : d - 1; }
@@ -32,7 +38,9 @@ export default function ContentCalendarPage() {
     useTasks();
     const { can } = useAuth();
     const { activeCompany } = useCompany();
-    const { language, locale } = useLanguage();
+    const { language, locale, t } = useLanguage();
+    const daysOfWeek = daysOfWeekByLang[language] || daysOfWeekByLang.en;
+    const monthNames = monthNamesByLang[language] || monthNamesByLang.en;
     const [currentDate, setCurrentDate] = useState(() => {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -40,6 +48,7 @@ export default function ContentCalendarPage() {
     const [view, setView] = useState('month');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
+    const [showIdeaWizard, setShowIdeaWizard] = useState(false);
 
     // Social Hub posts for calendar overlay
     const [socialPosts, setSocialPosts] = useState<ScheduledPost[]>([]);
@@ -100,24 +109,29 @@ export default function ContentCalendarPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">{language === 'en' ? 'Content calendar' : 'Content-Kalender'}</h1>
-                    <p className="page-subtitle">{language === 'en' ? 'Editorial planning across all channels' : 'Redaktionsplanung ueber alle Kanaele hinweg'} ({contents.length} {language === 'en' ? 'items' : 'Inhalte'}{socialPosts.length > 0 ? `, ${socialPosts.length} Social Hub Posts` : ''})</p>
+                    <h1 className="page-title">{t({ de: 'Content-Kalender', en: 'Content calendar', tr: 'İçerik Takvimi' })}</h1>
+                    <p className="page-subtitle">{t({ de: 'Redaktionsplanung über alle Kanäle hinweg', en: 'Editorial planning across all channels', tr: 'Tüm kanallarda editoryal planlama' })} ({contents.length} {t({ de: 'Inhalte', en: 'items', tr: 'içerik' })}{socialPosts.length > 0 ? `, ${socialPosts.length} Social Hub Posts` : ''})</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title={language === 'en' ? 'Content calendar' : 'Content-Kalender'}>
-                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'The content calendar is your daily navigation tool for upcoming publications.' : 'Der Content-Kalender ist dein taegliches Navigationsinstrument fuer alle anstehenden Veroeffentlichungen.'}</p>
+                    <PageHelp title={t({ de: 'Content-Kalender', en: 'Content calendar', tr: 'İçerik Takvimi' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Der Content-Kalender ist dein tägliches Navigationsinstrument für alle anstehenden Veröffentlichungen.', en: 'The content calendar is your daily navigation tool for upcoming publications.', tr: 'İçerik takvimi, yaklaşan yayınlarınız için günlük navigasyon aracınızdır.' })}</p>
                         <ul className="help-list">
-                            <li><strong>{language === 'en' ? 'View' : 'Die Ansicht'}:</strong> {language === 'en' ? 'Shows all planned content for the current month and can switch to list view.' : 'Zeigt dir alle geplanten Contents des aktuellen Monats. Mit den Buttons oben rechts kannst du auf eine chronologische Listen-Ansicht umschalten.'}</li>
-                            <li><strong>{language === 'en' ? 'Red markers' : 'Rot markiert'}:</strong> {language === 'en' ? 'Red cards indicate content without linked tasks yet.' : 'Ein Eintrag leuchtet rot auf und zeigt ein Warndreieck? Das bedeutet, dass es sich nur um eine Content-Idee handelt und noch keine Aufgabe zur Umsetzung zugewiesen wurde.'}</li>
+                            <li><strong>{t({ de: 'Die Ansicht', en: 'View', tr: 'Görünüm' })}:</strong> {t({ de: 'Zeigt dir alle geplanten Contents des aktuellen Monats. Mit den Buttons oben rechts kannst du auf eine chronologische Listen-Ansicht umschalten.', en: 'Shows all planned content for the current month and can switch to list view.', tr: 'Mevcut ayın tüm planlı içeriklerini gösterir. Sağ üstteki düğmelerle liste görünümüne geçebilirsiniz.' })}</li>
+                            <li><strong>{t({ de: 'Rot markiert', en: 'Red markers', tr: 'Kırmızı işaretler' })}:</strong> {t({ de: 'Ein Eintrag leuchtet rot auf und zeigt ein Warndreieck? Das bedeutet, dass es sich nur um eine Content-Idee handelt und noch keine Aufgabe zur Umsetzung zugewiesen wurde.', en: 'Red cards indicate content without linked tasks yet.', tr: 'Kırmızı kartlar, henüz bağlantılı görevi olmayan içerikleri gösterir.' })}</li>
                         </ul>
                     </PageHelp>
                     <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
-                        <button className={`btn btn-sm ${view === 'month' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('month')}>{language === 'en' ? 'Month' : 'Monat'}</button>
-                        <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('list')}>{language === 'en' ? 'List' : 'Liste'}</button>
+                        <button className={`btn btn-sm ${view === 'month' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('month')}>{t({ de: 'Monat', en: 'Month', tr: 'Ay' })}</button>
+                        <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('list')}>{t({ de: 'Liste', en: 'List', tr: 'Liste' })}</button>
                     </div>
                     {can('canEditContent') && (
+                        <button className="btn btn-secondary" onClick={() => setShowIdeaWizard(true)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
+                            <Wand2 size={16} /> {t({ de: 'KI Content-Ideen', en: 'AI content ideas', tr: 'YZ İçerik Fikirleri' })}
+                        </button>
+                    )}
+                    {can('canEditContent') && (
                         <button className="btn btn-primary" onClick={() => setShowNewContentModal(true)}>
-                            <Plus size={16} /> {language === 'en' ? 'Plan content' : 'Content planen'}
+                            <Plus size={16} /> {t({ de: 'Content planen', en: 'Plan content', tr: 'İçerik planla' })}
                         </button>
                     )}
                 </div>
@@ -132,7 +146,10 @@ export default function ContentCalendarPage() {
                     <AlertTriangle size={18} />
                     <span>{language === 'en'
                         ? <><strong>{noTaskCount} content item(s)</strong> still have no linked tasks and appear in <strong>red</strong>.</>
-                        : <><strong>{noTaskCount} Content(s)</strong> haben noch keine verknuepften Aufgaben und erscheinen <strong>rot</strong> im Kalender.</>}</span>
+                        : language === 'tr'
+                        ? <><strong>{noTaskCount} içerik</strong> henüz bağlantılı göreve sahip değil ve takvimde <strong>kırmızı</strong> görünüyor.</>
+                        : <><strong>{noTaskCount} Content(s)</strong> haben noch keine verknüpften Aufgaben und erscheinen <strong>rot</strong> im Kalender.</>
+                    }</span>
                 </div>
             )}
 
@@ -152,7 +169,7 @@ export default function ContentCalendarPage() {
                         setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                     }}
                 >
-                    {language === 'en' ? 'Today' : 'Heute'}
+                    {t({ de: 'Heute', en: 'Today', tr: 'Bugün' })}
                 </button>
             </div>
 
@@ -205,11 +222,11 @@ export default function ContentCalendarPage() {
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Datum</th>
-                                    <th>{language === 'en' ? 'Title' : 'Titel'}</th>
-                                    <th>{language === 'en' ? 'Platform' : 'Plattform'}</th>
-                                    <th>{language === 'en' ? 'Status' : 'Status'}</th>
-                                    <th>{language === 'en' ? 'Tasks' : 'Aufgaben'}</th>
+                                    <th>{t({ de: 'Datum', en: 'Date', tr: 'Tarih' })}</th>
+                                    <th>{t({ de: 'Titel', en: 'Title', tr: 'Başlık' })}</th>
+                                    <th>{t({ de: 'Plattform', en: 'Platform', tr: 'Platform' })}</th>
+                                    <th>{t({ de: 'Status', en: 'Status', tr: 'Durum' })}</th>
+                                    <th>{t({ de: 'Aufgaben', en: 'Tasks', tr: 'Görevler' })}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -232,7 +249,7 @@ export default function ContentCalendarPage() {
                                                 {hasTasks ? (
                                                     <span style={{ color: 'var(--color-success)', fontSize: 'var(--font-size-xs)' }}>✅ {cnt.taskIds.length}</span>
                                                 ) : (
-                                                    <span style={{ color: '#ef4444', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>{language === 'en' ? '⚠ None' : '⚠ Keine'}</span>
+                                                    <span style={{ color: '#ef4444', fontSize: 'var(--font-size-xs)', fontWeight: 600 }}>{t({ de: '⚠ Keine', en: '⚠ None', tr: '⚠ Yok' })}</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -250,8 +267,8 @@ export default function ContentCalendarPage() {
                     { color: 'primary', label: 'Social Media' },
                     { color: 'info', label: 'E-Mail' },
                     { color: 'warning', label: 'Ads' },
-                    { color: 'success', label: language === 'en' ? 'Content / Events' : 'Content / Events' },
-                    { color: 'danger', label: language === 'en' ? '⚠ No tasks' : '⚠ Keine Aufgaben' },
+                    { color: 'success', label: t({ de: 'Content / Events', en: 'Content / Events', tr: 'İçerik / Etkinlikler' }) },
+                    { color: 'danger', label: t({ de: '⚠ Keine Aufgaben', en: '⚠ No tasks', tr: '⚠ Görev yok' }) },
                 ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
                         <div className={`calendar-event ${item.color}`} style={{ margin: 0, width: 12, height: 12, padding: 0, borderRadius: '3px' }} />
@@ -274,6 +291,11 @@ export default function ContentCalendarPage() {
             {/* New Content Modal */}
             {showNewContentModal && (
                 <NewContentModal onClose={() => setShowNewContentModal(false)} />
+            )}
+
+            {/* Content Idea Wizard */}
+            {showIdeaWizard && (
+                <ContentIdeaWizard onClose={() => setShowIdeaWizard(false)} />
             )}
         </div>
     );

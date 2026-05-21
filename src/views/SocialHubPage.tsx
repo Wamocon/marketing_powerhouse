@@ -40,7 +40,7 @@ import PostVariantPicker from "../components/PostVariantPicker";
 import SocialHubUpgradePrompt from "../components/SocialHubUpgradePrompt";
 import { useAuth } from "../context/AuthContext";
 import { useCompany } from "../context/CompanyContext";
-import { useLanguage } from "../context/LanguageContext";
+import { useLanguage, type Translations } from "../context/LanguageContext";
 import { useSubscription } from "../context/SubscriptionContext";
 import {
   approvePost,
@@ -69,36 +69,36 @@ import { hasSocialHubPlanEntitlement } from "../lib/socialHubEntitlements";
 
 const STATUS_BADGE: Record<
   string,
-  { label: string; color: string; bg: string }
+  { label: Translations; color: string; bg: string }
 > = {
-  draft: { label: "Entwurf", color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
+  draft: { label: { de: "Entwurf", en: "Draft", tr: "Taslak" }, color: "#6b7280", bg: "rgba(107,114,128,0.12)" },
   scheduled: {
-    label: "Geplant",
+    label: { de: "Geplant", en: "Scheduled", tr: "Planlanmış" },
     color: "#0ea5e9",
     bg: "rgba(14,165,233,0.12)",
   },
   approved: {
-    label: "Freigegeben",
+    label: { de: "Freigegeben", en: "Approved", tr: "Onaylandı" },
     color: "#8b5cf6",
     bg: "rgba(139,92,246,0.12)",
   },
   publishing: {
-    label: "Wird veröffentlicht…",
+    label: { de: "Wird veröffentlicht...", en: "Publishing...", tr: "Yayınlanıyor..." },
     color: "#f59e0b",
     bg: "rgba(245,158,11,0.12)",
   },
   published: {
-    label: "Veröffentlicht",
+    label: { de: "Veröffentlicht", en: "Published", tr: "Yayınlandı" },
     color: "#10b981",
     bg: "rgba(16,185,129,0.12)",
   },
   failed: {
-    label: "Fehlgeschlagen",
+    label: { de: "Fehlgeschlagen", en: "Failed", tr: "Başarısız" },
     color: "#ef4444",
     bg: "rgba(239,68,68,0.12)",
   },
   rejected: {
-    label: "Abgelehnt",
+    label: { de: "Abgelehnt", en: "Rejected", tr: "Reddedildi" },
     color: "#ef4444",
     bg: "rgba(239,68,68,0.12)",
   },
@@ -120,10 +120,10 @@ const PLATFORM_ICON: Record<string, typeof Linkedin> = {
   instagram: Instagram,
 };
 
-const TOKEN_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  ok: { label: "Verbunden", color: "var(--color-success)" },
-  expiring_soon: { label: "Läuft bald ab", color: "var(--color-warning)" },
-  expired: { label: "Abgelaufen", color: "var(--color-danger)" },
+const TOKEN_STATUS_MAP: Record<string, { label: Translations; color: string }> = {
+  ok: { label: { de: "Verbunden", en: "Connected", tr: "Bağlı" }, color: "var(--color-success)" },
+  expiring_soon: { label: { de: "Läuft bald ab", en: "Expiring soon", tr: "Süresi dolmak üzere" }, color: "var(--color-warning)" },
+  expired: { label: { de: "Abgelaufen", en: "Expired", tr: "Süresi doldu" }, color: "var(--color-danger)" },
 };
 
 // ─── Component ─────────────────────────────────────────────
@@ -131,9 +131,8 @@ const TOKEN_STATUS_MAP: Record<string, { label: string; color: string }> = {
 export default function SocialHubPage() {
   const { activeCompany } = useCompany();
   const { currentUser, can } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { subscription, loading: subscriptionLoading } = useSubscription();
-  const t = language === "en";
   const canUseSocialHubRole = can("canUseSocialHub");
   const hasSocialHubPlanAccess = hasSocialHubPlanEntitlement(subscription);
   const canUseSocialHub = canUseSocialHubRole && hasSocialHubPlanAccess;
@@ -207,9 +206,11 @@ export default function SocialHubPage() {
 
       if (healthRes.status === "rejected") {
         setError(
-          t
-            ? "Social Hub service is not reachable behind the app route. Make sure the shared dev server is running."
-            : "Der Social-Hub-Service ist über die App-Route nicht erreichbar. Stelle sicher, dass der gemeinsame Dev-Start läuft.",
+          t({
+            de: "Der Social-Hub-Service ist über die App-Route nicht erreichbar. Stelle sicher, dass der gemeinsame Dev-Start läuft.",
+            en: "Social Hub service is not reachable behind the app route. Make sure the shared dev server is running.",
+            tr: "Social Hub servisi uygulama rotası üzerinden erişilebilir değil. Paylaşılan geliştirme sunucusunun çalıştığından emin olun.",
+          }),
         );
       }
     } catch (e: unknown) {
@@ -217,7 +218,7 @@ export default function SocialHubPage() {
     } finally {
       setLoading(false);
     }
-  }, [canUseSocialHub, companyId, t]);
+  }, [canUseSocialHub, companyId, language]);
 
   useEffect(() => {
     if (canUseSocialHub) {
@@ -419,7 +420,7 @@ export default function SocialHubPage() {
             style={{ color: "var(--text-tertiary)", marginBottom: "16px" }}
           />
           <h2 style={{ marginBottom: "8px" }}>
-            {t ? "No project selected" : "Kein Projekt ausgewählt"}
+            {t({ de: "Kein Projekt ausgewählt", en: "No project selected", tr: "Proje seçilmedi" })}
           </h2>
           <p
             style={{
@@ -427,9 +428,11 @@ export default function SocialHubPage() {
               fontSize: "var(--font-size-sm)",
             }}
           >
-            {t
-              ? "Select a project to use the Social Hub."
-              : "Wähle zuerst ein Projekt aus, um den Social Hub zu nutzen."}
+            {t({
+              de: "Wähle zuerst ein Projekt aus, um den Social Hub zu nutzen.",
+              en: "Select a project to use the Social Hub.",
+              tr: "Social Hub'ı kullanmak için bir proje seç.",
+            })}
           </p>
         </div>
       </div>
@@ -456,7 +459,7 @@ export default function SocialHubPage() {
             style={{ color: "var(--text-tertiary)", marginBottom: "16px" }}
           />
           <h2 style={{ marginBottom: "8px" }}>
-            {t ? "Access restricted" : "Zugriff eingeschraenkt"}
+            {t({ de: "Zugriff eingeschränkt", en: "Access restricted", tr: "Erişim kısıtlı" })}
           </h2>
           <p
             style={{
@@ -464,9 +467,11 @@ export default function SocialHubPage() {
               fontSize: "var(--font-size-sm)",
             }}
           >
-            {t
-              ? "Your current project role does not allow Social Hub access."
-              : "Deine aktuelle Projektrolle erlaubt keinen Zugriff auf den Social Hub."}
+            {t({
+              de: "Deine aktuelle Projektrolle erlaubt keinen Zugriff auf den Social Hub.",
+              en: "Your current project role does not allow Social Hub access.",
+              tr: "Mevcut proje rolün Social Hub erişimine izin vermiyor.",
+            })}
           </p>
         </div>
       </div>
@@ -486,9 +491,11 @@ export default function SocialHubPage() {
               Social Hub
             </h1>
             <p className="page-subtitle">
-              {t
-                ? "Upgrade to Pro or Ultimate to unlock AI social publishing"
-                : "Upgrade auf Pro oder Ultimate, um KI-Social-Publishing freizuschalten"}
+              {t({
+                de: "Upgrade auf Pro oder Ultimate, um KI-Social-Publishing freizuschalten",
+                en: "Upgrade to Pro or Ultimate to unlock AI social publishing",
+                tr: "Yapay zeka destekli sosyal medya yayınını açmak için Pro veya Ultimate'e yükseltin",
+              })}
             </p>
           </div>
         </div>
@@ -513,40 +520,54 @@ export default function SocialHubPage() {
             Social Hub
           </h1>
           <p className="page-subtitle">
-            {t
-              ? "AI-powered social media publishing for LinkedIn & Instagram"
-              : "KI-gestützte Social-Media-Veröffentlichung für LinkedIn & Instagram"}
+            {t({
+              de: "KI-gestützte Social-Media-Veröffentlichung für LinkedIn & Instagram",
+              en: "AI-powered social media publishing for LinkedIn & Instagram",
+              tr: "LinkedIn ve Instagram için yapay zeka destekli sosyal medya yayını",
+            })}
           </p>
         </div>
         <div className="page-header-actions">
           <PageHelp title="Social Hub">
             <p style={{ marginBottom: "12px" }}>
-              {t
-                ? "The Social Hub is your central hub for AI-generated social media posts. It connects to your LinkedIn and Instagram accounts."
-                : "Der Social Hub ist deine Zentrale für KI-generierte Social-Media-Posts. Er verbindet sich automatisch mit deinen LinkedIn- und Instagram-Accounts."}
+              {t({
+                de: "Der Social Hub ist deine Zentrale für KI-generierte Social-Media-Posts. Er verbindet sich automatisch mit deinen LinkedIn- und Instagram-Accounts.",
+                en: "The Social Hub is your central hub for AI-generated social media posts. It connects to your LinkedIn and Instagram accounts.",
+                tr: "Social Hub, yapay zeka ile oluşturulan sosyal medya gönderileri için merkezi platformundur. LinkedIn ve Instagram hesaplarınıza otomatik olarak bağlanır.",
+              })}
             </p>
             <ul className="help-list">
               <li>
-                <strong>{t ? "Overview" : "Übersicht"}:</strong>{" "}
-                {t
-                  ? "System status, readiness score and stats"
-                  : "Systemstatus, Readiness-Score und Statistiken"}
+                <strong>{t({ de: "Übersicht", en: "Overview", tr: "Genel Bakış" })}:</strong>{" "}
+                {t({
+                  de: "Systemstatus, Readiness-Score und Statistiken",
+                  en: "System status, readiness score and stats",
+                  tr: "Sistem durumu, hazırlık puanı ve istatistikler",
+                })}
               </li>
               <li>
                 <strong>Posts:</strong>{" "}
-                {t
-                  ? "Review, approve and publish posts"
-                  : "Posts prüfen, freigeben und veröffentlichen"}
+                {t({
+                  de: "Posts prüfen, freigeben und veröffentlichen",
+                  en: "Review, approve and publish posts",
+                  tr: "Gönderileri inceleyin, onaylayın ve yayınlayın",
+                })}
               </li>
               <li>
-                <strong>{t ? "Generate" : "Generieren"}:</strong>{" "}
-                {t ? "Create new AI posts" : "Neue KI-Posts erstellen"}
+                <strong>{t({ de: "Generieren", en: "Generate", tr: "Oluştur" })}:</strong>{" "}
+                {t({
+                  de: "Neue KI-Posts erstellen",
+                  en: "Create new AI posts",
+                  tr: "Yeni yapay zeka gönderileri oluşturun",
+                })}
               </li>
               <li>
                 <strong>Accounts:</strong>{" "}
-                {t
-                  ? "Connected account status"
-                  : "Status der verbundenen Accounts"}
+                {t({
+                  de: "Status der verbundenen Accounts",
+                  en: "Connected account status",
+                  tr: "Bağlı hesap durumu",
+                })}
               </li>
             </ul>
           </PageHelp>
@@ -556,7 +577,7 @@ export default function SocialHubPage() {
             disabled={loading}
           >
             <RefreshCw size={16} className={loading ? "spin" : ""} />
-            {t ? "Refresh" : "Aktualisieren"}
+            {t({ de: "Aktualisieren", en: "Refresh", tr: "Yenile" })}
           </button>
         </div>
       </div>
@@ -597,12 +618,8 @@ export default function SocialHubPage() {
           }}
         >
           {isOnline
-            ? t
-              ? "Social Hub Connected"
-              : "Social Hub verbunden"
-            : t
-              ? "Social Hub Offline"
-              : "Social Hub offline"}
+            ? t({ de: "Social Hub verbunden", en: "Social Hub Connected", tr: "Social Hub Bağlı" })
+            : t({ de: "Social Hub offline", en: "Social Hub Offline", tr: "Social Hub Çevrimdışı" })}
         </span>
         <span
           style={{
@@ -611,7 +628,7 @@ export default function SocialHubPage() {
             marginLeft: "auto",
           }}
         >
-          {accounts.length} {t ? "accounts connected" : "Accounts verbunden"}
+          {accounts.length} {t({ de: "Accounts verbunden", en: "accounts connected", tr: "hesap bağlı" })}
         </span>
       </div>
 
@@ -656,9 +673,9 @@ export default function SocialHubPage() {
       >
         {(
           [
-            { key: "overview", label: t ? "Overview" : "Übersicht" },
+            { key: "overview", label: t({ de: "Übersicht", en: "Overview", tr: "Genel Bakış" }) },
             { key: "posts", label: `Posts (${posts.length})` },
-            { key: "generate", label: t ? "Generate" : "Generieren" },
+            { key: "generate", label: t({ de: "Generieren", en: "Generate", tr: "Oluştur" }) },
             { key: "accounts", label: `Accounts (${accounts.length})` },
           ] as const
         ).map((tab) => (
@@ -722,7 +739,7 @@ export default function SocialHubPage() {
                 <div className="stat-card">
                   <div className="stat-card-header">
                     <span className="stat-card-label">
-                      {t ? "Readiness" : "Bereitschaft"}
+                      {t({ de: "Bereitschaft", en: "Readiness", tr: "Hazırlık" })}
                     </span>
                     <div
                       className="stat-card-icon"
@@ -749,13 +766,13 @@ export default function SocialHubPage() {
                     {readiness?.items?.filter((i) => i.state === "ready")
                       .length ?? 0}
                     /{readiness?.items?.length ?? 0}{" "}
-                    {t ? "checks passed" : "Checks bestanden"}
+                    {t({ de: "Checks bestanden", en: "checks passed", tr: "kontrol geçti" })}
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-card-header">
                     <span className="stat-card-label">
-                      {t ? "Total Posts" : "Gesamt Posts"}
+                      {t({ de: "Gesamt Posts", en: "Total Posts", tr: "Toplam Gönderi" })}
                     </span>
                     <div
                       className="stat-card-icon"
@@ -774,13 +791,13 @@ export default function SocialHubPage() {
                       color: "var(--text-tertiary)",
                     }}
                   >
-                    {publishedCount} {t ? "published" : "veröffentlicht"}
+                    {publishedCount} {t({ de: "veröffentlicht", en: "published", tr: "yayınlandı" })}
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-card-header">
                     <span className="stat-card-label">
-                      {t ? "Queued" : "In Warteschlange"}
+                      {t({ de: "In Warteschlange", en: "Queued", tr: "Sırada" })}
                     </span>
                     <div
                       className="stat-card-icon"
@@ -799,13 +816,13 @@ export default function SocialHubPage() {
                       color: "var(--text-tertiary)",
                     }}
                   >
-                    {t ? "approved & scheduled" : "freigegeben & geplant"}
+                    {t({ de: "freigegeben & geplant", en: "approved & scheduled", tr: "onaylandı ve planlandı" })}
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-card-header">
                     <span className="stat-card-label">
-                      {t ? "Drafts" : "Entwürfe"}
+                      {t({ de: "Entwürfe", en: "Drafts", tr: "Taslaklar" })}
                     </span>
                     <div
                       className="stat-card-icon"
@@ -824,7 +841,7 @@ export default function SocialHubPage() {
                       color: "var(--text-tertiary)",
                     }}
                   >
-                    {t ? "awaiting review" : "warten auf Review"}
+                    {t({ de: "warten auf Review", en: "awaiting review", tr: "inceleme bekliyor" })}
                   </div>
                 </div>
               </div>
@@ -836,12 +853,14 @@ export default function SocialHubPage() {
                   <div className="card-header">
                     <div>
                       <div className="card-title">
-                        {t ? "Go-Live Readiness" : "Go-Live Bereitschaft"}
+                        {t({ de: "Go-Live Bereitschaft", en: "Go-Live Readiness", tr: "Yayına Hazırlık" })}
                       </div>
                       <div className="card-subtitle">
-                        {t
-                          ? "System checks for publishing"
-                          : "Systemprüfungen für die Veröffentlichung"}
+                        {t({
+                          de: "Systemprüfungen für die Veröffentlichung",
+                          en: "System checks for publishing",
+                          tr: "Yayınlama için sistem kontrolleri",
+                        })}
                       </div>
                     </div>
                   </div>
@@ -898,9 +917,11 @@ export default function SocialHubPage() {
                           fontSize: "var(--font-size-sm)",
                         }}
                       >
-                        {t
-                          ? "Could not load readiness data"
-                          : "Readiness-Daten konnten nicht geladen werden"}
+                        {t({
+                          de: "Readiness-Daten konnten nicht geladen werden",
+                          en: "Could not load readiness data",
+                          tr: "Hazırlık verileri yüklenemedi",
+                        })}
                       </div>
                     )}
                   </div>
@@ -919,17 +940,17 @@ export default function SocialHubPage() {
                     <div className="card-header">
                       <div>
                         <div className="card-title">
-                          {t ? "Connected Accounts" : "Verbundene Accounts"}
+                          {t({ de: "Verbundene Accounts", en: "Connected Accounts", tr: "Bağlı Hesaplar" })}
                         </div>
                         <div className="card-subtitle">
-                          {accounts.length} {t ? "active" : "aktiv"}
+                          {accounts.length} {t({ de: "aktiv", en: "active", tr: "aktif" })}
                         </div>
                       </div>
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={() => setActiveTab("accounts")}
                       >
-                        {t ? "Details" : "Details"} →
+                        {t({ de: "Details", en: "Details", tr: "Detaylar" })} →
                       </button>
                     </div>
                     <div
@@ -953,9 +974,11 @@ export default function SocialHubPage() {
                             style={{ marginBottom: "8px", opacity: 0.4 }}
                           />
                           <div>
-                            {t
-                              ? "No accounts connected yet"
-                              : "Noch keine Accounts verbunden"}
+                            {t({
+                              de: "Noch keine Accounts verbunden",
+                              en: "No accounts connected yet",
+                              tr: "Henüz bağlı hesap yok",
+                            })}
                           </div>
                           <a
                             href={`${SOCIAL_HUB_URL}/project/${encodeURIComponent(companyId)}/settings`}
@@ -965,7 +988,7 @@ export default function SocialHubPage() {
                             style={{ marginTop: "12px" }}
                           >
                             <Link2 size={14} />{" "}
-                            {t ? "Connect Account" : "Account verbinden"}
+                            {t({ de: "Account verbinden", en: "Connect Account", tr: "Hesap Bağla" })}
                           </a>
                         </div>
                       ) : (
@@ -1016,8 +1039,7 @@ export default function SocialHubPage() {
                                   color: ts.color,
                                 }}
                               >
-                                {ts.label}
-                              </span>
+                                {t(ts.label)}                              </span>
                             </div>
                           );
                         })
@@ -1034,13 +1056,15 @@ export default function SocialHubPage() {
                       <div className="card-header">
                         <div>
                           <div className="card-title">
-                            {t ? "Needs Review" : "Review erforderlich"}
+                            {t({ de: "Review erforderlich", en: "Needs Review", tr: "İnceleme Gerekli" })}
                           </div>
                           <div className="card-subtitle">
                             {draftCount}{" "}
-                            {t
-                              ? "drafts awaiting approval"
-                              : "Entwürfe warten auf Freigabe"}
+                            {t({
+                              de: "Entwürfe warten auf Freigabe",
+                              en: "drafts awaiting approval",
+                              tr: "taslak onay bekliyor",
+                            })}
                           </div>
                         </div>
                       </div>
@@ -1095,7 +1119,7 @@ export default function SocialHubPage() {
                               >
                                 {post.topic ||
                                   post.post_text?.slice(0, 60) ||
-                                  "Ohne Titel"}
+                                  t({ de: "Ohne Titel", en: "Untitled", tr: "Başlıksız" })}
                               </span>
                               <Eye
                                 size={14}
@@ -1111,7 +1135,7 @@ export default function SocialHubPage() {
                               setStatusFilter("draft");
                             }}
                           >
-                            +{draftCount - 3} {t ? "more" : "weitere"} →
+                            +{draftCount - 3} {t({ de: "weitere", en: "more", tr: "daha" })} →
                           </button>
                         )}
                       </div>
@@ -1151,7 +1175,7 @@ export default function SocialHubPage() {
                   />
                   <input
                     className="form-input"
-                    placeholder={t ? "Search posts..." : "Posts durchsuchen..."}
+                    placeholder={t({ de: "Posts durchsuchen...", en: "Search posts...", tr: "Gönderilerde ara..." })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ paddingLeft: "36px" }}
@@ -1170,10 +1194,8 @@ export default function SocialHubPage() {
                         style={{ fontSize: "12px" }}
                       >
                         {s === "all"
-                          ? t
-                            ? "All"
-                            : "Alle"
-                          : STATUS_BADGE[s]?.label || s}
+                          ? t({ de: "Alle", en: "All", tr: "Tümü" })
+                          : STATUS_BADGE[s]?.label ? t(STATUS_BADGE[s].label) : s}
                       </button>
                     ),
                   )}
@@ -1182,7 +1204,7 @@ export default function SocialHubPage() {
                   className="btn btn-primary btn-sm"
                   onClick={() => setActiveTab("generate")}
                 >
-                  <Sparkles size={14} /> {t ? "Generate New" : "Neu generieren"}
+                  <Sparkles size={14} /> {t({ de: "Neu generieren", en: "Generate New", tr: "Yeni Oluştur" })}
                 </button>
               </div>
 
@@ -1207,12 +1229,16 @@ export default function SocialHubPage() {
                     }}
                   >
                     {searchQuery || statusFilter !== "all"
-                      ? t
-                        ? "No posts match your filter."
-                        : "Keine Posts entsprechen deinem Filter."
-                      : t
-                        ? "No posts yet. Generate your first AI post!"
-                        : "Noch keine Posts. Generiere deinen ersten KI-Post!"}
+                      ? t({
+                          de: "Keine Posts entsprechen deinem Filter.",
+                          en: "No posts match your filter.",
+                          tr: "Filtrenizle eşleşen gönderi yok.",
+                        })
+                      : t({
+                          de: "Noch keine Posts. Generiere deinen ersten KI-Post!",
+                          en: "No posts yet. Generate your first AI post!",
+                          tr: "Henüz gönderi yok. İlk yapay zeka gönderini oluştur!",
+                        })}
                   </p>
                 </div>
               ) : (
@@ -1308,7 +1334,7 @@ export default function SocialHubPage() {
                                   whiteSpace: "nowrap",
                                 }}
                               >
-                                {post.topic || "Ohne Titel"}
+                                {post.topic || t({ de: "Ohne Titel", en: "Untitled", tr: "Başlıksız" })}
                               </div>
                               <span
                                 style={{
@@ -1322,7 +1348,7 @@ export default function SocialHubPage() {
                                   flexShrink: 0,
                                 }}
                               >
-                                {badge.label}
+                                {t(badge.label)}
                               </span>
                             </div>
 
@@ -1433,7 +1459,7 @@ export default function SocialHubPage() {
                               ) : (
                                 <ThumbsUp size={12} />
                               )}
-                              {t ? "Approve" : "Freigeben"}
+                              {t({ de: "Freigeben", en: "Approve", tr: "Onayla" })}
                             </button>
                             <button
                               className="btn btn-sm"
@@ -1445,14 +1471,14 @@ export default function SocialHubPage() {
                               onClick={() => handleReject(post.id)}
                             >
                               <ThumbsDown size={12} />
-                              {t ? "Reject" : "Ablehnen"}
+                              {t({ de: "Ablehnen", en: "Reject", tr: "Reddet" })}
                             </button>
                             <button
                               className="btn btn-ghost btn-sm"
                               style={{ marginLeft: "auto" }}
                               onClick={() => openPostDetail(post.id)}
                             >
-                              <Eye size={12} /> {t ? "Preview" : "Vorschau"}
+                              <Eye size={12} /> {t({ de: "Vorschau", en: "Preview", tr: "Önizleme" })}
                             </button>
                           </div>
                         )}
@@ -1479,7 +1505,7 @@ export default function SocialHubPage() {
                               ) : (
                                 <PlayCircle size={12} />
                               )}
-                              {t ? "Publish Now" : "Jetzt veröffentlichen"}
+                              {t({ de: "Jetzt veröffentlichen", en: "Publish Now", tr: "Şimdi Yayınla" })}
                             </button>
                           </div>
                         )}
@@ -1503,9 +1529,9 @@ export default function SocialHubPage() {
               {/* Mode Switcher */}
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 {([
-                  { key: "variants" as const, icon: Layers, label: t ? "Multi-Variant" : "Multi-Variante", labelSub: t ? "3 tone options" : "3 Tonalitäten" },
-                  { key: "series" as const, icon: Target, label: t ? "Content Series" : "Content-Serie", labelSub: t ? "5 angle ideas" : "5 Blickwinkel" },
-                  { key: "quick" as const, icon: Zap, label: t ? "Quick Generate" : "Schnell generieren", labelSub: t ? "single post" : "einzelner Post" },
+                  { key: "variants" as const, icon: Layers, label: t({ de: "Multi-Variante", en: "Multi-Variant", tr: "Çoklu Varyant" }), labelSub: t({ de: "3 Tonalitäten", en: "3 tone options", tr: "3 ton seçeneği" }) },
+                  { key: "series" as const, icon: Target, label: t({ de: "Content-Serie", en: "Content Series", tr: "İçerik Serisi" }), labelSub: t({ de: "5 Blickwinkel", en: "5 angle ideas", tr: "5 bakış açısı" }) },
+                  { key: "quick" as const, icon: Zap, label: t({ de: "Schnell generieren", en: "Quick Generate", tr: "Hızlı Oluştur" }), labelSub: t({ de: "einzelner Post", en: "single post", tr: "tek gönderi" }) },
                 ]).map((mode) => (
                   <button
                     key={mode.key}
@@ -1543,10 +1569,10 @@ export default function SocialHubPage() {
                       onClick={() => setSeriesIdeaForVariants(null)}
                       type="button"
                     >
-                      ← {t ? "Back to Series" : "Zurück zur Serie"}
+                      ← {t({ de: "Zurück zur Serie", en: "Back to Series", tr: "Seriye Dön" })}
                     </button>
                     <span style={{ fontSize: "var(--font-size-sm)", color: "var(--text-tertiary)" }}>
-                      {t ? "Creating variants for:" : "Erstelle Varianten für:"} „{seriesIdeaForVariants.topic}"
+                      {t({ de: "Erstelle Varianten für:", en: "Creating variants for:", tr: "Varyantlar oluşturuluyor:" })} „{seriesIdeaForVariants.topic}"
                     </span>
                   </div>
                   <PostVariantPicker
@@ -1591,12 +1617,14 @@ export default function SocialHubPage() {
                       }}
                     >
                       <Sparkles size={18} style={{ color: "#8b5cf6" }} />
-                      {t ? "Generate AI Post" : "KI-Post generieren"}
+                      {t({ de: "KI-Post generieren", en: "Generate AI Post", tr: "Yapay Zeka Gönderisi Oluştur" })}
                     </div>
                     <div className="card-subtitle">
-                      {t
-                        ? "Enter a topic and select a platform. AI will generate text, image and hashtags."
-                        : "Gib ein Thema ein und wähle eine Plattform. Die KI generiert Text, Bild und Hashtags."}
+                      {t({
+                        de: "Gib ein Thema ein und wähle eine Plattform. Die KI generiert Text, Bild und Hashtags.",
+                        en: "Enter a topic and select a platform. AI will generate text, image and hashtags.",
+                        tr: "Bir konu girin ve platform seçin. Yapay zeka metin, görsel ve hashtag oluşturacak.",
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1620,16 +1648,14 @@ export default function SocialHubPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {t ? "Topic" : "Thema"}
+                      {t({ de: "Thema", en: "Topic", tr: "Konu" })}
                     </label>
                     <textarea
                       className="form-textarea"
                       value={genTopic}
                       onChange={(e) => setGenTopic(e.target.value)}
                       placeholder={
-                        t
-                          ? 'e.g. "5 tips for better team communication in remote work"'
-                          : 'z.B. „5 Tipps für bessere Team-Kommunikation im Homeoffice"'
+                        t({ de: 'z.B. „5 Tipps für bessere Team-Kommunikation im Homeoffice"', en: 'e.g. "5 tips for better team communication in remote work"', tr: 'ör. "Uzaktan çalışmada daha iyi ekip iletişimi için 5 ipucu"' })
                       }
                       style={{
                         minHeight: "80px",
@@ -1651,7 +1677,7 @@ export default function SocialHubPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {t ? "Platform" : "Plattform"}
+                      {t({ de: "Plattform", en: "Platform", tr: "Platform" })}
                     </label>
                     <div style={{ display: "flex", gap: "8px" }}>
                       {(["linkedin", "instagram"] as const).map((p) => (
@@ -1688,12 +1714,12 @@ export default function SocialHubPage() {
                     {generating ? (
                       <>
                         <Loader2 size={16} className="spin" />{" "}
-                        {t ? "Generating..." : "Wird generiert..."}
+                        {t({ de: "Wird generiert...", en: "Generating...", tr: "Oluşturuluyor..." })}
                       </>
                     ) : (
                       <>
                         <Sparkles size={16} />{" "}
-                        {t ? "Generate Post" : "Post generieren"}
+                        {t({ de: "Post generieren", en: "Generate Post", tr: "Gönderi Oluştur" })}
                       </>
                     )}
                   </button>
@@ -1725,9 +1751,11 @@ export default function SocialHubPage() {
                           fontSize: "var(--font-size-sm)",
                         }}
                       >
-                        {t
-                          ? "Post Generated Successfully!"
-                          : "Post erfolgreich generiert!"}
+                        {t({
+                          de: "Post erfolgreich generiert!",
+                          en: "Post Generated Successfully!",
+                          tr: "Gönderi Başarıyla Oluşturuldu!",
+                        })}
                       </div>
                       <div
                         style={{
@@ -1735,9 +1763,11 @@ export default function SocialHubPage() {
                           color: "var(--text-tertiary)",
                         }}
                       >
-                        {t
-                          ? "The post is now a draft"
-                          : "Der Post ist jetzt ein Entwurf"}{" "}
+                        {t({
+                          de: "Der Post ist jetzt ein Entwurf",
+                          en: "The post is now a draft",
+                          tr: "Gönderi şu anda bir taslak",
+                        })}{" "}
                         · {genResult.platform}
                       </div>
                     </div>
@@ -1747,7 +1777,7 @@ export default function SocialHubPage() {
                       className="btn btn-primary btn-sm"
                       onClick={() => openPostDetail(genResult.post_id)}
                     >
-                      <Eye size={14} /> {t ? "View Post" : "Post ansehen"}
+                      <Eye size={14} /> {t({ de: "Post ansehen", en: "View Post", tr: "Gönderiyi Gör" })}
                     </button>
                     <button
                       className="btn btn-ghost btn-sm"
@@ -1756,7 +1786,7 @@ export default function SocialHubPage() {
                         setStatusFilter("draft");
                       }}
                     >
-                      {t ? "Go to Posts" : "Zu den Posts"} →
+                      {t({ de: "Zu den Posts", en: "Go to Posts", tr: "Gönderilere Git" })} →
                     </button>
                   </div>
                 </div>
@@ -1775,14 +1805,18 @@ export default function SocialHubPage() {
                 <div className="card-header">
                   <div>
                     <div className="card-title">
-                      {t
-                        ? "Connected Social Accounts"
-                        : "Verbundene Social-Accounts"}
+                      {t({
+                        de: "Verbundene Social-Accounts",
+                        en: "Connected Social Accounts",
+                        tr: "Bağlı Sosyal Hesaplar",
+                      })}
                     </div>
                     <div className="card-subtitle">
-                      {t
-                        ? "Manage your LinkedIn and Instagram connections"
-                        : "Verwalte deine LinkedIn- und Instagram-Verbindungen"}
+                      {t({
+                        de: "Verwalte deine LinkedIn- und Instagram-Verbindungen",
+                        en: "Manage your LinkedIn and Instagram connections",
+                        tr: "LinkedIn ve Instagram bağlantılarınızı yönetin",
+                      })}
                     </div>
                   </div>
                   <a
@@ -1791,7 +1825,7 @@ export default function SocialHubPage() {
                     rel="noopener noreferrer"
                     className="btn btn-primary btn-sm"
                   >
-                    <Link2 size={14} /> {t ? "Connect New" : "Neu verbinden"}
+                    <Link2 size={14} /> {t({ de: "Neu verbinden", en: "Connect New", tr: "Yeni Bağla" })}
                   </a>
                 </div>
 
@@ -1813,9 +1847,11 @@ export default function SocialHubPage() {
                         marginBottom: "16px",
                       }}
                     >
-                      {t
-                        ? "No social accounts connected yet. Connect your LinkedIn or Instagram account to start publishing."
-                        : "Noch keine Social-Accounts verbunden. Verbinde deinen LinkedIn- oder Instagram-Account, um mit der Veröffentlichung zu beginnen."}
+                      {t({
+                        de: "Noch keine Social-Accounts verbunden. Verbinde deinen LinkedIn- oder Instagram-Account, um mit der Veröffentlichung zu beginnen.",
+                        en: "No social accounts connected yet. Connect your LinkedIn or Instagram account to start publishing.",
+                        tr: "Henüz sosyal hesap bağlanmadı. Yayınlamaya başlamak için LinkedIn veya Instagram hesabınızı bağlayın.",
+                      })}
                     </p>
                   </div>
                 ) : (
@@ -1885,7 +1921,7 @@ export default function SocialHubPage() {
                               </span>
                               {acc.created_at && (
                                 <span>
-                                  {t ? "Connected" : "Verbunden"}:{" "}
+                                  {t({ de: "Verbunden", en: "Connected", tr: "Bağlandı" })}:{" "}
                                   {new Date(acc.created_at).toLocaleDateString(
                                     "de-DE",
                                   )}
@@ -1893,7 +1929,7 @@ export default function SocialHubPage() {
                               )}
                               {acc.token_expires_at && (
                                 <span>
-                                  {t ? "Token expires" : "Token läuft ab"}:{" "}
+                                  {t({ de: "Token läuft ab", en: "Token expires", tr: "Token süresi" })}:{" "}
                                   {new Date(
                                     acc.token_expires_at,
                                   ).toLocaleDateString("de-DE")}
@@ -1924,7 +1960,7 @@ export default function SocialHubPage() {
                                 color: ts.color,
                               }}
                             >
-                              {ts.label}
+                              {t(ts.label)}
                             </span>
                           </div>
                         </div>
@@ -1965,9 +2001,11 @@ export default function SocialHubPage() {
                         marginBottom: "4px",
                       }}
                     >
-                      {t
-                        ? "Secure OAuth Connection"
-                        : "Sichere OAuth-Verbindung"}
+                      {t({
+                        de: "Sichere OAuth-Verbindung",
+                        en: "Secure OAuth Connection",
+                        tr: "Güvenli OAuth Bağlantısı",
+                      })}
                     </div>
                     <div
                       style={{
@@ -1976,9 +2014,11 @@ export default function SocialHubPage() {
                         lineHeight: 1.6,
                       }}
                     >
-                      {t
-                        ? "Account tokens are encrypted at rest. Social Hub uses official LinkedIn and Instagram APIs with proper OAuth 2.0 flows. Tokens are automatically refreshed before expiry."
-                        : "Account-Tokens werden verschlüsselt gespeichert. Der Social Hub nutzt offizielle LinkedIn- und Instagram-APIs mit korrekten OAuth-2.0-Flows. Tokens werden automatisch vor Ablauf erneuert."}
+                      {t({
+                        de: "Account-Tokens werden verschlüsselt gespeichert. Der Social Hub nutzt offizielle LinkedIn- und Instagram-APIs mit korrekten OAuth-2.0-Flows. Tokens werden automatisch vor Ablauf erneuert.",
+                        en: "Account tokens are encrypted at rest. Social Hub uses official LinkedIn and Instagram APIs with proper OAuth 2.0 flows. Tokens are automatically refreshed before expiry.",
+                        tr: "Hesap tokenları şifrelenmiş olarak saklanır. Social Hub, uygun OAuth 2.0 akışlarıyla resmi LinkedIn ve Instagram API'lerini kullanır. Tokenlar süresi dolmadan otomatik olarak yenilenir.",
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2052,7 +2092,7 @@ export default function SocialHubPage() {
                         size={18}
                         style={{ color: "var(--color-primary)" }}
                       />
-                      Post-Details
+                      {t({ de: "Post-Details", en: "Post Details", tr: "Gönderi Detayları" })}
                     </div>
                     <div style={{ display: "flex", gap: "8px" }}>
                       {selectedPost.platform_post_url && (
@@ -2063,7 +2103,7 @@ export default function SocialHubPage() {
                           className="btn btn-ghost btn-sm"
                         >
                           <ExternalLink size={14} />{" "}
-                          {t ? "View Live" : "Live ansehen"}
+                          {t({ de: "Live ansehen", en: "View Live", tr: "Canlı Gör" })}
                         </a>
                       )}
                       <button
@@ -2110,12 +2150,12 @@ export default function SocialHubPage() {
                           ).bg,
                         }}
                       >
-                        {
+                        {t(
                           (
                             STATUS_BADGE[selectedPost.status] ||
                             STATUS_BADGE.draft
                           ).label
-                        }
+                        )}
                       </span>
                       {selectedPost.platform && (
                         <span
@@ -2154,7 +2194,7 @@ export default function SocialHubPage() {
                         marginBottom: "16px",
                       }}
                     >
-                      {selectedPost.topic || "Ohne Titel"}
+                      {selectedPost.topic || t({ de: "Ohne Titel", en: "Untitled", tr: "Başlıksız" })}
                     </h3>
 
                     {/* Platform Native Preview */}
@@ -2181,11 +2221,11 @@ export default function SocialHubPage() {
                           }}
                         >
                           <Eye size={12} />
-                          {t ? "Platform Preview" : "Plattform-Vorschau"}
+                          {t({ de: "Plattform-Vorschau", en: "Platform Preview", tr: "Platform Önizleme" })}
                         </div>
                         {selectedPost.platform === "linkedin" ? (
                           <LinkedInPreview
-                            authorName={activeCompany?.name || "Ihr Unternehmen"}
+                            authorName={activeCompany?.name || t({ de: "Ihr Unternehmen", en: "Your Company", tr: "Şirketiniz" })}
                             postText={selectedPost.post_text}
                             imageUrl={selectedPost.post_image_url}
                             hashtags={selectedPost.hashtags}
@@ -2194,7 +2234,7 @@ export default function SocialHubPage() {
                           <InstagramPreview
                             authorName={
                               activeCompany?.name?.toLowerCase().replace(/\s/g, "_") ||
-                              "ihr_unternehmen"
+                              t({ de: "ihr_unternehmen", en: "your_company", tr: "sirketiniz" })
                             }
                             postText={selectedPost.post_text}
                             imageUrl={selectedPost.post_image_url}
@@ -2244,7 +2284,7 @@ export default function SocialHubPage() {
                           textTransform: "uppercase",
                         }}
                       >
-                        Post-Text
+                        {t({ de: "Post-Text", en: "Post Text", tr: "Gönderi Metni" })}
                       </div>
                       <div
                         style={{
@@ -2276,9 +2316,11 @@ export default function SocialHubPage() {
                             textTransform: "uppercase",
                           }}
                         >
-                          {t
-                            ? "Retry and Improve"
-                            : "Neu generieren und verbessern"}
+                          {t({
+                            de: "Neu generieren und verbessern",
+                            en: "Retry and Improve",
+                            tr: "Yeniden Oluştur ve İyileştir",
+                          })}
                         </div>
                         <textarea
                           className="form-textarea"
@@ -2287,9 +2329,11 @@ export default function SocialHubPage() {
                             setRegenerateInstruction(e.target.value)
                           }
                           placeholder={
-                            t
-                              ? "e.g. Make it sharper, more concrete, and more opinionated for LinkedIn."
-                              : "z.B. Mach den Text prägnanter, konkreter und pointierter für LinkedIn."
+                            t({
+                              de: "z.B. Mach den Text prägnanter, konkreter und pointierter für LinkedIn.",
+                              en: "e.g. Make it sharper, more concrete, and more opinionated for LinkedIn.",
+                              tr: "ör. LinkedIn için daha keskin, somut ve fikirli yap.",
+                            })
                           }
                           style={{ minHeight: "72px", marginBottom: "10px" }}
                         />
@@ -2315,7 +2359,7 @@ export default function SocialHubPage() {
                             ) : (
                               <RefreshCw size={14} />
                             )}
-                            {t ? "Regenerate Text" : "Text neu generieren"}
+                            {t({ de: "Text neu generieren", en: "Regenerate Text", tr: "Metni Yeniden Oluştur" })}
                           </button>
                           <button
                             className="btn btn-ghost btn-sm"
@@ -2331,7 +2375,7 @@ export default function SocialHubPage() {
                             ) : (
                               <ImageIcon size={14} />
                             )}
-                            {t ? "Regenerate Image" : "Bild neu generieren"}
+                            {t({ de: "Bild neu generieren", en: "Regenerate Image", tr: "Görseli Yeniden Oluştur" })}
                           </button>
                         </div>
                       </div>
@@ -2450,7 +2494,7 @@ export default function SocialHubPage() {
                           textTransform: "uppercase",
                         }}
                       >
-                        {t ? "Metadata" : "Metadaten"}
+                        {t({ de: "Metadaten", en: "Metadata", tr: "Meta Veriler" })}
                       </div>
                       <div
                         style={{
@@ -2461,7 +2505,7 @@ export default function SocialHubPage() {
                         }}
                       >
                         <div style={{ color: "var(--text-tertiary)" }}>
-                          {t ? "Created" : "Erstellt"}:
+                          {t({ de: "Erstellt", en: "Created", tr: "Oluşturuldu" })}:
                         </div>
                         <div>
                           {selectedPost.created_at
@@ -2474,7 +2518,7 @@ export default function SocialHubPage() {
                         {selectedPost.scheduled_at && (
                           <>
                             <div style={{ color: "var(--text-tertiary)" }}>
-                              {t ? "Scheduled" : "Geplant"}:
+                              {t({ de: "Geplant", en: "Scheduled", tr: "Planlandı" })}:
                             </div>
                             <div>
                               {new Date(
@@ -2486,7 +2530,7 @@ export default function SocialHubPage() {
                         {selectedPost.approved_at && (
                           <>
                             <div style={{ color: "var(--text-tertiary)" }}>
-                              {t ? "Approved" : "Freigegeben"}:
+                              {t({ de: "Freigegeben", en: "Approved", tr: "Onaylandı" })}:
                             </div>
                             <div>
                               {new Date(
@@ -2498,7 +2542,7 @@ export default function SocialHubPage() {
                         {selectedPost.published_at && (
                           <>
                             <div style={{ color: "var(--text-tertiary)" }}>
-                              {t ? "Published" : "Veröffentlicht"}:
+                              {t({ de: "Veröffentlicht", en: "Published", tr: "Yayınlandı" })}:
                             </div>
                             <div>
                               {new Date(
@@ -2510,7 +2554,7 @@ export default function SocialHubPage() {
                         {selectedPost.notes && (
                           <>
                             <div style={{ color: "var(--text-tertiary)" }}>
-                              {t ? "Notes" : "Notizen"}:
+                              {t({ de: "Notizen", en: "Notes", tr: "Notlar" })}:
                             </div>
                             <div style={{ whiteSpace: "pre-wrap" }}>
                               {selectedPost.notes}
@@ -2542,7 +2586,7 @@ export default function SocialHubPage() {
                           disabled={actionLoading === selectedPost.id}
                           onClick={() => handleReject(selectedPost.id)}
                         >
-                          <ThumbsDown size={14} /> {t ? "Reject" : "Ablehnen"}
+                          <ThumbsDown size={14} /> {t({ de: "Ablehnen", en: "Reject", tr: "Reddet" })}
                         </button>
                         <button
                           className="btn btn-primary btn-sm"
@@ -2554,7 +2598,7 @@ export default function SocialHubPage() {
                           ) : (
                             <ThumbsUp size={14} />
                           )}
-                          {t ? "Approve" : "Freigeben"}
+                          {t({ de: "Freigeben", en: "Approve", tr: "Onayla" })}
                         </button>
                       </>
                     )}
@@ -2569,7 +2613,7 @@ export default function SocialHubPage() {
                         ) : (
                           <ThumbsUp size={14} />
                         )}
-                        {t ? "Re-approve" : "Erneut freigeben"}
+                        {t({ de: "Erneut freigeben", en: "Re-approve", tr: "Tekrar Onayla" })}
                       </button>
                     )}
                     {selectedPost.status === "approved" && (
@@ -2583,7 +2627,7 @@ export default function SocialHubPage() {
                         ) : (
                           <PlayCircle size={14} />
                         )}
-                        {t ? "Publish Now" : "Jetzt veröffentlichen"}
+                        {t({ de: "Jetzt veröffentlichen", en: "Publish Now", tr: "Şimdi Yayınla" })}
                       </button>
                     )}
                   </div>

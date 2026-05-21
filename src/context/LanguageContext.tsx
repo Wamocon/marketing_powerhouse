@@ -1,9 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
-export type AppLanguage = 'de' | 'en';
+export type AppLanguage = 'de' | 'en' | 'tr';
+
+/** Shorthand translation record - every key must provide all three languages. */
+export type Translations = Record<AppLanguage, string>;
 
 const ANON_LANGUAGE_KEY = 'momentum_language_anon';
 const USER_LANGUAGE_KEY_PREFIX = 'momentum_language_user';
@@ -11,7 +14,7 @@ const USER_LANGUAGE_KEY_PREFIX = 'momentum_language_user';
 const FALLBACK_LANGUAGE: AppLanguage = 'de';
 
 function isAppLanguage(value: unknown): value is AppLanguage {
-    return value === 'de' || value === 'en';
+    return value === 'de' || value === 'en' || value === 'tr';
 }
 
 function readLanguageFromStorage(key: string): AppLanguage | null {
@@ -27,6 +30,8 @@ interface LanguageContextValue {
     language: AppLanguage;
     locale: string;
     setLanguage: (next: AppLanguage) => void;
+    /** Lookup helper: `t({ de: '...', en: '...', tr: '...' })` */
+    t: (translations: Translations) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -75,10 +80,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const locale = useMemo(() => (language === 'en' ? 'en-US' : 'de-DE'), [language]);
+    const locale = useMemo(() => {
+        if (language === 'en') return 'en-US';
+        if (language === 'tr') return 'tr-TR';
+        return 'de-DE';
+    }, [language]);
+
+    const t = useCallback(
+        (translations: Translations) => translations[language],
+        [language],
+    );
 
     return (
-        <LanguageContext.Provider value={{ language, locale, setLanguage }}>
+        <LanguageContext.Provider value={{ language, locale, setLanguage, t }}>
             {children}
         </LanguageContext.Provider>
     );

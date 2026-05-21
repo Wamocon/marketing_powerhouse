@@ -82,7 +82,7 @@ export default function TaskDetailModal({
     customerJourneys,
   } = useData();
   const { knowledgeDocuments } = usePublishing();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const companyPath = useProjectPath();
   const [isEditing, setIsEditing] = useState(false);
@@ -188,7 +188,6 @@ export default function TaskDetailModal({
   const [linkedSocialPosts, setLinkedSocialPosts] = useState<ScheduledPost[]>(
     [],
   );
-  const isGerman = language === "de";
   const linkedContents = contents.filter(
     (c) => c.taskIds && c.taskIds.includes(task.id),
   );
@@ -213,29 +212,37 @@ export default function TaskDetailModal({
       normalized.includes("available on pro and ultimate") ||
       normalized.includes("upgrade to pro")
     ) {
-      return isGerman
-        ? "Der Social Hub ist in deinem aktuellen Plan noch gesperrt. Upgrade auf Pro oder Ultimate, um Social Posts direkt aus Aufgaben zu erzeugen."
-        : "Social Hub is locked on your current plan. Upgrade to Pro or Ultimate to generate social posts directly from tasks.";
+      return t({
+        de: "Der Social Hub ist in deinem aktuellen Plan noch gesperrt. Upgrade auf Pro oder Ultimate, um Social Posts direkt aus Aufgaben zu erzeugen.",
+        en: "Social Hub is locked on your current plan. Upgrade to Pro or Ultimate to generate social posts directly from tasks.",
+        tr: "Social Hub mevcut planınızda kilitli. Görevlerden doğrudan sosyal paylaşım oluşturmak için Pro veya Ultimate'e yükseltin.",
+      });
     }
     if (
       normalized.includes("authentication required") ||
       normalized.includes("access denied")
     ) {
-      return isGerman
-        ? "Die Verbindung zum Social Hub konnte nicht verifiziert werden. Bitte lade die Seite neu und versuche es erneut."
-        : "The Social Hub session could not be verified. Refresh the page and try again.";
+      return t({
+        de: "Die Verbindung zum Social Hub konnte nicht verifiziert werden. Bitte lade die Seite neu und versuche es erneut.",
+        en: "The Social Hub session could not be verified. Refresh the page and try again.",
+        tr: "Social Hub oturumu doğrulanamadı. Sayfayı yenileyip tekrar deneyin.",
+      });
     }
     if (
       normalized.includes("temporarily unavailable") ||
       normalized.includes("draft generation is temporarily unavailable")
     ) {
-      return isGerman
-        ? "Der Social Hub ist momentan ausgelastet. Bitte versuche es in einem Moment erneut."
-        : "The Social Hub is temporarily busy. Please try again in a moment.";
+      return t({
+        de: "Der Social Hub ist momentan ausgelastet. Bitte versuche es in einem Moment erneut.",
+        en: "The Social Hub is temporarily busy. Please try again in a moment.",
+        tr: "Social Hub şu anda meşgul. Lütfen bir süre sonra tekrar deneyin.",
+      });
     }
-    return isGerman
-      ? "Der Beitrag konnte gerade nicht generiert werden. Bitte prüfe die Social-Hub-Konfiguration und versuche es erneut."
-      : "The post could not be generated right now. Check the Social Hub setup and try again.";
+    return t({
+      de: "Der Beitrag konnte gerade nicht generiert werden. Bitte prüfe die Social-Hub-Konfiguration und versuche es erneut.",
+      en: "The post could not be generated right now. Check the Social Hub setup and try again.",
+      tr: "Gönderi şu anda oluşturulamadı. Social Hub yapılandırmasını kontrol edip tekrar deneyin.",
+    });
   };
 
   const handleGenerateSocialPost = async () => {
@@ -275,7 +282,7 @@ export default function TaskDetailModal({
         brandDonts: positioning.donts ?? [],
         keywords: (companyKeywords ?? []).map((keyword) => keyword.term),
         journeyPhase: touchpoint?.journeyPhase || "",
-        language: isGerman ? "de" : "en",
+        language: language === "en" ? "en" : language === "tr" ? "tr" : "de",
       });
 
       setSocialGenResult({
@@ -833,7 +840,7 @@ export default function TaskDetailModal({
                     fontSize: "0.6rem",
                   }}
                 >
-                  {isGerman ? "Aufgabe" : "Task"}
+                  {t({ de: 'Aufgabe', en: 'Task', tr: 'Görev' })}
                 </span>
                 <span>→</span>
                 <span
@@ -878,9 +885,7 @@ export default function TaskDetailModal({
                         fontSize: "var(--font-size-sm)",
                       }}
                     >
-                      {isGerman
-                        ? "Post erfolgreich generiert!"
-                        : "Post generated successfully!"}
+                      {t({ de: 'Post erfolgreich generiert!', en: 'Post generated successfully!', tr: 'Gönderi başarıyla oluşturuldu!' })}
                     </div>
                     <div
                       style={{
@@ -888,9 +893,11 @@ export default function TaskDetailModal({
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman
-                        ? `Entwurf für ${socialGenResult.platform} erstellt – bearbeite und veröffentliche ihn im Social Hub.`
-                        : `Draft for ${socialGenResult.platform} created – edit and publish it in Social Hub.`}
+                      {t({
+                        de: `Entwurf für ${socialGenResult.platform} erstellt – bearbeite und veröffentliche ihn im Social Hub.`,
+                        en: `Draft for ${socialGenResult.platform} created – edit and publish it in Social Hub.`,
+                        tr: `${socialGenResult.platform} için taslak oluşturuldu – Social Hub'da düzenleyip yayınlayın.`,
+                      })}
                     </div>
                   </div>
                   <Link
@@ -904,7 +911,7 @@ export default function TaskDetailModal({
                     }}
                   >
                     <Eye size={14} />{" "}
-                    {isGerman ? "Im Social Hub ansehen" : "View in Social Hub"}
+                    {t({ de: 'Im Social Hub ansehen', en: 'View in Social Hub', tr: 'Social Hub\'da görüntüle' })}
                   </Link>
                   <button
                     className="btn btn-ghost btn-sm"
@@ -916,9 +923,7 @@ export default function TaskDetailModal({
                     ) : (
                       <Sparkles size={14} />
                     )}
-                    {isGerman
-                      ? "Neuen Entwurf generieren"
-                      : "Generate new draft"}
+                    {t({ de: 'Neuen Entwurf generieren', en: 'Generate new draft', tr: 'Yeni taslak oluştur' })}
                   </button>
                 </div>
               ) : socialGenError ? (
@@ -937,9 +942,7 @@ export default function TaskDetailModal({
                         color: "#ef4444",
                       }}
                     >
-                      {isGerman
-                        ? "Generierung fehlgeschlagen"
-                        : "Generation failed"}
+                      {t({ de: 'Generierung fehlgeschlagen', en: 'Generation failed', tr: 'Oluşturma başarısız' })}
                     </div>
                     <div
                       style={{
@@ -955,7 +958,7 @@ export default function TaskDetailModal({
                     onClick={handleGenerateSocialPost}
                     disabled={socialGenerating}
                   >
-                    {isGerman ? "Erneut versuchen" : "Try again"}
+                    {t({ de: 'Erneut versuchen', en: 'Try again', tr: 'Tekrar dene' })}
                   </button>
                 </div>
               ) : (
@@ -987,15 +990,17 @@ export default function TaskDetailModal({
                         margin: 0,
                       }}
                     >
-                      {isGerman
-                        ? task.status === "approved" ||
-                          task.status === "scheduled"
-                          ? `Diesen ${task.type} jetzt über den Social Hub auf ${task.platform} veröffentlichen.`
-                          : `Erstelle einen KI-generierten ${task.platform}-Post basierend auf dieser Aufgabe.`
-                        : task.status === "approved" ||
-                            task.status === "scheduled"
-                          ? `Publish this ${task.type} on ${task.platform} via Social Hub.`
-                          : `Generate an AI-powered ${task.platform} post based on this task.`}
+                      {task.status === "approved" || task.status === "scheduled"
+                        ? t({
+                            de: `Diesen ${task.type} jetzt über den Social Hub auf ${task.platform} veröffentlichen.`,
+                            en: `Publish this ${task.type} on ${task.platform} via Social Hub.`,
+                            tr: `Bu ${task.type} görevini Social Hub üzerinden ${task.platform}'da yayınlayın.`,
+                          })
+                        : t({
+                            de: `Erstelle einen KI-generierten ${task.platform}-Post basierend auf dieser Aufgabe.`,
+                            en: `Generate an AI-powered ${task.platform} post based on this task.`,
+                            tr: `Bu göreve dayalı yapay zeka destekli bir ${task.platform} gönderisi oluşturun.`,
+                          })}
                     </p>
                   </div>
                   <button
@@ -1015,12 +1020,8 @@ export default function TaskDetailModal({
                       <Sparkles size={14} />
                     )}
                     {socialGenerating
-                      ? isGerman
-                        ? "Wird generiert…"
-                        : "Generating…"
-                      : isGerman
-                        ? "Post generieren"
-                        : "Generate post"}
+                      ? t({ de: "Wird generiert…", en: "Generating…", tr: "Oluşturuluyor…" })
+                      : t({ de: "Post generieren", en: "Generate post", tr: "Gönderi oluştur" })}
                   </button>
                 </div>
               )}
@@ -1049,9 +1050,7 @@ export default function TaskDetailModal({
                   }}
                 >
                   <Radio size={14} style={{ color: "#8b5cf6" }} />
-                  {isGerman
-                    ? "Verknüpfte Social Hub Posts"
-                    : "Linked Social Hub Posts"}{" "}
+                  {t({ de: "Verknüpfte Social Hub Posts", en: "Linked Social Hub Posts", tr: "Bağlı Social Hub Gönderileri" })}{" "}
                   ({linkedSocialPosts.length})
                 </h4>
                 {linkedSocialPosts.length > 0 ? (
@@ -1108,18 +1107,12 @@ export default function TaskDetailModal({
                               }}
                             >
                               {sp.status === "published"
-                                ? isGerman
-                                  ? "Veröffentlicht"
-                                  : "Published"
+                                ? t({ de: "Veröffentlicht", en: "Published", tr: "Yayınlandı" })
                                 : sp.status === "approved"
-                                  ? isGerman
-                                    ? "Freigegeben"
-                                    : "Approved"
+                                  ? t({ de: "Freigegeben", en: "Approved", tr: "Onaylandı" })
                                   : sp.status === "draft" ||
                                       sp.status === "generated"
-                                    ? isGerman
-                                      ? "Entwurf"
-                                      : "Draft"
+                                    ? t({ de: "Entwurf", en: "Draft", tr: "Taslak" })
                                     : sp.status}
                             </span>
                             {sp.published_at && (
@@ -1127,7 +1120,7 @@ export default function TaskDetailModal({
                                 <span>·</span>
                                 <span>
                                   {new Date(sp.published_at).toLocaleDateString(
-                                    isGerman ? "de-DE" : "en-US",
+                                    language === "en" ? "en-US" : language === "tr" ? "tr-TR" : "de-DE",
                                   )}
                                 </span>
                               </>
@@ -1144,7 +1137,7 @@ export default function TaskDetailModal({
                             gap: "4px",
                           }}
                         >
-                          <Eye size={12} /> {isGerman ? "Ansehen" : "View"}
+                          <Eye size={12} /> {t({ de: "Ansehen", en: "View", tr: "Görüntüle" })}
                         </Link>
                       </div>
                     ))}
@@ -1160,9 +1153,11 @@ export default function TaskDetailModal({
                       fontSize: "var(--font-size-sm)",
                     }}
                   >
-                    {isGerman
-                      ? 'Noch keine Social Hub Posts mit dieser Aufgabe verknüpft. Nutze "Post generieren" oben, um einen Entwurf zu erstellen.'
-                      : 'No Social Hub posts linked to this task yet. Use "Generate post" above to create a draft.'}
+                    {t({
+                      de: 'Noch keine Social Hub Posts mit dieser Aufgabe verknüpft. Nutze "Post generieren" oben, um einen Entwurf zu erstellen.',
+                      en: 'No Social Hub posts linked to this task yet. Use "Generate post" above to create a draft.',
+                      tr: 'Bu görevle henüz Social Hub gönderisi bağlanmamış. Taslak oluşturmak için yukarıdaki "Gönderi oluştur" butonunu kullanın.',
+                    })}
                   </div>
                 )}
               </div>
@@ -1287,7 +1282,7 @@ export default function TaskDetailModal({
                     }}
                   >
                     <Radio size={14} />{" "}
-                    {isGerman ? "Social Hub öffnen" : "Open Social Hub"}
+                    {t({ de: 'Social Hub öffnen', en: 'Open Social Hub', tr: 'Social Hub\'u aç' })}
                     {linkedSocialPosts.length > 0 && (
                       <span
                         style={{
@@ -1317,7 +1312,7 @@ export default function TaskDetailModal({
                   }}
                 >
                   <Sparkles size={14} />{" "}
-                  {isGerman ? "Auf Pro upgraden" : "Upgrade to Pro"}
+                  {t({ de: 'Auf Pro upgraden', en: 'Upgrade to Pro', tr: 'Pro\'ya yükselt' })}
                 </Link>
               )}
             </div>

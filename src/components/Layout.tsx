@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import SetupPromptModal from './SetupPromptModal';
 
 interface LayoutProps {
     children: ReactNode;
@@ -17,6 +18,7 @@ export default function Layout({ children, onLogout }: LayoutProps) {
                     {children}
                 </main>
             </div>
+            <SetupPromptModal />
         </div>
     );
 }

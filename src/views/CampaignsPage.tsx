@@ -10,18 +10,19 @@ import ImportExportPanel from '../components/ImportExportPanel';
 import { downloadCampaignExport } from '../lib/importExport';
 import type { CampaignExportData } from '../types/importExport';
 
-const statusConfig = {
-    active: { label: { de: 'Aktiv', en: 'Active' }, badge: 'badge-success' },
-    planned: { label: { de: 'Geplant', en: 'Planned' }, badge: 'badge-info' },
-    draft: { label: { de: 'Entwurf', en: 'Draft' }, badge: 'badge-warning' },
-    completed: { label: { de: 'Abgeschlossen', en: 'Completed' }, badge: 'badge-primary' },
-    paused: { label: { de: 'Pausiert', en: 'Paused' }, badge: 'badge-danger' },
+const statusConfig: Record<string, { label: { de: string; en: string; tr: string }; badge: string }> = {
+    active: { label: { de: 'Aktiv', en: 'Active', tr: 'Aktif' }, badge: 'badge-success' },
+    planned: { label: { de: 'Geplant', en: 'Planned', tr: 'Planlanmış' }, badge: 'badge-info' },
+    draft: { label: { de: 'Entwurf', en: 'Draft', tr: 'Taslak' }, badge: 'badge-warning' },
+    completed: { label: { de: 'Abgeschlossen', en: 'Completed', tr: 'Tamamlandı' }, badge: 'badge-primary' },
+    paused: { label: { de: 'Pausiert', en: 'Paused', tr: 'Duraklatıldı' }, badge: 'badge-danger' },
 };
 
 export default function CampaignsPage() {
     const router = useProjectRouter();
     const { can, isSuperAdmin, activeCompanyRole } = useAuth();
     const { language, locale } = useLanguage();
+    const t = (translations: { de: string; en: string; tr: string }) => translations[language];
     const { campaigns, users, addCampaign } = useData();
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -35,21 +36,21 @@ export default function CampaignsPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">{language === 'en' ? 'Campaigns' : 'Kampagnen'}</h1>
-                    <p className="page-subtitle">{campaigns.length} {language === 'en' ? 'campaigns total' : 'Kampagnen insgesamt'} - {campaigns.filter(c => c.status === 'active').length} {language === 'en' ? 'active' : 'aktiv'}</p>
+                    <h1 className="page-title">{t({ de: 'Kampagnen', en: 'Campaigns', tr: 'Kampanyalar' })}</h1>
+                    <p className="page-subtitle">{campaigns.length} {t({ de: 'Kampagnen insgesamt', en: 'campaigns total', tr: 'toplam kampanya' })} - {campaigns.filter(c => c.status === 'active').length} {t({ de: 'aktiv', en: 'active', tr: 'aktif' })}</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title={language === 'en' ? 'Campaign management' : 'Kampagnen-Management'}>
-                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'The command center for your key initiatives. Everything is organized by campaign.' : 'Die Kommandozentrale fuer all deine grossen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.'}</p>
+                    <PageHelp title={t({ de: 'Kampagnen-Management', en: 'Campaign management', tr: 'Kampanya yönetimi' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Die Kommandozentrale für all deine gro\u00dfen Initiativen. Alles ordnet sich bestimmten Kampagnen unter.', en: 'The command center for your key initiatives. Everything is organized by campaign.', tr: 'Temel girişimleriniz için komuta merkezi. Her şey kampanyalara göre düzenlenir.' })}</p>
                         <ul className="help-list">
-                            <li><strong>{language === 'en' ? 'Dashboard view' : 'Dashboard-Sicht'}:</strong> {language === 'en' ? 'Instant progress and budget utilization for running campaigns in card view.' : 'Sehe sofort den Fortschritt und die Budget-Auslastung laufender Kampagnen in Kachelansicht.'}</li>
-                            <li><strong>{language === 'en' ? 'Create campaigns' : 'Neue Kampagnen erstellen'}:</strong> {language === 'en' ? 'Define budget, timeline, keywords and target audiences.' : 'Vergib Budgets, eine Laufzeit (Start/Ende), Keywords und setze verbindlich Zielgruppen.'}</li>
+                            <li><strong>{t({ de: 'Dashboard-Sicht', en: 'Dashboard view', tr: 'Pano görünümü' })}:</strong> {t({ de: 'Sehe sofort den Fortschritt und die Budget-Auslastung laufender Kampagnen in Kachelansicht.', en: 'Instant progress and budget utilization for running campaigns in card view.', tr: 'Kart görünümünde devam eden kampanyaların ilerleme ve bütçe kullanımını anında görün.' })}</li>
+                            <li><strong>{t({ de: 'Neue Kampagnen erstellen', en: 'Create campaigns', tr: 'Kampanya olu\u015ftur' })}:</strong> {t({ de: 'Vergib Budgets, eine Laufzeit (Start/Ende), Keywords und setze verbindlich Zielgruppen.', en: 'Define budget, timeline, keywords and target audiences.', tr: 'Bütçe, zaman çizelgesi, anahtar kelimeler ve hedef kitleleri belirleyin.' })}</li>
                         </ul>
                     </PageHelp>
                     {can('canCreateCampaigns') && (
                         <button className="btn btn-primary" onClick={() => setShowNewCampaignModal(true)}>
                             <Plus size={16} />
-                            {language === 'en' ? 'New campaign' : 'Neue Kampagne'}
+                            {t({ de: 'Neue Kampagne', en: 'New campaign', tr: 'Yeni kampanya' })}
                         </button>
                     )}
                 </div>
@@ -63,7 +64,7 @@ export default function CampaignsPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder={language === 'en' ? 'Search campaigns...' : 'Kampagnen durchsuchen...'}
+                        placeholder={t({ de: 'Kampagnen durchsuchen...', en: 'Search campaigns...', tr: 'Kampanyalarda ara...' })}
                         style={{ paddingLeft: '36px', width: '100%' }}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -71,11 +72,11 @@ export default function CampaignsPage() {
                 </div>
                 <div className="tabs" style={{ marginBottom: 0, borderBottom: 'none', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
                     {[
-                        { key: 'all', label: language === 'en' ? 'All' : 'Alle' },
-                        { key: 'active', label: language === 'en' ? 'Active' : 'Aktiv' },
-                        { key: 'planned', label: language === 'en' ? 'Planned' : 'Geplant' },
-                        { key: 'draft', label: language === 'en' ? 'Draft' : 'Entwurf' },
-                        { key: 'completed', label: language === 'en' ? 'Completed' : 'Abgeschlossen' },
+                        { key: 'all', label: t({ de: 'Alle', en: 'All', tr: 'Tümü' }) },
+                        { key: 'active', label: t({ de: 'Aktiv', en: 'Active', tr: 'Aktif' }) },
+                        { key: 'planned', label: t({ de: 'Geplant', en: 'Planned', tr: 'Planlanmı\u015f' }) },
+                        { key: 'draft', label: t({ de: 'Entwurf', en: 'Draft', tr: 'Taslak' }) },
+                        { key: 'completed', label: t({ de: 'Abgeschlossen', en: 'Completed', tr: 'Tamamlandı' }) },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -124,7 +125,7 @@ export default function CampaignsPage() {
                             {/* Progress */}
                             <div style={{ marginBottom: '16px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                    <span>{language === 'en' ? 'Progress' : 'Fortschritt'}</span>
+                                    <span>{t({ de: 'Fortschritt', en: 'Progress', tr: 'İlerleme' })}</span>
                                     <span>{campaign.progress}%</span>
                                 </div>
                                 <div className="progress-bar">
@@ -156,7 +157,7 @@ export default function CampaignsPage() {
                                         background: 'rgba(16,185,129,0.15)',
                                         color: '#10b981',
                                     }}>
-                                        <Users size={10} /> {linkedAudienceCount} {language === 'en' ? `persona${linkedAudienceCount !== 1 ? 's' : ''}` : `Persona${linkedAudienceCount !== 1 ? 's' : ''}`}
+                                        <Users size={10} /> {linkedAudienceCount} {t({ de: `Persona${linkedAudienceCount !== 1 ? 's' : ''}`, en: `persona${linkedAudienceCount !== 1 ? 's' : ''}`, tr: `ki\u015fi` })}
                                     </span>
                                 )}
                                 {keywordCount > 0 && (
@@ -187,7 +188,7 @@ export default function CampaignsPage() {
                                 {teamCount > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <UsersRound size={12} style={{ color: '#0ea5e9' }} />
-                                        <span>{teamCount} {language === 'en' ? `member${teamCount !== 1 ? 's' : ''}` : `Mitglied${teamCount !== 1 ? 'er' : ''}`}</span>
+                                        <span>{teamCount} {t({ de: `Mitglied${teamCount !== 1 ? 'er' : ''}`, en: `member${teamCount !== 1 ? 's' : ''}`, tr: `üye` })}</span>
                                     </div>
                                 )}
                             </div>
@@ -216,7 +217,7 @@ export default function CampaignsPage() {
                                 borderTop: '1px solid var(--border-color)',
                                 fontSize: 'var(--font-size-sm)',
                             }}>
-                                <span style={{ color: 'var(--text-secondary)' }}>{language === 'en' ? 'Budget' : 'Budget'}</span>
+                                <span style={{ color: 'var(--text-secondary)' }}>{t({ de: 'Budget', en: 'Budget', tr: 'Bütçe' })}</span>
                                 <span style={{ fontWeight: 600 }}>
                                     €{campaign.spent.toLocaleString(locale)} <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>/ €{campaign.budget.toLocaleString(locale)}</span>
                                 </span>

@@ -2,6 +2,7 @@
 
 import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { CompanyProvider } from '@/context/CompanyContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { ContentProvider } from '@/context/ContentContext';
@@ -13,24 +14,26 @@ import type { ReactNode } from 'react';
 
 export default function Providers({ children }: { children: ReactNode }) {
     return (
-        <AuthProvider>
-            <LanguageProvider>
-                <CompanyProvider>
-                    <SubscriptionProvider>
-                        <NotificationProvider>
-                            <DataProvider>
-                                <ContentProvider>
-                                    <TaskProvider>
-                                        <PublishingProvider>
-                                            {children}
-                                        </PublishingProvider>
-                                    </TaskProvider>
-                                </ContentProvider>
-                            </DataProvider>
-                        </NotificationProvider>
-                    </SubscriptionProvider>
-                </CompanyProvider>
-            </LanguageProvider>
-        </AuthProvider>
+        <ThemeProvider>
+            <AuthProvider>
+                <LanguageProvider>
+                    <CompanyProvider>
+                        <SubscriptionProvider>
+                            <NotificationProvider>
+                                <DataProvider>
+                                    <ContentProvider>
+                                        <TaskProvider>
+                                            <PublishingProvider>
+                                                {children}
+                                            </PublishingProvider>
+                                        </TaskProvider>
+                                    </ContentProvider>
+                                </DataProvider>
+                            </NotificationProvider>
+                        </SubscriptionProvider>
+                    </CompanyProvider>
+                </LanguageProvider>
+            </AuthProvider>
+        </ThemeProvider>
     );
 }

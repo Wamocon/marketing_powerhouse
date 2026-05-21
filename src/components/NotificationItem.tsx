@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { AppNotification, NotificationType } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import type { AppLanguage } from '../context/LanguageContext';
 
 interface Props {
   notification: AppNotification;
@@ -38,22 +39,50 @@ const PRIORITY_CLASSES: Record<string, string> = {
   urgent: 'notification-item--urgent',
 };
 
-function timeAgo(dateStr: string, language: 'de' | 'en'): string {
+function timeAgo(dateStr: string, language: AppLanguage): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return language === 'en' ? 'just now' : 'gerade eben';
-  if (minutes < 60) return language === 'en' ? `${minutes}m ago` : `vor ${minutes} Min.`;
+  if (minutes < 1) {
+    const m: Record<AppLanguage, string> = { de: 'gerade eben', en: 'just now', tr: 'az \u00F6nce' };
+    return m[language];
+  }
+  if (minutes < 60) {
+    const m: Record<AppLanguage, string> = {
+      de: `vor ${minutes} Min.`,
+      en: `${minutes}m ago`,
+      tr: `${minutes} dakika \u00F6nce`,
+    };
+    return m[language];
+  }
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return language === 'en' ? `${hours}h ago` : `vor ${hours} Std.`;
+  if (hours < 24) {
+    const m: Record<AppLanguage, string> = {
+      de: `vor ${hours} Std.`,
+      en: `${hours}h ago`,
+      tr: `${hours} saat \u00F6nce`,
+    };
+    return m[language];
+  }
   const days = Math.floor(hours / 24);
-  if (days === 1) return language === 'en' ? 'yesterday' : 'gestern';
-  if (days < 7) return language === 'en' ? `${days}d ago` : `vor ${days} Tagen`;
-  return new Date(dateStr).toLocaleDateString(language === 'en' ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit' });
+  if (days === 1) {
+    const m: Record<AppLanguage, string> = { de: 'gestern', en: 'yesterday', tr: 'd\u00FCn' };
+    return m[language];
+  }
+  if (days < 7) {
+    const m: Record<AppLanguage, string> = {
+      de: `vor ${days} Tagen`,
+      en: `${days}d ago`,
+      tr: `${days} g\u00FCn \u00F6nce`,
+    };
+    return m[language];
+  }
+  const localeMap: Record<AppLanguage, string> = { de: 'de-DE', en: 'en-US', tr: 'tr-TR' };
+  return new Date(dateStr).toLocaleDateString(localeMap[language], { day: '2-digit', month: '2-digit' });
 }
 
 export default function NotificationItem({ notification, onMarkRead, onArchive, onNavigate }: Props) {
   const router = useProjectRouter();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { icon: Icon, color } = ICON_MAP[notification.type] ?? ICON_MAP.system_alert;
   const priorityClass = PRIORITY_CLASSES[notification.priority] ?? '';
 
@@ -93,7 +122,7 @@ export default function NotificationItem({ notification, onMarkRead, onArchive, 
       <button
         className="notification-item-dismiss"
         onClick={handleArchive}
-        title={language === 'en' ? 'Remove' : 'Entfernen'}
+        title={t({ de: 'Entfernen', en: 'Remove', tr: 'Kald\u0131r' })}
       >
         <X size={14} />
       </button>

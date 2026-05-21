@@ -6,11 +6,13 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import PageHelp from '../components/PageHelp';
 import { SectionHeader, Field, CommsContent } from '../components/PositioningComponents';
 
 export default function PositioningPage() {
     const { can } = useAuth();
+    const { t } = useLanguage();
     const router = useProjectRouter();
     const { positioning, companyKeywords, savePositioning, addKeyword, deleteKeyword } = useData();
     const [pos, setPos] = useState(positioning);
@@ -23,7 +25,7 @@ export default function PositioningPage() {
 
     useEffect(() => { if (positioning) setTimeout(() => setPos(positioning), 0); }, [positioning]);
 
-    if (!pos) return <div className="animate-in"><p>Lade Positionierung...</p></div>;
+    if (!pos) return <div className="animate-in"><p>{t({ de: 'Lade Positionierung...', en: 'Loading positioning...', tr: 'Konumlandırma yükleniyor...' })}</p></div>;
 
     const canEdit = can('canEditPositioning');
 
@@ -55,20 +57,28 @@ export default function PositioningPage() {
             {/* Page Header */}
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">Digitale Positionierung</h1>
+                    <h1 className="page-title">{t({ de: 'Digitale Positionierung', en: 'Digital Positioning', tr: 'Dijital Konumlandırma' })}</h1>
                     <p className="page-subtitle">
-                        Projektidentität, Markenwerte und Kommunikations-DNA — die Grundlage all eurer Kampagnen.
+                        {t({
+                            de: 'Projektidentität, Markenwerte und Kommunikations-DNA - die Grundlage all eurer Kampagnen.',
+                            en: 'Project identity, brand values and communication DNA - the foundation of all your campaigns.',
+                            tr: 'Proje kimliği, marka değerleri ve iletişim DNA\'sı - tüm kampanyalarınızın temeli.'
+                        })}
                     </p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title="Digitale Positionierung">
-                        <p style={{ marginBottom: '12px' }}>Dieses Modul ist das Gehirn eurer Marke. Es dient als "Single Source of Truth", an der sich alle Kampagnen, Creatives und KI-Assistenten messen lassen.</p>
+                    <PageHelp title={t({ de: 'Digitale Positionierung', en: 'Digital Positioning', tr: 'Dijital Konumlandırma' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({
+                            de: 'Dieses Modul ist das Gehirn eurer Marke. Es dient als "Single Source of Truth", an der sich alle Kampagnen, Creatives und KI-Assistenten messen lassen.',
+                            en: 'This module is the brain of your brand. It serves as the "Single Source of Truth" against which all campaigns, creatives and AI assistants are measured.',
+                            tr: 'Bu modül markanızın beynidir. Tüm kampanyaların, kreatif içeriklerin ve yapay zeka asistanlarının ölçüldüğü "Tek Doğru Kaynak" olarak hizmet eder.'
+                        })}</p>
                         <ul className="help-list">
-                            <li><strong>Projekt-DNA:</strong> Die harten Fakten zu Eurem Business.</li>
-                            <li><strong>Vision, Mission & Werte:</strong> Das "Warum". Dies gibt später allen Copywritern die Vorlage, wie der Benefit beim Kunden ankommen muss.</li>
-                            <li><strong>Tone of Voice:</strong> Diese Parameter (Dos & Don'ts) ziehen sich die angeschlossenen KI-Modelle tief in ihre Prompts. Definiere die Sprache hier sehr exakt.</li>
-                            <li><strong>Schlüsselbegriffe:</strong> Wenn es Wörter gibt, die ihr konsequent besetzen wollt (SEO relevant) kommen sie hier rein.</li>
-                            <li><strong>Admin Only:</strong> Die Pflege dieses Kernmoduls ist nur Administratoren mit der entsprechenden Berechtigung vorbehalten.</li>
+                            <li><strong>{t({ de: 'Projekt-DNA:', en: 'Project DNA:', tr: 'Proje DNA\'sı:' })}</strong> {t({ de: 'Die harten Fakten zu Eurem Business.', en: 'The hard facts about your business.', tr: 'İşinizle ilgili somut gerçekler.' })}</li>
+                            <li><strong>{t({ de: 'Vision, Mission & Werte:', en: 'Vision, Mission & Values:', tr: 'Vizyon, Misyon & Değerler:' })}</strong> {t({ de: 'Das "Warum". Dies gibt später allen Copywritern die Vorlage, wie der Benefit beim Kunden ankommen muss.', en: 'The "Why". This gives all copywriters the template for how the benefit must reach the customer.', tr: '"Neden" sorusunun cevabı. Bu, tüm metin yazarlarına faydanın müşteriye nasıl ulaşması gerektiğinin şablonunu verir.' })}</li>
+                            <li><strong>{t({ de: 'Tone of Voice:', en: 'Tone of Voice:', tr: 'Ses Tonu:' })}</strong> {t({ de: 'Diese Parameter (Dos & Don\'ts) ziehen sich die angeschlossenen KI-Modelle tief in ihre Prompts. Definiere die Sprache hier sehr exakt.', en: 'These parameters (Dos & Don\'ts) are deeply integrated into the connected AI models\' prompts. Define the language here very precisely.', tr: 'Bu parametreler (Yapılması ve Yapılmaması Gerekenler) bağlı yapay zeka modellerinin istemlerine derinlemesine entegre edilir. Dili burada çok kesin tanımlayın.' })}</li>
+                            <li><strong>{t({ de: 'Schlüsselbegriffe:', en: 'Keywords:', tr: 'Anahtar Kelimeler:' })}</strong> {t({ de: 'Wenn es Wörter gibt, die ihr konsequent besetzen wollt (SEO relevant) kommen sie hier rein.', en: 'If there are words you want to consistently occupy (SEO relevant), they go here.', tr: 'Tutarlı bir şekilde sahiplenmek istediğiniz kelimeler (SEO ile ilgili) varsa, buraya ekleyin.' })}</li>
+                            <li><strong>{t({ de: 'Admin Only:', en: 'Admin Only:', tr: 'Yalnızca Yönetici:' })}</strong> {t({ de: 'Die Pflege dieses Kernmoduls ist nur Administratoren mit der entsprechenden Berechtigung vorbehalten.', en: 'Maintaining this core module is reserved for administrators with the appropriate permissions.', tr: 'Bu çekirdek modülün bakımı yalnızca uygun izinlere sahip yöneticilere ayrılmıştır.' })}</li>
                         </ul>
                     </PageHelp>
                     {!canEdit && (
@@ -77,26 +87,26 @@ export default function PositioningPage() {
                             padding: '6px 12px', background: 'var(--bg-elevated)',
                             borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)',
                         }}>
-                            <Lock size={12} /> Nur-Lese-Modus (Admin erforderlich)
+                            <Lock size={12} /> {t({ de: 'Nur-Lese-Modus (Admin erforderlich)', en: 'Read-only mode (Admin required)', tr: 'Salt okunur mod (Yönetici gerekli)' })}
                         </div>
                     )}
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                        Zuletzt aktualisiert: {pos.lastUpdated} · {pos.updatedBy}
+                        {t({ de: 'Zuletzt aktualisiert:', en: 'Last updated:', tr: 'Son güncelleme:' })} {pos.lastUpdated} · {pos.updatedBy}
                     </div>
                 </div>
             </div>
 
             {/* ─── BLOCK 1: Projekt-DNA ─── */}
-            <SectionHeader id="dna" title="Projekt-DNA" icon={Building2} {...sectionProps}>
+            <SectionHeader id="dna" title={t({ de: 'Projekt-DNA', en: 'Project DNA', tr: 'Proje DNA\'sı' })} icon={Building2} {...sectionProps}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                     {[
-                        { label: 'Projektname', value: pos.name, key: 'name' },
+                        { label: t({ de: 'Projektname', en: 'Project Name', tr: 'Proje Adı' }), value: pos.name, key: 'name' },
                         { label: 'Tagline', value: pos.tagline, key: 'tagline' },
-                        { label: 'Gegründet', value: pos.founded, key: 'founded' },
-                        { label: 'Branche', value: pos.industry, key: 'industry' },
-                        { label: 'Hauptsitz', value: pos.headquarters, key: 'headquarters' },
-                        { label: 'Rechtsform', value: pos.legalForm, key: 'legalForm' },
-                        { label: 'Mitarbeiter', value: pos.employees, key: 'employees' },
+                        { label: t({ de: 'Gegründet', en: 'Founded', tr: 'Kuruluş' }), value: pos.founded, key: 'founded' },
+                        { label: t({ de: 'Branche', en: 'Industry', tr: 'Sektör' }), value: pos.industry, key: 'industry' },
+                        { label: t({ de: 'Hauptsitz', en: 'Headquarters', tr: 'Genel Merkez' }), value: pos.headquarters, key: 'headquarters' },
+                        { label: t({ de: 'Rechtsform', en: 'Legal Form', tr: 'Hukuki Biçim' }), value: pos.legalForm, key: 'legalForm' },
+                        { label: t({ de: 'Mitarbeiter', en: 'Employees', tr: 'Çalışanlar' }), value: pos.employees, key: 'employees' },
                         { label: 'Website', value: pos.website, key: 'website' },
                     ].map(f => (
                         <div key={f.label} style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: '14px' }}>
@@ -116,12 +126,12 @@ export default function PositioningPage() {
             </SectionHeader>
 
             {/* ─── BLOCK 2: Digitale Identität ─── */}
-            <SectionHeader id="identity" title="Digitale Identität — Vision, Mission & Werte" icon={Target} {...sectionProps}>
+            <SectionHeader id="identity" title={t({ de: 'Digitale Identität - Vision, Mission & Werte', en: 'Digital Identity - Vision, Mission & Values', tr: 'Dijital Kimlik - Vizyon, Misyon & Değerler' })} icon={Target} {...sectionProps}>
                 {/* Vision & Mission */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                     {[
-                        { label: '🔭 Vision', value: pos.vision, field: 'vision' },
-                        { label: '🎯 Mission', value: pos.mission, field: 'mission' },
+                        { label: t({ de: '🔭 Vision', en: '🔭 Vision', tr: '🔭 Vizyon' }), value: pos.vision, field: 'vision' },
+                        { label: t({ de: '🎯 Mission', en: '🎯 Mission', tr: '🎯 Misyon' }), value: pos.mission, field: 'mission' },
                     ].map(f => (
                         <div key={f.label} style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
                             <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
@@ -140,7 +150,7 @@ export default function PositioningPage() {
 
                 {/* Werte */}
                 <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                    ❤️ Projektwerte
+                    ❤️ {t({ de: 'Projektwerte', en: 'Project Values', tr: 'Proje Değerleri' })}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
                     {pos.values.map(value => (
@@ -180,7 +190,7 @@ export default function PositioningPage() {
                             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                         }}>
                             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Plus size={14} /> Wert hinzufügen
+                                <Plus size={14} /> {t({ de: 'Wert hinzufügen', en: 'Add value', tr: 'Değer ekle' })}
                             </span>
                         </div>
                     )}
@@ -188,12 +198,12 @@ export default function PositioningPage() {
             </SectionHeader>
 
             {/* ─── BLOCK 3: Kommunikations-DNA ─── */}
-            <SectionHeader id="comms" title="Kommunikations-DNA — Tone of Voice & Sprache" icon={Megaphone} {...sectionProps}>
+            <SectionHeader id="comms" title={t({ de: 'Kommunikations-DNA - Tone of Voice & Sprache', en: 'Communication DNA - Tone of Voice & Language', tr: 'İletişim DNA\'sı - Ses Tonu & Dil' })} icon={Megaphone} {...sectionProps}>
                 <CommsContent pos={pos} editSection={editSection} />
             </SectionHeader>
 
             {/* ─── BLOCK 4: Schlüsselbegriffe ─── */}
-            <SectionHeader id="keywords" title="Projektweite Schlüsselbegriffe" icon="🔑" {...sectionProps}>
+            <SectionHeader id="keywords" title={t({ de: 'Projektweite Schlüsselbegriffe', en: 'Project-wide Keywords', tr: 'Proje Genelinde Anahtar Kelimeler' })} icon="🔑" {...sectionProps}>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
                     {companyKeywords.map(kw => (
                         <div key={kw.id} style={{
@@ -214,39 +224,43 @@ export default function PositioningPage() {
                     ))}
                     {editSection === 'keywords' && canEdit && (
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%', marginTop: '8px' }}>
-                            <input type="text" className="form-input" placeholder="Begriff" value={newKeywordTerm}
+                            <input type="text" className="form-input" placeholder={t({ de: 'Begriff', en: 'Term', tr: 'Terim' })} value={newKeywordTerm}
                                 onChange={e => setNewKeywordTerm(e.target.value)}
                                 style={{ fontSize: 'var(--font-size-xs)', padding: '6px 10px', flex: 1 }} />
-                            <input type="text" className="form-input" placeholder="Kategorie" value={newKeywordCategory}
+                            <input type="text" className="form-input" placeholder={t({ de: 'Kategorie', en: 'Category', tr: 'Kategori' })} value={newKeywordCategory}
                                 onChange={e => setNewKeywordCategory(e.target.value)}
                                 style={{ fontSize: 'var(--font-size-xs)', padding: '6px 10px', flex: 1 }} />
                             <button className="btn btn-primary btn-sm" onClick={() => {
                                 if (newKeywordTerm.trim()) {
-                                    addKeyword({ term: newKeywordTerm.trim(), category: newKeywordCategory.trim() || 'Allgemein', description: '' });
+                                    addKeyword({ term: newKeywordTerm.trim(), category: newKeywordCategory.trim() || t({ de: 'Allgemein', en: 'General', tr: 'Genel' }), description: '' });
                                     setNewKeywordTerm('');
                                     setNewKeywordCategory('');
                                 }
                             }}>
-                                <Plus size={12} /> Hinzufügen
+                                <Plus size={12} /> {t({ de: 'Hinzufügen', en: 'Add', tr: 'Ekle' })}
                             </button>
                         </div>
                     )}
                 </div>
                 <div style={{ padding: '10px 14px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Lock size={11} />
-                    Diese Keywords sind in allen Kampagnen automatisch eingebunden und können dort nicht verändert werden.
-                    {!canEdit && ' Nur Admins können diese bearbeiten.'}
+                    {t({
+                        de: 'Diese Keywords sind in allen Kampagnen automatisch eingebunden und können dort nicht verändert werden.',
+                        en: 'These keywords are automatically included in all campaigns and cannot be changed there.',
+                        tr: 'Bu anahtar kelimeler tüm kampanyalara otomatik olarak dahil edilir ve orada değiştirilemez.'
+                    })}
+                    {!canEdit && ' ' + t({ de: 'Nur Admins können diese bearbeiten.', en: 'Only admins can edit these.', tr: 'Yalnızca yöneticiler bunları düzenleyebilir.' })}
                 </div>
             </SectionHeader>
 
             {/* ─── BLOCK 5: Zielmarkt ─── */}
-            <SectionHeader id="market" title="Zielmarkt & Zielgruppen" icon={Globe} {...sectionProps}>
+            <SectionHeader id="market" title={t({ de: 'Zielmarkt & Zielgruppen', en: 'Target Market & Audiences', tr: 'Hedef Pazar & Hedef Kitleler' })} icon={Globe} {...sectionProps}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div>
-                        <Field label="Primärmarkt" value={pos.primaryMarket} section="market" editSection={editSection} />
+                        <Field label={t({ de: 'Primärmarkt', en: 'Primary Market', tr: 'Birincil Pazar' })} value={pos.primaryMarket} section="market" editSection={editSection} />
                         <div style={{ marginBottom: '16px' }}>
                             <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
-                                Sekundärmärkte
+                                {t({ de: 'Sekundärmärkte', en: 'Secondary Markets', tr: 'İkincil Pazarlar' })}
                             </div>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                 {pos.secondaryMarkets.map(m => (
@@ -254,12 +268,12 @@ export default function PositioningPage() {
                                 ))}
                             </div>
                         </div>
-                        <Field label="Zielprojektgröße" value={pos.targetCompanySize} section="market" editSection={editSection} />
+                        <Field label={t({ de: 'Zielprojektgröße', en: 'Target Project Size', tr: 'Hedef Proje Büyüklüğü' })} value={pos.targetCompanySize} section="market" editSection={editSection} />
                     </div>
                     <div>
                         <div style={{ marginBottom: '16px' }}>
                             <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
-                                Zielbranchen
+                                {t({ de: 'Zielbranchen', en: 'Target Industries', tr: 'Hedef Sektörler' })}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {pos.targetIndustries.map(ind => (
@@ -274,14 +288,14 @@ export default function PositioningPage() {
                             </div>
                         </div>
                         <div style={{ padding: '12px 14px', background: 'rgba(16,185,129,0.08)', borderRadius: 'var(--radius-md)', fontSize: 'var(--font-size-xs)' }}>
-                            <div style={{ fontWeight: 600, marginBottom: '6px', color: '#10b981' }}>🔗 Verknüpfte Zielgruppen</div>
+                            <div style={{ fontWeight: 600, marginBottom: '6px', color: '#10b981' }}>🔗 {t({ de: 'Verknüpfte Zielgruppen', en: 'Linked Audiences', tr: 'Bağlı Hedef Kitleler' })}</div>
                             <div style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                Die detaillierten Buyer-Personas findest du im{' '}
+                                {t({ de: 'Die detaillierten Buyer-Personas findest du im', en: 'You can find the detailed buyer personas in the', tr: 'Detaylı alıcı personalarını şurada bulabilirsiniz:' })}{' '}
                                 <button
                                     onClick={() => router.push('/audiences')}
                                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary-light)', fontWeight: 600, padding: 0 }}
                                 >
-                                    Zielgruppen-Modul →
+                                    {t({ de: 'Zielgruppen-Modul →', en: 'Audiences Module →', tr: 'Hedef Kitle Modülü →' })}
                                 </button>
                             </div>
                         </div>

@@ -53,10 +53,9 @@ export default function ContentDetailModal({
   const { updateContent, deleteContent } = useContents();
   const { tasks, addTask } = useTasks();
   const { campaigns, touchpoints } = useData();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const companyPath = useProjectPath();
-  const isGerman = language === "de";
   const [isEditing, setIsEditing] = useState(false);
   const [edited, setEdited] = useState({ ...content });
   const [showNewTask, setShowNewTask] = useState(false);
@@ -216,7 +215,7 @@ export default function ContentDetailModal({
           width: "100%",
           maxWidth: "750px",
           borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--border-color)",
+          border: "2px solid var(--border-color-strong)",
           boxShadow: "var(--shadow-xl)",
           animation: "fadeIn 0.2s ease-out",
           display: "flex",
@@ -624,9 +623,7 @@ export default function ContentDetailModal({
                 }}
               >
                 <Radio size={14} style={{ color: "#8b5cf6" }} />
-                {isGerman
-                  ? "Verknüpfte Social Hub Posts"
-                  : "Linked Social Hub Posts"}{" "}
+                {t({ de: 'Verknüpfte Social Hub Posts', en: 'Linked Social Hub Posts', tr: 'Bağlı Social Hub Gönderileri' })}{" "}
                 ({linkedSocialPosts.length})
               </h4>
               {linkedSocialPosts.length > 0 ? (
@@ -687,17 +684,11 @@ export default function ContentDetailModal({
                             }}
                           >
                             {post.status === "published"
-                              ? isGerman
-                                ? "Veröffentlicht"
-                                : "Published"
+                              ? t({ de: "Veröffentlicht", en: "Published", tr: "Yayınlandı" })
                               : post.status === "approved"
-                                ? isGerman
-                                  ? "Freigegeben"
-                                  : "Approved"
+                                ? t({ de: "Freigegeben", en: "Approved", tr: "Onaylandı" })
                                 : post.status === "draft"
-                                  ? isGerman
-                                    ? "Entwurf"
-                                    : "Draft"
+                                  ? t({ de: "Entwurf", en: "Draft", tr: "Taslak" })
                                   : post.status}
                           </span>
                           {(post.scheduled_at || post.published_at) && (
@@ -707,7 +698,7 @@ export default function ContentDetailModal({
                                 {new Date(
                                   post.scheduled_at || post.published_at || "",
                                 ).toLocaleDateString(
-                                  isGerman ? "de-DE" : "en-US",
+                                  language === "en" ? "en-US" : language === "tr" ? "tr-TR" : "de-DE",
                                 )}
                               </span>
                             </>
@@ -724,7 +715,7 @@ export default function ContentDetailModal({
                           gap: "4px",
                         }}
                       >
-                        <Eye size={12} /> {isGerman ? "Ansehen" : "View"}
+                        <Eye size={12} /> {t({ de: 'Ansehen', en: 'View', tr: 'Görüntüle' })}
                       </Link>
                     </div>
                   ))}
@@ -746,9 +737,7 @@ export default function ContentDetailModal({
                       marginBottom: "10px",
                     }}
                   >
-                    {isGerman
-                      ? "Noch keine Social Hub Posts mit diesem Content verknüpft."
-                      : "No Social Hub posts linked to this content yet."}
+                    {t({ de: 'Noch keine Social Hub Posts mit diesem Content verknüpft.', en: 'No Social Hub posts linked to this content yet.', tr: 'Bu içerikle henüz Social Hub gönderisi bağlanmamış.' })}
                   </div>
                   <Link
                     href={companyPath("/social-hub")}
@@ -760,26 +749,23 @@ export default function ContentDetailModal({
                     }}
                   >
                     <Radio size={14} style={{ color: "#8b5cf6" }} />
-                    {isGerman
-                      ? "Im Social Hub erstellen"
-                      : "Create in Social Hub"}
+                    {t({ de: 'Im Social Hub erstellen', en: 'Create in Social Hub', tr: 'Social Hub\'da oluştur' })}
                   </Link>
                 </div>
               )}
             </div>
           )}
         </div>
-      </div>
 
       {/* FOOTER */}
       <div className="modal-footer" style={{ background: "var(--bg-surface)" }}>
         {isEditing ? (
           <>
             <button className="btn btn-ghost" onClick={handleCancelEditing}>
-              {isGerman ? "Abbrechen" : "Cancel"}
+              {t({ de: 'Abbrechen', en: 'Cancel', tr: 'İptal' })}
             </button>
             <button className="btn btn-primary" onClick={handleSave}>
-              <Save size={16} /> {isGerman ? "Speichern" : "Save"}
+              <Save size={16} /> {t({ de: 'Speichern', en: 'Save', tr: 'Kaydet' })}
             </button>
           </>
         ) : (
@@ -789,11 +775,11 @@ export default function ContentDetailModal({
                 href={companyPath(`/campaigns/${content.campaignId}`)}
                 className="btn btn-primary"
               >
-                {isGerman ? "Zur Kampagne" : "Go to campaign"} →
+                {t({ de: 'Zur Kampagne', en: 'Go to campaign', tr: 'Kampanyaya git' })} →
               </Link>
             )}
             <Link href={companyPath("/content")} className="btn btn-secondary">
-              {isGerman ? "Zum Kalender" : "Calendar"} →
+              {t({ de: 'Zum Kalender', en: 'Calendar', tr: 'Takvim' })} →
             </Link>
             {canSocialHub && isSocialContent && (
               <Link
@@ -805,7 +791,7 @@ export default function ContentDetailModal({
                   gap: "6px",
                 }}
               >
-                <Radio size={14} /> {isGerman ? "Social Hub" : "Social Hub"}
+                <Radio size={14} /> Social Hub
                 {linkedSocialPosts.length > 0 && (
                   <span
                     style={{
@@ -835,11 +821,12 @@ export default function ContentDetailModal({
                 }}
               >
                 <Radio size={14} />{" "}
-                {isGerman ? "Social Hub freischalten" : "Unlock Social Hub"}
+                {t({ de: 'Social Hub freischalten', en: 'Unlock Social Hub', tr: 'Social Hub\'u aç' })}
               </Link>
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );

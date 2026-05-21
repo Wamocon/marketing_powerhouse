@@ -23,9 +23,8 @@ interface FeatureGateProps {
  */
 export default function FeatureGate({ feature, children, fallback, dimmed }: FeatureGateProps) {
   const { can, currentPlan, loading } = useSubscription();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const { activeCompany } = useCompany();
-  const isEn = language === 'en';
   const settingsUrl = activeCompany ? `/project/${activeCompany.id}/settings?tab=subscription` : '/settings?tab=subscription';
 
   // While loading, show children to avoid flash of upgrade prompt
@@ -55,7 +54,7 @@ export default function FeatureGate({ feature, children, fallback, dimmed }: Fea
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           }}>
             <Lock size={12} />
-            {isEn ? 'Upgrade required' : 'Upgrade erforderlich'}
+            {t({ de: 'Upgrade erforderlich', en: 'Upgrade required', tr: 'Yükseltme gerekli' })}
           </div>
         </div>
       </div>
@@ -74,12 +73,14 @@ export default function FeatureGate({ feature, children, fallback, dimmed }: Fea
       <Lock size={18} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: 'var(--text-primary)' }}>
-          {isEn ? 'Feature not available on your plan' : 'Feature im aktuellen Plan nicht verfügbar'}
+          {t({ de: 'Feature im aktuellen Plan nicht verfügbar', en: 'Feature not available on your plan', tr: 'Bu özellik mevcut planınızda kullanılamıyor' })}
         </div>
         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-          {isEn
-            ? `Upgrade from ${currentPlan?.name ?? 'Starter'} to unlock this feature.`
-            : `Upgrade von ${currentPlan?.name ?? 'Starter'}, um dieses Feature freizuschalten.`}
+          {t({
+            de: `Upgrade von ${currentPlan?.name ?? 'Starter'}, um dieses Feature freizuschalten.`,
+            en: `Upgrade from ${currentPlan?.name ?? 'Starter'} to unlock this feature.`,
+            tr: `Bu özelliği açmak için ${currentPlan?.name ?? 'Starter'} planından yükseltin.`,
+          })}
         </div>
       </div>
       <Link
@@ -87,7 +88,7 @@ export default function FeatureGate({ feature, children, fallback, dimmed }: Fea
         className="btn btn-primary btn-sm"
         style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}
       >
-        {isEn ? 'Upgrade' : 'Upgraden'} <ArrowRight size={14} />
+        {t({ de: 'Upgraden', en: 'Upgrade', tr: 'Yükselt' })} <ArrowRight size={14} />
       </Link>
     </div>
   );

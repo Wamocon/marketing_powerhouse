@@ -34,15 +34,14 @@ interface PricingCardsProps {
 }
 
 export default function PricingCards({ onSelect, compact, highlightSlug }: PricingCardsProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { plans, currentPlanSlug, loading } = useSubscription();
   const [changingPlanId, setChangingPlanId] = useState<string | null>(null);
-  const isEn = language === 'en';
   const highlight = highlightSlug ?? PLAN_SLUGS.PRO;
 
   if (loading && plans.length === 0) {
     return <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)' }}>
-      {isEn ? 'Loading plans...' : 'Pläne werden geladen...'}
+      {t({ de: 'Pläne werden geladen...', en: 'Loading plans...', tr: 'Planlar yükleniyor...' })}
     </div>;
   }
 
@@ -72,7 +71,7 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
         const isCurrent = plan.slug === currentPlanSlug;
         const canSelect = planTierOrder(plan.slug) !== planTierOrder(currentPlanSlug);
         const isUpgrade = planTierOrder(plan.slug) > planTierOrder(currentPlanSlug);
-        const highlights = getPlanHighlights(plan, language);
+        const highlights = getPlanHighlights(plan, language === 'en' ? 'en' : language === 'tr' ? 'de' : 'de');
         const isChanging = changingPlanId === plan.id;
 
         return (
@@ -114,7 +113,7 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
                 padding: '3px 14px', borderRadius: 'var(--radius-full)',
                 letterSpacing: '0.05em',
               }}>
-                {isEn ? 'Most Popular' : 'Beliebteste Wahl'}
+                {t({ de: 'Beliebteste Wahl', en: 'Most Popular', tr: 'En Popüler' })}
               </div>
             )}
 
@@ -126,7 +125,7 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
                 fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase',
                 padding: '2px 8px', borderRadius: 'var(--radius-full)',
               }}>
-                {isEn ? 'Current' : 'Aktuell'}
+                {t({ de: 'Aktuell', en: 'Current', tr: 'Mevcut' })}
               </div>
             )}
 
@@ -168,7 +167,7 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
                 {formatPrice(plan.priceMonthly)}
               </span>
               <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                /{isEn ? 'month' : 'Monat'}
+                /{t({ de: 'Monat', en: 'month', tr: 'ay' })}
               </span>
             </div>
 
@@ -198,12 +197,12 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
                 paddingTop: '8px',
                 display: 'flex', flexDirection: 'column', gap: '2px',
               }}>
-                <span>+ {formatPrice(ADD_ON_PRICES.extraSeat)}/{isEn ? 'extra seat' : 'extra Platz'}</span>
+                <span>+ {formatPrice(ADD_ON_PRICES.extraSeat)}/{t({ de: 'extra Platz', en: 'extra seat', tr: 'ek koltuk' })}</span>
                 {plan.slug !== PLAN_SLUGS.STARTER && (
-                  <span>+ {formatPrice(ADD_ON_PRICES.extraProject)}/{isEn ? 'extra project' : 'extra Projekt'}</span>
+                  <span>+ {formatPrice(ADD_ON_PRICES.extraProject)}/{t({ de: 'extra Projekt', en: 'extra project', tr: 'ek proje' })}</span>
                 )}
                 {plan.slug !== PLAN_SLUGS.STARTER && (
-                  <span>+ {formatPrice(ADD_ON_PRICES.extraSocialAccount)}/{isEn ? 'extra account' : 'extra Konto'}</span>
+                  <span>+ {formatPrice(ADD_ON_PRICES.extraSocialAccount)}/{t({ de: 'extra Konto', en: 'extra account', tr: 'ek hesap' })}</span>
                 )}
               </div>
             )}
@@ -223,14 +222,14 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
                 }}
               >
                 {isChanging
-                  ? (isEn ? 'Switching...' : 'Wird gewechselt...')
+                  ? t({ de: 'Wird gewechselt...', en: 'Switching...', tr: 'Değiştiriliyor...' })
                   : isCurrent
-                    ? (isEn ? 'Current plan' : 'Aktueller Plan')
+                    ? t({ de: 'Aktueller Plan', en: 'Current plan', tr: 'Mevcut plan' })
                     : isUpgrade
                       ? <>
-                          {isEn ? 'Upgrade' : 'Upgraden'} <ArrowRight size={14} />
+                          {t({ de: 'Upgraden', en: 'Upgrade', tr: 'Yükselt' })} <ArrowRight size={14} />
                         </>
-                      : (isEn ? 'Switch' : 'Wechseln')
+                      : t({ de: 'Wechseln', en: 'Switch', tr: 'Değiştir' })
                 }
               </button>
             )}
@@ -253,13 +252,15 @@ export default function PricingCards({ onSelect, compact, highlightSlug }: Prici
               Enterprise
             </div>
             <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-              {isEn
-                ? '20+ seats, custom features, dedicated support — contact us.'
-                : '20+ Plätze, individuelle Features, dedizierter Support — kontaktieren Sie uns.'}
+              {t({
+                de: '20+ Plätze, individuelle Features, dedizierter Support - kontaktieren Sie uns.',
+                en: '20+ seats, custom features, dedicated support — contact us.',
+                tr: '20+ koltuk, özel özellikler, özel destek - bize ulaşın.',
+              })}
             </div>
           </div>
           <button className="btn btn-ghost" style={{ whiteSpace: 'nowrap' }}>
-            {isEn ? 'Contact sales' : 'Vertrieb kontaktieren'}
+            {t({ de: 'Vertrieb kontaktieren', en: 'Contact sales', tr: 'Satış ile iletişime geçin' })}
           </button>
         </div>
       )}

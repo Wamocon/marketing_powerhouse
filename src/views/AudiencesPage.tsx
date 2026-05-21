@@ -4,6 +4,7 @@ import { Plus, Search, Users, Target, Megaphone, ChevronRight, Tag, MapPin, Brie
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import type { AppLanguage } from '../context/LanguageContext';
 import PageHelp from '../components/PageHelp';
 import AudienceDetailModal from '../components/AudienceDetailModal';
 import ImportExportPanel from '../components/ImportExportPanel';
@@ -15,16 +16,15 @@ const segmentConfig = {
     'B2B': { badge: 'badge-primary', label: 'B2B' },
 };
 
-const typeConfig = {
-    'buyer': { label: { de: 'Buyer Persona', en: 'Buyer Persona' }, icon: '🎯' },
-    'user': { label: { de: 'User Persona', en: 'User Persona' }, icon: '🧑‍💻' },
+const typeConfig: Record<string, { label: Record<AppLanguage, string>; icon: string }> = {
+    'buyer': { label: { de: 'Buyer Persona', en: 'Buyer Persona', tr: 'Alıcı Profili' }, icon: '🎯' },
+    'user': { label: { de: 'User Persona', en: 'User Persona', tr: 'Kullanıcı Profili' }, icon: '🧑‍💻' },
 };
 
 export default function AudiencesPage() {
     const { audiences, campaigns, addAudience } = useData();
     const { can, isSuperAdmin, activeCompanyRole } = useAuth();
-    const { language } = useLanguage();
-    const isGerman = language === 'de';
+    const { language, t } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [segmentFilter, setSegmentFilter] = useState('all');
     const [selectedAudience, setSelectedAudience] = useState<Audience | null>(null);
@@ -57,7 +57,7 @@ export default function AudiencesPage() {
     );
 
     const requestCloseNewAudienceModal = () => {
-        if (hasUnsavedNewAudienceChanges && !window.confirm(isGerman ? 'Es gibt ungespeicherte Eingaben. Moechtest du das Modal wirklich schliessen?' : 'There are unsaved changes. Do you really want to close the modal?')) {
+        if (hasUnsavedNewAudienceChanges && !window.confirm(t({ de: 'Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?', en: 'There are unsaved changes. Do you really want to close the modal?', tr: 'Kaydedilmemiş değişiklikler var. Modalı gerçekten kapatmak istiyor musunuz?' }))) {
             return;
         }
         setShowNewAudienceModal(false);
@@ -96,27 +96,25 @@ export default function AudiencesPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">{isGerman ? 'Zielgruppen & Avatare' : 'Audiences & Personas'}</h1>
+                    <h1 className="page-title">{t({ de: 'Zielgruppen & Avatare', en: 'Audiences & Personas', tr: 'Hedef Kitleler & Kişi Profilleri' })}</h1>
                     <p className="page-subtitle">
-                        {isGerman
-                            ? `${audiences.length} Personas definiert · ${audiences.filter(a => a.segment === 'B2B').length} B2B · ${audiences.filter(a => a.segment === 'B2C').length} B2C`
-                            : `${audiences.length} personas defined · ${audiences.filter(a => a.segment === 'B2B').length} B2B · ${audiences.filter(a => a.segment === 'B2C').length} B2C`}
+                        {t({ de: `${audiences.length} Personas definiert`, en: `${audiences.length} personas defined`, tr: `${audiences.length} kişi profili tanımlandı` })} · {audiences.filter(a => a.segment === 'B2B').length} B2B · {audiences.filter(a => a.segment === 'B2C').length} B2C
                     </p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title={isGerman ? 'Zielgruppen & Avatare' : 'Audiences & Personas'}>
-                        <p style={{ marginBottom: '12px' }}>{isGerman ? 'Werbt nicht ins Leere. Ohne klare Zielgruppen ist jedes Budget vergeudet. Erstelle hier eure Traumkunden.' : 'Do not market blindly. Without clear audiences, every budget gets wasted. Build your ideal customer profiles here.'}</p>
+                    <PageHelp title={t({ de: 'Zielgruppen & Avatare', en: 'Audiences & Personas', tr: 'Hedef Kitleler & Kişi Profilleri' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Werbt nicht ins Leere. Ohne klare Zielgruppen ist jedes Budget vergeudet. Erstelle hier eure Traumkunden.', en: 'Do not market blindly. Without clear audiences, every budget gets wasted. Build your ideal customer profiles here.', tr: 'Körü körüne pazarlama yapmayın. Net hedef kitleler olmadan her bütçe boşa gider. İdeal müşteri profillerinizi burada oluşturun.' })}</p>
                         <ul className="help-list">
-                            <li><strong>{isGerman ? 'Personas anlegen:' : 'Create personas:'}</strong> {isGerman ? 'Generiere "Buyer Personas" (Kaeufer) oder "User Personas" (Nutzer) basierend auf echten demografischen Daten.' : 'Generate buyer or user personas based on real demographic data.'}</li>
-                            <li><strong>{isGerman ? 'Schmerzpunkte (Pain Points):' : 'Pain points:'}</strong> {isGerman ? 'Das wichtigste Feld! Formuliere extrem genau, welche Alltagsprobleme die Persona hat, damit eure Ads genau in diese Wunde treffen koennen.' : 'This is the most important field. Be very specific about daily problems so your ads hit exactly the right need.'}</li>
-                            <li><strong>{isGerman ? 'Ziele:' : 'Goals:'}</strong> {isGerman ? 'Was will die Persona erreichen? Das wird euer Angebot.' : 'What does the persona want to achieve? This should directly shape your offer.'}</li>
-                            <li><strong>{isGerman ? 'Kampagnen-Kopplung:' : 'Campaign linkage:'}</strong> {isGerman ? 'Wenn du auf eine Persona klickst, siehst du im Detail-Bereich, in welchen Kampagnen diese Person beworben wird.' : 'Click a persona to see which active campaigns currently target this profile.'}</li>
+                            <li><strong>{t({ de: 'Personas anlegen:', en: 'Create personas:', tr: 'Kişi profili oluştur:' })}</strong> {t({ de: 'Generiere "Buyer Personas" (Käufer) oder "User Personas" (Nutzer) basierend auf echten demografischen Daten.', en: 'Generate buyer or user personas based on real demographic data.', tr: 'Gerçek demografik verilere dayalı alıcı veya kullanıcı profilleri oluşturun.' })}</li>
+                            <li><strong>{t({ de: 'Schmerzpunkte (Pain Points):', en: 'Pain points:', tr: 'Sorunlar (Pain Points):' })}</strong> {t({ de: 'Das wichtigste Feld! Formuliere extrem genau, welche Alltagsprobleme die Persona hat, damit eure Ads genau in diese Wunde treffen können.', en: 'This is the most important field. Be very specific about daily problems so your ads hit exactly the right need.', tr: 'En önemli alan! Reklamlarınızın doğru ihtiyaca ulaşması için günlük sorunları çok net ifade edin.' })}</li>
+                            <li><strong>{t({ de: 'Ziele:', en: 'Goals:', tr: 'Hedefler:' })}</strong> {t({ de: 'Was will die Persona erreichen? Das wird euer Angebot.', en: 'What does the persona want to achieve? This should directly shape your offer.', tr: 'Kişi profili ne elde etmek istiyor? Bu doğrudan teklifinizi şekillendirmelidir.' })}</li>
+                            <li><strong>{t({ de: 'Kampagnen-Kopplung:', en: 'Campaign linkage:', tr: 'Kampanya bağlantısı:' })}</strong> {t({ de: 'Wenn du auf eine Persona klickst, siehst du im Detail-Bereich, in welchen Kampagnen diese Person beworben wird.', en: 'Click a persona to see which active campaigns currently target this profile.', tr: 'Hangi aktif kampanyaların bu profili hedeflediğini görmek için bir kişi profiline tıklayın.' })}</li>
                         </ul>
                     </PageHelp>
                     {can('canEditAudiences') && (
                         <button className="btn btn-primary" onClick={() => setShowNewAudienceModal(true)}>
                             <Plus size={16} />
-                            {isGerman ? 'Neue Persona' : 'New Persona'}
+                            {t({ de: 'Neue Persona', en: 'New Persona', tr: 'Yeni Kişi Profili' })}
                         </button>
                     )}
                 </div>
@@ -129,7 +127,7 @@ export default function AudiencesPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder={isGerman ? 'Personas durchsuchen...' : 'Search personas...'}
+                        placeholder={t({ de: 'Personas durchsuchen...', en: 'Search personas...', tr: 'Kişi profillerinde ara...' })}
                         style={{ paddingLeft: '36px', width: '100%' }}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -137,7 +135,7 @@ export default function AudiencesPage() {
                 </div>
                 <div className="tabs" style={{ marginBottom: 0, borderBottom: 'none', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
                     {[
-                        { key: 'all', label: isGerman ? 'Alle' : 'All' },
+                        { key: 'all', label: t({ de: 'Alle', en: 'All', tr: 'Tümü' }) },
                         { key: 'B2B', label: 'B2B' },
                         { key: 'B2C', label: 'B2C' },
                     ].map(tab => (
@@ -171,7 +169,7 @@ export default function AudiencesPage() {
                                 style={{
                                     cursor: 'pointer',
                                     padding: '20px',
-                                    borderColor: isSelected ? 'var(--color-primary)' : 'transparent',
+                                    borderColor: isSelected ? 'var(--color-primary)' : 'var(--border-color)',
                                     transition: 'all 0.2s ease',
                                 }}
                                 onClick={() => setSelectedAudience(isSelected ? null : audience)}
@@ -185,7 +183,7 @@ export default function AudiencesPage() {
                                             <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700 }}>{audience.name}</h3>
                                             <span className={`badge ${segmentConfig[audience.segment].badge}`}>{audience.segment}</span>
                                             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                {typeConfig[audience.type].icon} {typeConfig[audience.type].label[isGerman ? 'de' : 'en']}
+                                                {typeConfig[audience.type].icon} {typeConfig[audience.type].label[language]}
                                             </span>
                                         </div>
                                         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
@@ -227,17 +225,15 @@ export default function AudiencesPage() {
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
                                     paddingTop: '12px',
-                                    borderTop: '1px solid var(--border-color)',
+                                    borderTop: '2px solid var(--border-color)',
                                     fontSize: 'var(--font-size-xs)',
                                 }}>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-tertiary)' }}>
                                         <Megaphone size={11} />
-                                        {isGerman
-                                            ? `${linkedCampaigns.length} Kampagne${linkedCampaigns.length !== 1 ? 'n' : ''}`
-                                            : `${linkedCampaigns.length} campaign${linkedCampaigns.length !== 1 ? 's' : ''}`}
+                                        {t({ de: `${linkedCampaigns.length} Kampagne${linkedCampaigns.length !== 1 ? 'n' : ''}`, en: `${linkedCampaigns.length} campaign${linkedCampaigns.length !== 1 ? 's' : ''}`, tr: `${linkedCampaigns.length} kampanya` })}
                                     </span>
                                     <span style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                                        {isGerman ? 'Details' : 'Details'} <ChevronRight size={12} />
+                                        {t({ de: 'Details', en: 'Details', tr: 'Detaylar' })} <ChevronRight size={12} />
                                     </span>
                                 </div>
                             </div>
@@ -258,17 +254,17 @@ export default function AudiencesPage() {
                 <div className="modal-overlay" onClick={requestCloseNewAudienceModal}>
                     <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                         <div className="modal-header">
-                            <h2 className="modal-title">{isGerman ? 'Neue Persona erstellen' : 'Create New Persona'}</h2>
+                            <h2 className="modal-title">{t({ de: 'Neue Persona erstellen', en: 'Create New Persona', tr: 'Yeni Kişi Profili Oluştur' })}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={requestCloseNewAudienceModal}>✕</button>
                         </div>
                         <div className="modal-body" style={{ overflowY: 'auto' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Persona-Name' : 'Persona Name'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Digital Dave' : 'e.g. Digital Dave'} value={newAud.name} onChange={e => setNewAud({...newAud, name: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Persona-Name', en: 'Persona Name', tr: 'Kişi Profili Adı' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Digital Dave', en: 'e.g. Digital Dave', tr: 'ör. Digital Dave' })} value={newAud.name} onChange={e => setNewAud({...newAud, name: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Typ' : 'Type'}</label>
+                                    <label className="form-label">{t({ de: 'Typ', en: 'Type', tr: 'Tür' })}</label>
                                     <select className="form-input" value={newAud.type} onChange={e => setNewAud({...newAud, type: e.target.value})}>
                                         <option value="buyer">Buyer Persona</option>
                                         <option value="user">User Persona</option>
@@ -282,31 +278,31 @@ export default function AudiencesPage() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Altersgruppe' : 'Age Group'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. 28-38' : 'e.g. 28-38'} value={newAud.age} onChange={e => setNewAud({...newAud, age: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Altersgruppe', en: 'Age Group', tr: 'Yaş Grubu' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. 28-38', en: 'e.g. 28-38', tr: 'ör. 28-38' })} value={newAud.age} onChange={e => setNewAud({...newAud, age: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Standort' : 'Location'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. DACH-Region' : 'e.g. DACH region'} value={newAud.location} onChange={e => setNewAud({...newAud, location: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Standort', en: 'Location', tr: 'Konum' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. DACH-Region', en: 'e.g. DACH region', tr: 'ör. DACH bölgesi' })} value={newAud.location} onChange={e => setNewAud({...newAud, location: e.target.value})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Berufsfeld / Job Title' : 'Role / Job Title'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Marketing Manager' : 'e.g. Marketing Manager'} value={newAud.jobTitle} onChange={e => setNewAud({...newAud, jobTitle: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Berufsfeld / Job Title', en: 'Role / Job Title', tr: 'Meslek / İş Unvanı' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Marketing Manager', en: 'e.g. Marketing Manager', tr: 'ör. Pazarlama Müdürü' })} value={newAud.jobTitle} onChange={e => setNewAud({...newAud, jobTitle: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Geschlecht' : 'Gender'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Weiblich, Divers' : 'e.g. Female, Diverse'} value={newAud.gender} onChange={e => setNewAud({...newAud, gender: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Geschlecht', en: 'Gender', tr: 'Cinsiyet' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Weiblich, Divers', en: 'e.g. Female, Diverse', tr: 'ör. Kadın, Çeşitli' })} value={newAud.gender} onChange={e => setNewAud({...newAud, gender: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Einkommen' : 'Income'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Mittel-Hoch' : 'e.g. Medium-high'} value={newAud.income} onChange={e => setNewAud({...newAud, income: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Einkommen', en: 'Income', tr: 'Gelir' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Mittel-Hoch', en: 'e.g. Medium-high', tr: 'ör. Orta-Yüksek' })} value={newAud.income} onChange={e => setNewAud({...newAud, income: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Bildung' : 'Education'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Master' : 'e.g. Master degree'} value={newAud.education} onChange={e => setNewAud({...newAud, education: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Bildung', en: 'Education', tr: 'Eğitim' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Master', en: 'e.g. Master degree', tr: 'ör. Yüksek lisans' })} value={newAud.education} onChange={e => setNewAud({...newAud, education: e.target.value})} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{isGerman ? 'Customer-Journey-Phase' : 'Customer Journey Phase'}</label>
+                                    <label className="form-label">{t({ de: 'Customer-Journey-Phase', en: 'Customer Journey Phase', tr: 'Müşteri Yolculuğu Aşaması' })}</label>
                                     <select className="form-input" value={newAud.journeyPhase} onChange={e => setNewAud({...newAud, journeyPhase: e.target.value})}>
                                         <option value="Awareness">Awareness</option>
                                         <option value="Consideration">Consideration</option>
@@ -316,30 +312,30 @@ export default function AudiencesPage() {
                                     </select>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Bevorzugte Kanaele (kommagetrennt)' : 'Preferred Channels (comma-separated)'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. LinkedIn, Magazin, Podcast' : 'e.g. LinkedIn, magazine, podcast'} value={newAud.preferredChannels.join(', ')} onChange={e => setNewAud({...newAud, preferredChannels: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                                    <label className="form-label">{t({ de: 'Bevorzugte Kanäle (kommagetrennt)', en: 'Preferred Channels (comma-separated)', tr: 'Tercih Edilen Kanallar (virgülle ayrılmış)' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. LinkedIn, Magazin, Podcast', en: 'e.g. LinkedIn, magazine, podcast', tr: 'ör. LinkedIn, dergi, podcast' })} value={newAud.preferredChannels.join(', ')} onChange={e => setNewAud({...newAud, preferredChannels: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Entscheidungsprozess' : 'Decision Process'}</label>
-                                    <textarea className="form-input form-textarea" placeholder={isGerman ? 'Wie trifft diese Persona Kaufentscheidungen?...' : 'How does this persona make purchase decisions?...'} style={{ minHeight: '60px' }} value={newAud.decisionProcess} onChange={e => setNewAud({...newAud, decisionProcess: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Entscheidungsprozess', en: 'Decision Process', tr: 'Karar Süreci' })}</label>
+                                    <textarea className="form-input form-textarea" placeholder={t({ de: 'Wie trifft diese Persona Kaufentscheidungen?...', en: 'How does this persona make purchase decisions?...', tr: 'Bu kişi profili satın alma kararlarını nasıl veriyor?...' })} style={{ minHeight: '60px' }} value={newAud.decisionProcess} onChange={e => setNewAud({...newAud, decisionProcess: e.target.value})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Beschreibung' : 'Description'}</label>
-                                    <textarea className="form-input form-textarea" placeholder={isGerman ? 'Beschreibe diese Persona in 2-3 Saetzen...' : 'Describe this persona in 2-3 sentences...'} value={newAud.description} onChange={e => setNewAud({...newAud, description: e.target.value})} />
+                                    <label className="form-label">{t({ de: 'Beschreibung', en: 'Description', tr: 'Açıklama' })}</label>
+                                    <textarea className="form-input form-textarea" placeholder={t({ de: 'Beschreibe diese Persona in 2-3 Sätzen...', en: 'Describe this persona in 2-3 sentences...', tr: 'Bu kişi profilini 2-3 cümleyle tanımlayın...' })} value={newAud.description} onChange={e => setNewAud({...newAud, description: e.target.value})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Pain Points (kommagetrennt)' : 'Pain Points (comma-separated)'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Zu viele Tools, Zeitmangel, ...' : 'e.g. Too many tools, no time, ...'} value={newAud.painPoints.join(', ')} onChange={e => setNewAud({...newAud, painPoints: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                                    <label className="form-label">{t({ de: 'Pain Points (kommagetrennt)', en: 'Pain Points (comma-separated)', tr: 'Sorunlar (virgülle ayrılmış)' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Zu viele Tools, Zeitmangel, ...', en: 'e.g. Too many tools, no time, ...', tr: 'ör. Çok fazla araç, zaman yetersizliği, ...' })} value={newAud.painPoints.join(', ')} onChange={e => setNewAud({...newAud, painPoints: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{isGerman ? 'Ziele (kommagetrennt)' : 'Goals (comma-separated)'}</label>
-                                    <input type="text" className="form-input" placeholder={isGerman ? 'z.B. Produktivitaet steigern, ...' : 'e.g. increase productivity, ...'} value={newAud.goals.join(', ')} onChange={e => setNewAud({...newAud, goals: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
+                                    <label className="form-label">{t({ de: 'Ziele (kommagetrennt)', en: 'Goals (comma-separated)', tr: 'Hedefler (virgülle ayrılmış)' })}</label>
+                                    <input type="text" className="form-input" placeholder={t({ de: 'z.B. Produktivität steigern, ...', en: 'e.g. increase productivity, ...', tr: 'ör. verimliliği artırmak, ...' })} value={newAud.goals.join(', ')} onChange={e => setNewAud({...newAud, goals: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})} />
                                 </div>
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={requestCloseNewAudienceModal}>{isGerman ? 'Abbrechen' : 'Cancel'}</button>
-                            <button className="btn btn-primary" onClick={handleCreateAudience}>{isGerman ? 'Persona erstellen' : 'Create Persona'}</button>
+                            <button className="btn btn-secondary" onClick={requestCloseNewAudienceModal}>{t({ de: 'Abbrechen', en: 'Cancel', tr: 'İptal' })}</button>
+                            <button className="btn btn-primary" onClick={handleCreateAudience}>{t({ de: 'Persona erstellen', en: 'Create Persona', tr: 'Kişi Profili Oluştur' })}</button>
                         </div>
                     </div>
                 </div>

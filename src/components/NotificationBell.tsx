@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 export default function NotificationBell() {
   const { unreadCount } = useNotifications();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -33,7 +33,7 @@ export default function NotificationBell() {
       <button
         ref={btnRef}
         className="header-icon-btn"
-        title={language === 'en' ? 'Notifications' : 'Benachrichtigungen'}
+        title={t({ de: 'Benachrichtigungen', en: 'Notifications', tr: 'Bildirimler' })}
         onClick={() => setIsOpen(prev => !prev)}
       >
         <Bell size={20} />

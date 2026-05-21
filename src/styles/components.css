@@ -1,7 +1,7 @@
 /* === Cards === */
 .card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
@@ -40,7 +40,7 @@
 
 .stat-card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: flex;
@@ -181,7 +181,7 @@
 .btn-secondary {
   background: var(--bg-elevated);
   color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
 }
 
 .btn-secondary:hover {
@@ -504,6 +504,8 @@
 /* === Table === */
 .table-container {
   overflow-x: auto;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
 }
 
 .table {

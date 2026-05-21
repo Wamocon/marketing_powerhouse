@@ -207,7 +207,7 @@ export default function AudienceDetailModal({ audience, onClose }: AudienceDetai
                     </div>
 
                     {/* Verknüpfte Kampagnen */}
-                    <div className="detail-section" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', paddingBottom: 0, margin: 0 }}>
+                    <div className="detail-section" style={{ borderTop: '2px solid var(--border-color)', paddingTop: '20px', paddingBottom: 0, margin: 0 }}>
                         <div className="detail-section-title">
                             <Megaphone size={12} style={{ display: 'inline', marginRight: '4px' }} />
                             Verknüpfte Kampagnen

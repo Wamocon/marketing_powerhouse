@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Plus, Users, Bot, Tag, MapPin, UserCheck, UsersRound } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NewCampaignModalProps {
     onClose: () => void;
 }
 
 export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
+    const { t } = useLanguage();
     const { audiences: allAudiences, touchpoints, addCampaign, users, companyKeywords } = useData();
     const [modalStep, setModalStep] = useState(1);
     const [campaignName, setCampaignName] = useState('');
@@ -36,7 +38,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
     );
 
     const requestClose = () => {
-        if (hasUnsavedChanges && !window.confirm('Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?')) {
+        if (hasUnsavedChanges && !window.confirm(t({ de: 'Es gibt ungespeicherte Eingaben. Möchtest du das Modal wirklich schließen?', en: 'There are unsaved changes. Do you really want to close the modal?', tr: 'Kaydedilmemiş değişiklikler var. Modalı gerçekten kapatmak istiyor musunuz?' }))) {
             return;
         }
         onClose();
@@ -65,7 +67,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
             <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '620px' }}>
                 <div className="modal-header">
                     <div>
-                        <h2 className="modal-title">Neue Kampagne erstellen</h2>
+                        <h2 className="modal-title">{t({ de: 'Neue Kampagne erstellen', en: 'Create New Campaign', tr: 'Yeni Kampanya Oluştur' })}</h2>
                         <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
                             {[1, 2, 3].map(step => (
                                 <div key={step} style={{
@@ -76,7 +78,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             ))}
                         </div>
                         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-                            Schritt {modalStep} von 3: {modalStep === 1 ? 'Grunddaten' : modalStep === 2 ? 'Master-Prompt & Zielgruppen' : 'Schlüsselbegriffe'}
+                            {t({ de: 'Schritt', en: 'Step', tr: 'Adım' })} {modalStep} {t({ de: 'von', en: 'of', tr: '/' })} 3: {modalStep === 1 ? t({ de: 'Grunddaten', en: 'Basic Data', tr: 'Temel Bilgiler' }) : modalStep === 2 ? t({ de: 'Master-Prompt & Zielgruppen', en: 'Master Prompt & Audiences', tr: 'Ana Prompt ve Hedef Kitleler' }) : t({ de: 'Schlüsselbegriffe', en: 'Keywords', tr: 'Anahtar Kelimeler' })}
                         </div>
                     </div>
                     <button className="btn btn-ghost btn-icon" onClick={requestClose}>✕</button>
@@ -86,37 +88,37 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                     {modalStep === 1 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                             <div className="form-group">
-                                <label className="form-label">Kampagnenname</label>
-                                <input type="text" className="form-input" placeholder="z.B. Sommer-Sale 2026" value={campaignName} onChange={e => setCampaignName(e.target.value)} />
+                                <label className="form-label">{t({ de: 'Kampagnenname', en: 'Campaign Name', tr: 'Kampanya Adı' })}</label>
+                                <input type="text" className="form-input" placeholder={t({ de: 'z.B. Sommer-Sale 2026', en: 'e.g. Summer Sale 2026', tr: 'örn. Yaz İndirimi 2026' })} value={campaignName} onChange={e => setCampaignName(e.target.value)} />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Beschreibung</label>
-                                <textarea className="form-input form-textarea" placeholder="Beschreibe das Ziel der Kampagne…" value={description} onChange={e => setDescription(e.target.value)} />
+                                <label className="form-label">{t({ de: 'Beschreibung', en: 'Description', tr: 'Açıklama' })}</label>
+                                <textarea className="form-input form-textarea" placeholder={t({ de: 'Beschreibe das Ziel der Kampagne…', en: 'Describe the campaign goal…', tr: 'Kampanyanın amacını açıklayın…' })} value={description} onChange={e => setDescription(e.target.value)} />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Startdatum</label>
+                                    <label className="form-label">{t({ de: 'Startdatum', en: 'Start Date', tr: 'Başlangıç Tarihi' })}</label>
                                     <input type="date" className="form-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Enddatum</label>
+                                    <label className="form-label">{t({ de: 'Enddatum', en: 'End Date', tr: 'Bitiş Tarihi' })}</label>
                                     <input type="date" className="form-input" value={endDate} onChange={e => setEndDate(e.target.value)} />
                                 </div>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Budget (€)</label>
-                                <input type="number" className="form-input" placeholder="z.B. 15000" value={budget} onChange={e => setBudget(e.target.value)} />
+                                <label className="form-label">{t({ de: 'Budget (€)', en: 'Budget (€)', tr: 'Bütçe (€)' })}</label>
+                                <input type="number" className="form-input" placeholder={t({ de: 'z.B. 15000', en: 'e.g. 15000', tr: 'örn. 15000' })} value={budget} onChange={e => setBudget(e.target.value)} />
                             </div>
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <UserCheck size={14} style={{ color: '#8b5cf6' }} />
-                                    Verantwortlicher Manager
+                                    {t({ de: 'Verantwortlicher Manager', en: 'Responsible Manager', tr: 'Sorumlu Yönetici' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Wähle den verantwortlichen Manager für diese Kampagne.
+                                    {t({ de: 'Wähle den verantwortlichen Manager für diese Kampagne.', en: 'Select the responsible manager for this campaign.', tr: 'Bu kampanya için sorumlu yöneticiyi seçin.' })}
                                 </p>
                                 <select className="form-input" value={responsibleManagerId} onChange={e => setResponsibleManagerId(e.target.value)}>
-                                    <option value="">Bitte wählen…</option>
+                                    <option value="">{t({ de: 'Bitte wählen…', en: 'Please select…', tr: 'Lütfen seçin…' })}</option>
                                     {managers.map(m => (
                                         <option key={m.id} value={m.id}>{m.name} ({m.jobTitle})</option>
                                     ))}
@@ -125,10 +127,10 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <UsersRound size={14} style={{ color: '#0ea5e9' }} />
-                                    Team-Mitglieder
+                                    {t({ de: 'Team-Mitglieder', en: 'Team Members', tr: 'Ekip Üyeleri' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Wähle die Mitglieder, die für diese Kampagne eingeplant sind.
+                                    {t({ de: 'Wähle die Mitglieder, die für diese Kampagne eingeplant sind.', en: 'Select the members assigned to this campaign.', tr: 'Bu kampanya için görevlendirilmiş üyeleri seçin.' })}
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                     {allMembers.map(member => (
@@ -171,10 +173,10 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <MapPin size={14} style={{ color: 'var(--color-primary)' }} />
-                                    Touchpoints / Kanäle
+                                    {t({ de: 'Touchpoints / Kanäle', en: 'Touchpoints / Channels', tr: 'Temas Noktaları / Kanallar' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Wähle die vordefinierten Touchpoints für deine Kampagne aus.
+                                    {t({ de: 'Wähle die vordefinierten Touchpoints für deine Kampagne aus.', en: 'Select the predefined touchpoints for your campaign.', tr: 'Kampanyanız için önceden tanımlanmış temas noktalarını seçin.' })}
                                 </p>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                     {touchpoints.map(tp => (
@@ -214,14 +216,14 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Bot size={14} style={{ color: 'var(--color-primary)' }} />
-                                    Master-Prompt
+                                    {t({ de: 'Master-Prompt', en: 'Master Prompt', tr: 'Ana Prompt' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px', lineHeight: 1.5 }}>
-                                    Der Master-Prompt ist die allgemeingültige KI-Zusammenfassung deiner Kampagne. Er wird als Kontextbasis für alle KI-generierten Inhalte genutzt.
+                                    {t({ de: 'Der Master-Prompt ist die allgemeingültige KI-Zusammenfassung deiner Kampagne. Er wird als Kontextbasis für alle KI-generierten Inhalte genutzt.', en: 'The master prompt is the universal AI summary of your campaign. It serves as the context base for all AI-generated content.', tr: 'Ana prompt, kampanyanızın genel yapay zeka özetidir. Tüm yapay zeka tarafından oluşturulan içerikler için bağlam temeli olarak kullanılır.' })}
                                 </p>
                                 <textarea
                                     className="form-input form-textarea"
-                                    placeholder="Beschreibe Ton, Zielgruppe, USPs, Kernbotschaft und Dos & Don'ts dieser Kampagne…"
+                                    placeholder={t({ de: 'Beschreibe Ton, Zielgruppe, USPs, Kernbotschaft und Dos & Don\'ts dieser Kampagne…', en: 'Describe tone, target audience, USPs, core message and dos & don\'ts of this campaign…', tr: 'Bu kampanyanın tonunu, hedef kitlesini, USP\'lerini, ana mesajını ve yapılması/yapılmaması gerekenleri açıklayın…' })}
                                     style={{ minHeight: '160px', fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}
                                     value={masterPrompt}
                                     onChange={e => setMasterPrompt(e.target.value)}
@@ -230,10 +232,10 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Users size={14} style={{ color: '#10b981' }} />
-                                    Zielgruppen zuweisen
+                                    {t({ de: 'Zielgruppen zuweisen', en: 'Assign Audiences', tr: 'Hedef Kitleleri Ata' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px' }}>
-                                    Wähle eine oder mehrere Personas aus der Zielgruppen-Bibliothek.
+                                    {t({ de: 'Wähle eine oder mehrere Personas aus der Zielgruppen-Bibliothek.', en: 'Select one or more personas from the audience library.', tr: 'Hedef kitle kütüphanesinden bir veya daha fazla persona seçin.' })}
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {allAudiences.map(a => (
@@ -277,15 +279,15 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Tag size={14} style={{ color: '#f59e0b' }} />
-                                    Kampagnenspezifische Keywords
+                                    {t({ de: 'Kampagnenspezifische Keywords', en: 'Campaign-Specific Keywords', tr: 'Kampanyaya Özel Anahtar Kelimeler' })}
                                 </label>
                                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '10px', lineHeight: 1.5 }}>
-                                    Ergänze Keywords, die spezifisch für diese Kampagne sind. Projektweite Keywords werden automatisch hinzugefügt.
+                                    {t({ de: 'Ergänze Keywords, die spezifisch für diese Kampagne sind. Projektweite Keywords werden automatisch hinzugefügt.', en: 'Add keywords specific to this campaign. Project-wide keywords are included automatically.', tr: 'Bu kampanyaya özel anahtar kelimeler ekleyin. Proje genelindeki anahtar kelimeler otomatik olarak dahil edilir.' })}
                                 </p>
                                 <input
                                     type="text"
                                     className="form-input"
-                                    placeholder="Keywords kommagetrennt eingeben, z.B. Sommer-Sale, New Arrivals, …"
+                                    placeholder={t({ de: 'Keywords kommagetrennt eingeben, z.B. Sommer-Sale, New Arrivals, …', en: 'Enter keywords separated by commas, e.g. Summer Sale, New Arrivals, …', tr: 'Anahtar kelimeleri virgülle ayırarak girin, örn. Yaz İndirimi, Yeni Gelenler, …' })}
                                     value={campaignKeywords}
                                     onChange={(e) => setCampaignKeywords(e.target.value)}
                                 />
@@ -298,7 +300,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                 )}
                                 <div style={{ marginTop: '20px' }}>
                                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        🔒 Projektweite Keywords (werden automatisch eingebunden)
+                                        {t({ de: '🔒 Projektweite Keywords (werden automatisch eingebunden)', en: '🔒 Project-wide keywords (included automatically)', tr: '🔒 Proje geneli anahtar kelimeler (otomatik dahil edilir)' })}
                                     </div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                         {companyKeywords.length > 0 ? (
@@ -307,7 +309,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                             ))
                                         ) : (
                                             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                Keine projektweiten Keywords vorhanden.
+                                                {t({ de: 'Keine projektweiten Keywords vorhanden.', en: 'No project-wide keywords available.', tr: 'Proje genelinde anahtar kelime bulunmuyor.' })}
                                             </span>
                                         )}
                                     </div>
@@ -320,19 +322,19 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                 <div className="modal-footer">
                     {modalStep > 1 && (
                         <button className="btn btn-secondary" onClick={() => setModalStep(prev => prev - 1)}>
-                            ← Zurück
+                            ← {t({ de: 'Zurück', en: 'Back', tr: 'Geri' })}
                         </button>
                     )}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                        <button className="btn btn-secondary" onClick={requestClose}>Abbrechen</button>
+                        <button className="btn btn-secondary" onClick={requestClose}>{t({ de: 'Abbrechen', en: 'Cancel', tr: 'İptal' })}</button>
                         {modalStep < 3 ? (
                             <button className="btn btn-primary" onClick={() => setModalStep(prev => prev + 1)}>
-                                Weiter →
+                                {t({ de: 'Weiter', en: 'Next', tr: 'İleri' })} →
                             </button>
                         ) : (
                             <button className="btn btn-primary" onClick={async () => {
                                 await addCampaign({
-                                    name: campaignName || 'Neue Kampagne',
+                                    name: campaignName || t({ de: 'Neue Kampagne', en: 'New Campaign', tr: 'Yeni Kampanya' }),
                                     status: 'planned',
                                     startDate,
                                     endDate,
@@ -352,7 +354,7 @@ export default function NewCampaignModal({ onClose }: NewCampaignModalProps) {
                                 });
                                 onClose();
                             }}>
-                                Kampagne erstellen
+                                {t({ de: 'Kampagne erstellen', en: 'Create Campaign', tr: 'Kampanya Oluştur' })}
                             </button>
                         )}
                     </div>

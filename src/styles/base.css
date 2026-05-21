@@ -1,4 +1,10 @@
-/* === Reset & Base === */
+/* === Reset & Base ===
+   Wrapped in @layer base so that Tailwind @layer utilities
+   can override these defaults (CSS cascade: unlayered > layered,
+   utilities > base).
+*/
+@layer base {
+
 *,
 *::before,
 *::after {
@@ -46,7 +52,7 @@ select {
   font-family: var(--font-family);
   color: var(--text-primary);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-sm);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);
@@ -79,6 +85,8 @@ select:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
 }
+
+} /* end @layer base */
 
 /* === Layout === */
 .app-layout {

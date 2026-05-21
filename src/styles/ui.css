@@ -48,7 +48,7 @@
 .tabs {
   display: flex;
   gap: 2px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
   margin-bottom: var(--space-lg);
 }
 
@@ -156,7 +156,7 @@
 
 .modal {
   background: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 560px;
@@ -170,7 +170,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-lg);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .modal-title {
@@ -187,7 +187,7 @@
   justify-content: flex-end;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  border-top: 1px solid var(--border-color);
+  border-top: 2px solid var(--border-color);
 }
 
 /* === Form === */
@@ -207,7 +207,7 @@
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: var(--font-size-sm);
@@ -223,7 +223,7 @@
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: var(--font-size-sm);

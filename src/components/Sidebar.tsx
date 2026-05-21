@@ -44,7 +44,7 @@ type BadgeKey =
 interface NavItem {
   path: string;
   icon: LucideIcon;
-  label: { de: string; en: string };
+  label: { de: string; en: string; tr: string };
   badge?: string | number;
   badgeKey?: BadgeKey;
   requiredPermission?: PermissionKey | null;
@@ -52,118 +52,118 @@ interface NavItem {
 }
 
 interface NavSection {
-  section: { de: string; en: string };
+  section: { de: string; en: string; tr: string };
   items: NavItem[];
 }
 
 const NAV: NavSection[] = [
   {
-    section: { de: "Uebersicht", en: "Overview" },
+    section: { de: "Übersicht", en: "Overview", tr: "Genel Bakış" },
     items: [
       {
         path: "/",
         icon: LayoutDashboard,
-        label: { de: "Dashboard", en: "Dashboard" },
+        label: { de: "Dashboard", en: "Dashboard", tr: "Kontrol Paneli" },
       },
     ],
   },
   {
-    section: { de: "Marketing", en: "Marketing" },
+    section: { de: "Marketing", en: "Marketing", tr: "Pazarlama" },
     items: [
       {
         path: "/campaigns",
         icon: Megaphone,
-        label: { de: "Kampagnen", en: "Campaigns" },
+        label: { de: "Kampagnen", en: "Campaigns", tr: "Kampanyalar" },
         badgeKey: "campaigns" as const,
         requiredPermission: null,
       },
       {
         path: "/audiences",
         icon: Users2,
-        label: { de: "Zielgruppen", en: "Audiences" },
+        label: { de: "Zielgruppen", en: "Audiences", tr: "Hedef Kitleler" },
         badgeKey: "audiences" as const,
       },
       {
         path: "/journeys",
         icon: Map,
-        label: { de: "Customer Journey", en: "Customer journey" },
+        label: { de: "Customer Journey", en: "Customer journey", tr: "Müşteri yolculuğu" },
         badgeKey: "journeys" as const,
       },
       {
         path: "/touchpoints",
         icon: Radio,
-        label: { de: "Kanaele & Touchpoints", en: "Channels & touchpoints" },
+        label: { de: "Kanäle & Touchpoints", en: "Channels & touchpoints", tr: "Kanallar & temas noktaları" },
         badgeKey: "touchpoints" as const,
       },
       {
         path: "/content-overview",
         icon: FileText,
-        label: { de: "Content-Uebersicht", en: "Content overview" },
+        label: { de: "Content-Übersicht", en: "Content overview", tr: "İçerik genel bakışı" },
         badgeKey: "contents" as const,
       },
       {
         path: "/content",
         icon: Calendar,
-        label: { de: "Content-Kalender", en: "Content calendar" },
+        label: { de: "Content-Kalender", en: "Content calendar", tr: "İçerik takvimi" },
       },
       {
         path: "/social-hub",
         icon: Share2,
-        label: { de: "Social Hub", en: "Social Hub" },
+        label: { de: "Social Hub", en: "Social Hub", tr: "Social Hub" },
         requiredPermission: "canUseSocialHub",
       },
       {
         path: "/budget",
         icon: Wallet,
-        label: { de: "Budget & Controlling", en: "Budget & controlling" },
+        label: { de: "Budget & Controlling", en: "Budget & controlling", tr: "Bütçe & kontrol" },
         requiredPermission: "canSeeBudget",
       },
     ],
   },
   {
-    section: { de: "Team", en: "Team" },
+    section: { de: "Team", en: "Team", tr: "Ekip" },
     items: [
       {
         path: "/tasks",
         icon: CheckSquare,
-        label: { de: "Aufgaben", en: "Tasks" },
+        label: { de: "Aufgaben", en: "Tasks", tr: "Görevler" },
         badgeKey: "tasks" as const,
       },
       {
         path: "/analytics",
         icon: BarChart3,
-        label: { de: "Berichte", en: "Reports" },
+        label: { de: "Berichte", en: "Reports", tr: "Raporlar" },
         comingSoon: true,
       },
     ],
   },
   {
-    section: { de: "Projekt", en: "Project" },
+    section: { de: "Projekt", en: "Project", tr: "Proje" },
     items: [
       {
         path: "/positioning",
         icon: Target,
-        label: { de: "Digitale Positionierung", en: "Digital positioning" },
+        label: { de: "Digitale Positionierung", en: "Digital positioning", tr: "Dijital konumlandırma" },
       },
     ],
   },
   {
-    section: { de: "System", en: "System" },
+    section: { de: "System", en: "System", tr: "Sistem" },
     items: [
       {
         path: "/setup",
         icon: Compass,
-        label: { de: "Projekt-Setup", en: "Project setup" },
+        label: { de: "Projekt-Setup", en: "Project setup", tr: "Proje kurulumu" },
       },
       {
         path: "/manual",
         icon: HelpCircle,
-        label: { de: "Anleitung", en: "Manual" },
+        label: { de: "Anleitung", en: "Manual", tr: "Kılavuz" },
       },
       {
         path: "/settings",
         icon: Settings,
-        label: { de: "Einstellungen", en: "Settings" },
+        label: { de: "Einstellungen", en: "Settings", tr: "Ayarlar" },
       },
     ],
   },
@@ -181,6 +181,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
   const { tasks } = useTasks();
   const { contents } = useContents();
   const { language } = useLanguage();
+  const t = (translations: { de: string; en: string; tr: string }) => translations[language];
   const pathname = usePathname();
   const router = useRouter();
 
@@ -219,7 +220,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
 
   const handleSwitchCompany = () => {
     deselectCompany();
-    router.push("/");
+    router.push("/dashboard");
   };
 
   // Filtert Einträge nach Rolle
@@ -233,7 +234,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
     <aside className="sidebar">
       {/* Company Header — clickable logo navigates home */}
       <Link
-        href="/"
+        href="/dashboard"
         className="sidebar-header"
         style={{ textDecoration: "none", color: "inherit" }}
       >
@@ -266,7 +267,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
             padding: "10px 12px",
             borderRadius: "var(--radius-md)",
             background: "var(--bg-elevated)",
-            border: "1px solid var(--border-color)",
+            border: "2px solid var(--border-color)",
           }}
         >
           <div
@@ -274,7 +275,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              marginBottom: "6px",
+              marginBottom: "8px",
             }}
           >
             <Building2
@@ -299,17 +300,20 @@ export default function Sidebar({ onLogout }: SidebarProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "4px",
-              fontSize: "0.6rem",
-              color: "var(--text-tertiary)",
-              background: "none",
-              border: "none",
+              gap: "6px",
+              width: "100%",
+              fontSize: "var(--font-size-xs)",
+              color: "var(--color-primary)",
+              background: "var(--color-primary-50)",
+              border: "1px solid var(--color-primary)",
+              borderRadius: "var(--radius-sm)",
               cursor: "pointer",
-              padding: 0,
+              padding: "6px 10px",
               fontWeight: 600,
+              transition: "all var(--transition-fast)",
             }}
           >
-            <ArrowLeftRight size={10} />{" "}
+            <ArrowLeftRight size={12} />
             {language === "en" ? "Switch project" : "Projekt wechseln"}
           </button>
         </div>
@@ -370,7 +374,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
                           textTransform: "uppercase",
                         }}
                       >
-                        {language === "en" ? "soon" : "bald"}
+                        {t({ de: "bald", en: "soon", tr: "yak\u0131nda" })}
                       </span>
                     </div>
                   );
@@ -506,7 +510,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
           onClick={onLogout}
         >
           <LogOut size={18} />
-          <span>{language === "en" ? "Log out" : "Abmelden"}</span>
+          <span>{t({ de: "Abmelden", en: "Log out", tr: "\u00c7\u0131k\u0131\u015f" })}</span>
         </button>
       </div>
     </aside>

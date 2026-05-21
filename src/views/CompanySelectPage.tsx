@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useLanguage } from '../context/LanguageContext';
 import type { CompanyRole } from '../types';
 import {
     readJsonFile,
@@ -19,6 +20,7 @@ export default function CompanySelectPage() {
     const router = useRouter();
     const { currentUser, isSuperAdmin, logout } = useAuth();
     const { userCompanies, loading, selectCompany, createCompany } = useCompany();
+    const { t } = useLanguage();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -126,7 +128,7 @@ export default function CompanySelectPage() {
                         onClick={logout}
                         style={{ color: 'var(--color-danger)' }}
                     >
-                        Abmelden
+                        {t({ de: 'Abmelden', en: 'Log out', tr: 'Çıkış' })}
                     </button>
                 </div>
             </header>
@@ -142,10 +144,10 @@ export default function CompanySelectPage() {
                             fontSize: '1.75rem', fontWeight: 800,
                             color: 'var(--text-primary)', marginBottom: '8px',
                         }}>
-                            Projekt auswählen
+                            {t({ de: 'Projekt auswählen', en: 'Select Project', tr: 'Proje Seçin' })}
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-base)' }}>
-                            Wähle ein Projekt aus, um mit der Arbeit zu beginnen.
+                            {t({ de: 'Wähle ein Projekt aus, um mit der Arbeit zu beginnen.', en: 'Select a project to get started.', tr: 'Başlamak için bir proje seçin.' })}
                         </p>
                     </div>
 
@@ -161,7 +163,7 @@ export default function CompanySelectPage() {
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Projekt suchen..."
+                                placeholder={t({ de: 'Projekt suchen...', en: 'Search project...', tr: 'Proje ara...' })}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 style={{ paddingLeft: '36px' }}
@@ -185,7 +187,7 @@ export default function CompanySelectPage() {
                                 className="btn btn-primary"
                                 onClick={() => setShowCreateModal(true)}
                             >
-                                <Plus size={16} /> Neues Projekt
+                                <Plus size={16} /> {t({ de: 'Neues Projekt', en: 'New Project', tr: 'Yeni Proje' })}
                             </button>
                         )}
                     </div>
@@ -199,16 +201,16 @@ export default function CompanySelectPage() {
                         }}>
                             <Building2 size={48} style={{ color: 'var(--text-tertiary)', marginBottom: '16px' }} />
                             <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                                {searchQuery ? 'Keine Ergebnisse' : 'Noch keine Projekte'}
+                                {searchQuery ? t({ de: 'Keine Ergebnisse', en: 'No results', tr: 'Sonuç yok' }) : t({ de: 'Noch keine Projekte', en: 'No projects yet', tr: 'Henüz proje yok' })}
                             </h3>
                             <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)', marginBottom: '24px' }}>
                                 {searchQuery
-                                    ? 'Versuche einen anderen Suchbegriff.'
-                                    : 'Erstelle dein erstes Projekt, um loszulegen.'}
+                                    ? t({ de: 'Versuche einen anderen Suchbegriff.', en: 'Try a different search term.', tr: 'Farklı bir arama terimi deneyin.' })
+                                    : t({ de: 'Erstelle dein erstes Projekt, um loszulegen.', en: 'Create your first project to get started.', tr: 'Başlamak için ilk projenizi oluşturun.' })}
                             </p>
                             {!searchQuery && (isSuperAdmin || userCompanies.some(c => c.role === 'company_admin')) && (
                                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                                    <Plus size={16} /> Projekt erstellen
+                                    <Plus size={16} /> {t({ de: 'Projekt erstellen', en: 'Create project', tr: 'Proje oluştur' })}
                                 </button>
                             )}
                         </div>
@@ -311,6 +313,7 @@ function CreateCompanyModal({
     onClose: () => void;
     onCreate: (data: { name: string; description?: string; industry?: string }) => Promise<unknown>;
 }) {
+    const { t } = useLanguage();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -326,30 +329,30 @@ function CreateCompanyModal({
             const raw = await readJsonFile(file);
             const validation = validateProjectImport(raw);
             if (!validation.valid) {
-                setError(validation.errors[0] ?? 'Import-Datei ist ungültig.');
+                setError(validation.errors[0] ?? t({ de: 'Import-Datei ist ungültig.', en: 'Import file is invalid.', tr: 'İçe aktarma dosyası geçersiz.' }));
                 return;
             }
 
             const data = raw as ProjectExportData;
             const importedName = data.project?.name?.trim() ?? '';
             if (!importedName) {
-                setError('Import fehlgeschlagen: project.name ist ein Pflichtfeld.');
+                setError(t({ de: 'Import fehlgeschlagen: project.name ist ein Pflichtfeld.', en: 'Import failed: project.name is required.', tr: 'İçe aktarma başarısız: project.name zorunlu alandır.' }));
                 return;
             }
 
             setName(importedName);
             setDescription(data.project?.description ?? '');
             setIndustry(data.project?.industry ?? '');
-            setImportInfo('Projektdaten importiert. Bitte prüfen und erstellen.');
+            setImportInfo(t({ de: 'Projektdaten importiert. Bitte prüfen und erstellen.', en: 'Project data imported. Please review and create.', tr: 'Proje verileri içe aktarıldı. Lütfen kontrol edin ve oluşturun.' }));
         } catch {
-            setError('Import fehlgeschlagen. Bitte prüfe die JSON-Datei.');
+            setError(t({ de: 'Import fehlgeschlagen. Bitte prüfe die JSON-Datei.', en: 'Import failed. Please check the JSON file.', tr: 'İçe aktarma başarısız. Lütfen JSON dosyasını kontrol edin.' }));
         }
     };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!name.trim()) {
-            setError('Bitte gib einen Projektnamen ein.');
+            setError(t({ de: 'Bitte gib einen Projektnamen ein.', en: 'Please enter a project name.', tr: 'Lütfen bir proje adı girin.' }));
             return;
         }
         setIsSubmitting(true);
@@ -358,7 +361,7 @@ function CreateCompanyModal({
             await onCreate({ name: name.trim(), description: description.trim(), industry: industry.trim() });
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Fehler beim Erstellen. Bitte versuche es erneut.');
+            setError(err instanceof Error ? err.message : t({ de: 'Fehler beim Erstellen. Bitte versuche es erneut.', en: 'Error creating. Please try again.', tr: 'Oluşturma hatası. Lütfen tekrar deneyin.' }));
         } finally {
             setIsSubmitting(false);
         }
@@ -376,7 +379,7 @@ function CreateCompanyModal({
             }} className="animate-in">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        Neues Projekt erstellen
+                        {t({ de: 'Neues Projekt erstellen', en: 'Create New Project', tr: 'Yeni Proje Oluştur' })}
                     </h2>
                     <button onClick={onClose} style={{
                         background: 'none', border: 'none', cursor: 'pointer',
@@ -408,7 +411,7 @@ function CreateCompanyModal({
                         marginBottom: '14px',
                     }}>
                         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                            Alternativ Projektdaten aus JSON importieren
+                            {t({ de: 'Alternativ Projektdaten aus JSON importieren', en: 'Alternatively import project data from JSON', tr: 'Alternatif olarak JSON\'dan proje verilerini içe aktarın' })}
                         </span>
                         <button
                             type="button"
@@ -416,36 +419,36 @@ function CreateCompanyModal({
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isSubmitting}
                         >
-                            Projektdaten importieren
+                            {t({ de: 'Projektdaten importieren', en: 'Import project data', tr: 'Proje verilerini içe aktar' })}
                         </button>
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Projektname *</label>
+                        <label className="form-label">{t({ de: 'Projektname *', en: 'Project name *', tr: 'Proje adı *' })}</label>
                         <input
                             type="text"
                             className="form-input"
-                            placeholder="z.B. WAMOCON Academy"
+                            placeholder={t({ de: 'z.B. WAMOCON Academy', en: 'e.g. WAMOCON Academy', tr: 'örn. WAMOCON Academy' })}
                             value={name}
                             onChange={e => setName(e.target.value)}
                             autoFocus
                         />
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Branche</label>
+                        <label className="form-label">{t({ de: 'Branche', en: 'Industry', tr: 'Sektör' })}</label>
                         <input
                             type="text"
                             className="form-input"
-                            placeholder="z.B. IT & Training"
+                            placeholder={t({ de: 'z.B. IT & Training', en: 'e.g. IT & Training', tr: 'örn. IT & Eğitim' })}
                             value={industry}
                             onChange={e => setIndustry(e.target.value)}
                         />
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Beschreibung</label>
+                        <label className="form-label">{t({ de: 'Beschreibung', en: 'Description', tr: 'Açıklama' })}</label>
                         <textarea
                             className="form-input form-textarea"
-                            placeholder="Kurze Beschreibung des Projekt..."
+                            placeholder={t({ de: 'Kurze Beschreibung des Projekts...', en: 'Short project description...', tr: 'Kısa proje açıklaması...' })}
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             rows={3}
@@ -474,10 +477,10 @@ function CreateCompanyModal({
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
-                            Abbrechen
+                            {t({ de: 'Abbrechen', en: 'Cancel', tr: 'İptal' })}
                         </button>
                         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                            {isSubmitting ? 'Wird erstellt...' : 'Projekt erstellen'}
+                            {isSubmitting ? t({ de: 'Wird erstellt...', en: 'Creating...', tr: 'Oluşturuluyor...' }) : t({ de: 'Projekt erstellen', en: 'Create project', tr: 'Proje oluştur' })}
                         </button>
                     </div>
                 </form>

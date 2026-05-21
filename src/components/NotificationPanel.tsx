@@ -3,7 +3,7 @@ import { CheckCheck, Bell } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import NotificationItem from '@/components/NotificationItem';
 import type { AppNotification } from '../types';
-import type { AppLanguage } from '../context/LanguageContext';
+import type { AppLanguage, Translations } from '../context/LanguageContext';
 import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
@@ -16,31 +16,33 @@ function groupByDate(notifications: AppNotification[], language: AppLanguage): {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
+  const todayLabel: Translations = { de: 'Heute', en: 'Today', tr: 'Bug\u00FCn' };
+  const yesterdayLabel: Translations = { de: 'Gestern', en: 'Yesterday', tr: 'D\u00FCn' };
+
   const groups: Record<string, AppNotification[]> = {};
   for (const n of notifications) {
     const d = new Date(n.createdAt);
     const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     let label: string;
     if (dDate.getTime() === today.getTime()) {
-      label = language === 'en' ? 'Today' : 'Heute';
+      label = todayLabel[language];
     } else if (dDate.getTime() === yesterday.getTime()) {
-      label = language === 'en' ? 'Yesterday' : 'Gestern';
+      label = yesterdayLabel[language];
     } else {
-      label = d.toLocaleDateString(language === 'en' ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const localeMap: Record<AppLanguage, string> = { de: 'de-DE', en: 'en-US', tr: 'tr-TR' };
+      label = d.toLocaleDateString(localeMap[language], { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
     if (!groups[label]) groups[label] = [];
     groups[label].push(n);
   }
 
-  // Sort: Heute first, then Gestern, then dates descending
+  // Sort: Today first, then Yesterday, then dates descending
   const order = Object.keys(groups);
   order.sort((a, b) => {
-    const todayLabel = language === 'en' ? 'Today' : 'Heute';
-    const yesterdayLabel = language === 'en' ? 'Yesterday' : 'Gestern';
-    if (a === todayLabel) return -1;
-    if (b === todayLabel) return 1;
-    if (a === yesterdayLabel) return -1;
-    if (b === yesterdayLabel) return 1;
+    if (a === todayLabel[language]) return -1;
+    if (b === todayLabel[language]) return 1;
+    if (a === yesterdayLabel[language]) return -1;
+    if (b === yesterdayLabel[language]) return 1;
     return 0;
   });
 
@@ -49,7 +51,7 @@ function groupByDate(notifications: AppNotification[], language: AppLanguage): {
 
 export default function NotificationPanel({ onClose }: Props) {
   const { notifications, unreadCount, markAsRead, markAllAsRead, archiveNotification } = useNotifications();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const groups = useMemo(() => groupByDate(notifications, language), [notifications, language]);
 
@@ -58,7 +60,7 @@ export default function NotificationPanel({ onClose }: Props) {
       {/* Header */}
       <div className="notification-panel-header">
         <span className="notification-panel-title">
-          {language === 'en' ? 'Notifications' : 'Benachrichtigungen'}
+          {t({ de: 'Benachrichtigungen', en: 'Notifications', tr: 'Bildirimler' })}
           {unreadCount > 0 && (
             <span className="notification-panel-count">{unreadCount}</span>
           )}
@@ -67,10 +69,10 @@ export default function NotificationPanel({ onClose }: Props) {
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => markAllAsRead()}
-            title={language === 'en' ? 'Mark all as read' : 'Alle als gelesen markieren'}
+            title={t({ de: 'Alle als gelesen markieren', en: 'Mark all as read', tr: 'T\u00FCm\u00FCn\u00FC okundu olarak i\u015Faretle' })}
             style={{ fontSize: 'var(--font-size-xs)', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            <CheckCheck size={14} /> {language === 'en' ? 'Mark all read' : 'Alle gelesen'}
+            <CheckCheck size={14} /> {t({ de: 'Alle gelesen', en: 'Mark all read', tr: 'T\u00FCm\u00FC okundu' })}
           </button>
         )}
       </div>
@@ -80,8 +82,8 @@ export default function NotificationPanel({ onClose }: Props) {
         {notifications.length === 0 ? (
           <div className="notification-panel-empty">
             <Bell size={32} style={{ color: 'var(--text-muted)', marginBottom: '8px' }} />
-            <p>{language === 'en' ? 'No notifications' : 'Keine Benachrichtigungen'}</p>
-            <span>{language === 'en' ? 'You are all caught up!' : 'Du bist auf dem neuesten Stand!'}</span>
+            <p>{t({ de: 'Keine Benachrichtigungen', en: 'No notifications', tr: 'Bildirim yok' })}</p>
+            <span>{t({ de: 'Du bist auf dem neuesten Stand!', en: 'You are all caught up!', tr: 'Her \u015Fey tamam!' })}</span>
           </div>
         ) : (
           groups.map(group => (

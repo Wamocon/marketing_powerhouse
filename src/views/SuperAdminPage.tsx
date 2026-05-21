@@ -8,6 +8,7 @@ import {
 import { useAuth, ROLE_CONFIG } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import type { Company, CompanyRole, User } from '../types';
 import * as api from '../lib/api';
 import PageHelp from '../components/PageHelp';
@@ -18,10 +19,11 @@ export default function SuperAdminPage() {
     const { currentUser, isSuperAdmin } = useAuth();
     const { allCompanies, loadAllCompanies, activeCompany } = useCompany();
     const { users } = useData();
+    const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState<AdminTab>('companies');
     const [searchQuery, setSearchQuery] = useState('');
-    const [showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
-    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [_showCreateCompanyModal, setShowCreateCompanyModal] = useState(false);
+    const [_showAddUserModal, setShowAddUserModal] = useState(false);
     const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
     const [companyMembers, setCompanyMembers] = useState<Record<string, { memberId: string; userId: string; role: CompanyRole; userName: string; userEmail: string }[]>>({});
     const [assignByCompany, setAssignByCompany] = useState<Record<string, { userId: string; role: CompanyRole }>>({});
@@ -41,12 +43,12 @@ export default function SuperAdminPage() {
                 flexDirection: 'column', gap: '16px',
             }}>
                 <Shield size={48} style={{ color: 'var(--color-danger)' }} />
-                <h2 style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Kein Zugriff</h2>
+                <h2 style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{t({ de: 'Kein Zugriff', en: 'No Access', tr: 'Erişim Yok' })}</h2>
                 <p style={{ color: 'var(--text-secondary)' }}>
-                    Diese Seite ist nur für Super-Administratoren zugänglich.
+                    {t({ de: 'Diese Seite ist nur für Super-Administratoren zugänglich.', en: 'This page is only accessible to super administrators.', tr: 'Bu sayfa yalnızca süper yöneticiler için erişilebilir.' })}
                 </p>
-                <a href="/" className="btn btn-primary">
-                    <ArrowLeft size={16} /> Zurück zum Dashboard
+                <a href="/dashboard" className="btn btn-primary">
+                    <ArrowLeft size={16} /> {t({ de: 'Zurück zum Dashboard', en: 'Back to Dashboard', tr: 'Panele Dön' })}
                 </a>
             </div>
         );
@@ -63,7 +65,7 @@ export default function SuperAdminPage() {
     );
 
     const handleDeleteCompany = async (id: string) => {
-        if (!confirm('Soll dieses Projekt wirklich gelöscht werden? Alle zugehörigen Daten gehen verloren.')) return;
+        if (!confirm(t({ de: 'Soll dieses Projekt wirklich gelöscht werden? Alle zugehörigen Daten gehen verloren.', en: 'Do you really want to delete this project? All associated data will be lost.', tr: 'Bu proje gerçekten silinsin mi? Tüm ilişkili veriler kaybolacak.' }))) return;
         try {
             await api.deleteCompany(id);
             loadAllCompanies();
@@ -84,7 +86,7 @@ export default function SuperAdminPage() {
 
     const handleDeleteUser = async (userId: string) => {
         if (userId === currentUser?.id) return;
-        if (!confirm('Soll dieser Benutzer wirklich gelöscht werden?')) return;
+        if (!confirm(t({ de: 'Soll dieser Benutzer wirklich gelöscht werden?', en: 'Do you really want to delete this user?', tr: 'Bu kullanıcı gerçekten silinsin mi?' }))) return;
         try {
             await api.deleteUser(userId);
         } catch (err) {
@@ -103,7 +105,7 @@ export default function SuperAdminPage() {
                     memberId: m.id,
                     userId: m.userId,
                     role: m.role,
-                    userName: m.userName ?? 'Unbekannt',
+                    userName: m.userName ?? t({ de: 'Unbekannt', en: 'Unknown', tr: 'Bilinmeyen' }),
                     userEmail: m.userEmail ?? '',
                 })),
             }));
@@ -130,16 +132,16 @@ export default function SuperAdminPage() {
         const selectedUserId = assignByCompany[companyId]?.userId;
         const selectedRole = assignByCompany[companyId]?.role ?? 'member';
         if (!selectedUserId) {
-            setCompanyMessage(companyId, { error: 'Bitte zuerst einen Benutzer auswählen.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Bitte zuerst einen Benutzer auswählen.', en: 'Please select a user first.', tr: 'Lütfen önce bir kullanıcı seçin.' }) });
             return;
         }
         try {
             setCompanyMessage(companyId, {});
             await api.addCompanyMember(companyId, selectedUserId, selectedRole);
             await loadCompanyMembers(companyId);
-            setCompanyMessage(companyId, { success: 'Benutzer erfolgreich zum Projekt zugewiesen.' });
+            setCompanyMessage(companyId, { success: t({ de: 'Benutzer erfolgreich zum Projekt zugewiesen.', en: 'User successfully assigned to project.', tr: 'Kullanıcı projeye başarıyla atandı.' }) });
         } catch {
-            setCompanyMessage(companyId, { error: 'Zuweisung fehlgeschlagen. Benutzer ist ggf. bereits Mitglied.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Zuweisung fehlgeschlagen. Benutzer ist ggf. bereits Mitglied.', en: 'Assignment failed. User may already be a member.', tr: 'Atama başarısız. Kullanıcı zaten üye olabilir.' }) });
         }
     };
 
@@ -153,9 +155,9 @@ export default function SuperAdminPage() {
                     member.memberId === memberId ? { ...member, role } : member,
                 ),
             }));
-            setCompanyMessage(companyId, { success: 'Projektrolle aktualisiert.' });
+            setCompanyMessage(companyId, { success: t({ de: 'Projektrolle aktualisiert.', en: 'Project role updated.', tr: 'Proje rolü güncellendi.' }) });
         } catch {
-            setCompanyMessage(companyId, { error: 'Rolle konnte nicht aktualisiert werden.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Rolle konnte nicht aktualisiert werden.', en: 'Role could not be updated.', tr: 'Rol güncellenemedi.' }) });
         }
     };
 
@@ -163,39 +165,39 @@ export default function SuperAdminPage() {
         const companyList = companyMembers[companyId] ?? [];
         const targetMember = companyList.find(m => m.memberId === memberId);
         if (!targetMember) {
-            setCompanyMessage(companyId, { error: 'Mitglied nicht gefunden.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Mitglied nicht gefunden.', en: 'Member not found.', tr: 'Üye bulunamadı.' }) });
             return;
         }
 
         const isCurrentUserInActiveCompany =
             targetMember.userId === currentUser?.id && activeCompany?.id === companyId;
         if (isCurrentUserInActiveCompany) {
-            setCompanyMessage(companyId, { error: 'Du kannst deinen eigenen Account nicht aus dem aktiven Projekt entfernen.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Du kannst deinen eigenen Account nicht aus dem aktiven Projekt entfernen.', en: 'You cannot remove your own account from the active project.', tr: 'Aktif projeden kendi hesabınızı kaldıramazsınız.' }) });
             return;
         }
 
         const adminCount = companyList.filter(m => m.role === 'company_admin').length;
         const isLastAdmin = targetMember.role === 'company_admin' && adminCount <= 1;
         if (isLastAdmin) {
-            setCompanyMessage(companyId, { error: 'Der letzte Admin eines Projekt kann nicht entfernt werden.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Der letzte Admin eines Projekts kann nicht entfernt werden.', en: 'The last admin of a project cannot be removed.', tr: 'Bir projenin son admini kaldırılamaz.' }) });
             return;
         }
 
-        const confirmed = confirm(`Soll ${userName} wirklich aus diesem Projekt entfernt werden?`);
+        const confirmed = confirm(t({ de: `Soll ${userName} wirklich aus diesem Projekt entfernt werden?`, en: `Do you really want to remove ${userName} from this project?`, tr: `${userName} bu projeden gerçekten kaldırılsın mı?` }));
         if (!confirmed) return;
         try {
             setCompanyMessage(companyId, {});
             await api.removeCompanyMember(memberId);
             await loadCompanyMembers(companyId);
-            setCompanyMessage(companyId, { success: `${userName} wurde aus dem Projekt entfernt.` });
+            setCompanyMessage(companyId, { success: t({ de: `${userName} wurde aus dem Projekt entfernt.`, en: `${userName} was removed from the project.`, tr: `${userName} projeden kaldırıldı.` }) });
         } catch {
-            setCompanyMessage(companyId, { error: 'Mitglied konnte nicht entfernt werden.' });
+            setCompanyMessage(companyId, { error: t({ de: 'Mitglied konnte nicht entfernt werden.', en: 'Member could not be removed.', tr: 'Üye kaldırılamadı.' }) });
         }
     };
 
     const tabs: { id: AdminTab; label: string; icon: typeof Building2; count: number }[] = [
-        { id: 'companies', label: 'Projekt', icon: Building2, count: allCompanies.length },
-        { id: 'users', label: 'Benutzer', icon: Users2, count: users.length },
+        { id: 'companies', label: t({ de: 'Projekte', en: 'Projects', tr: 'Projeler' }), icon: Building2, count: allCompanies.length },
+        { id: 'users', label: t({ de: 'Benutzer', en: 'Users', tr: 'Kullanıcılar' }), icon: Users2, count: users.length },
     ];
 
     return (
@@ -207,7 +209,7 @@ export default function SuperAdminPage() {
                 background: 'var(--bg-surface)',
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <a href="/" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>
+                    <a href="/dashboard" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>
                         <ArrowLeft size={20} />
                     </a>
                     <div style={{
@@ -220,22 +222,22 @@ export default function SuperAdminPage() {
                     </div>
                     <div>
                         <div style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--text-primary)' }}>
-                            Super-Admin Panel
+                            {t({ de: 'Super-Admin Panel', en: 'Super Admin Panel', tr: 'Süper Admin Paneli' })}
                         </div>
                         <div style={{ fontSize: 'var(--font-size-xs)', color: '#f59e0b', fontWeight: 600 }}>
-                            Globale Verwaltung
+                            {t({ de: 'Globale Verwaltung', en: 'Global Management', tr: 'Genel Yönetim' })}
                         </div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <PageHelp title="Super-Admin: Benutzer und Projekt">
-                        <p><strong>Projekt-Tab:</strong> Bestehende Benutzer können einem Projekt zugewiesen und ihre Rolle pro Projekt direkt angepasst werden.</p>
+                    <PageHelp title={t({ de: 'Super-Admin: Benutzer und Projekte', en: 'Super Admin: Users and Projects', tr: 'Süper Admin: Kullanıcılar ve Projeler' })}>
+                        <p><strong>{t({ de: 'Projekt-Tab:', en: 'Projects tab:', tr: 'Projeler sekmesi:' })}</strong> {t({ de: 'Bestehende Benutzer können einem Projekt zugewiesen und ihre Rolle pro Projekt direkt angepasst werden.', en: 'Existing users can be assigned to a project and their role per project can be adjusted directly.', tr: 'Mevcut kullanıcılar bir projeye atanabilir ve proje başına rolleri doğrudan ayarlanabilir.' })}</p>
                         <ul style={{ marginTop: '8px', paddingLeft: '18px' }}>
-                            <li>"Benutzer wählen" zeigt nur Benutzer, die noch nicht Mitglied des Projekt sind.</li>
-                            <li>Rollen sind projektbezogen und können als Admin, Manager oder Member gesetzt werden.</li>
-                            <li>Änderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Projekt.</li>
+                            <li>{t({ de: '"Benutzer wählen" zeigt nur Benutzer, die noch nicht Mitglied des Projekts sind.', en: '"Select user" shows only users who are not yet members of the project.', tr: '"Kullanıcı seç" yalnızca henüz projenin üyesi olmayan kullanıcıları gösterir.' })}</li>
+                            <li>{t({ de: 'Rollen sind projektbezogen und können als Admin, Manager oder Member gesetzt werden.', en: 'Roles are project-specific and can be set as Admin, Manager, or Member.', tr: 'Roller projeye özeldir ve Admin, Manager veya Member olarak ayarlanabilir.' })}</li>
+                            <li>{t({ de: 'Änderungen wirken sofort auf den Zugriff des Benutzers im jeweiligen Projekt.', en: 'Changes immediately affect the user\'s access in the respective project.', tr: 'Değişiklikler, kullanıcının ilgili projedeki erişimini hemen etkiler.' })}</li>
                         </ul>
-                        <p style={{ marginTop: '10px' }}><strong>Benutzer-Tab:</strong> Hier werden globale Benutzer gepflegt, inkl. Super-Admin-Status.</p>
+                        <p style={{ marginTop: '10px' }}><strong>{t({ de: 'Benutzer-Tab:', en: 'Users tab:', tr: 'Kullanıcılar sekmesi:' })}</strong> {t({ de: 'Hier werden globale Benutzer gepflegt, inkl. Super-Admin-Status.', en: 'Global users are managed here, including super admin status.', tr: 'Burada global kullanıcılar yönetilir, süper admin statüsü dahil.' })}</p>
                     </PageHelp>
                     <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
                         {currentUser?.name}
@@ -281,23 +283,23 @@ export default function SuperAdminPage() {
                             fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em',
                             marginBottom: '12px',
                         }}>
-                            Übersicht
+                            {t({ de: 'Übersicht', en: 'Overview', tr: 'Genel Bakış' })}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Projekt</span>
+                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{t({ de: 'Projekte', en: 'Projects', tr: 'Projeler' })}</span>
                                 <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
                                     {allCompanies.length}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Benutzer</span>
+                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{t({ de: 'Benutzer', en: 'Users', tr: 'Kullanıcılar' })}</span>
                                 <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
                                     {users.length}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Super-Admins</span>
+                                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{t({ de: 'Super-Admins', en: 'Super Admins', tr: 'Süper Adminler' })}</span>
                                 <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: '#f59e0b' }}>
                                     {users.filter(u => u.isSuperAdmin).length}
                                 </span>
@@ -318,7 +320,7 @@ export default function SuperAdminPage() {
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder={activeTab === 'companies' ? 'Projekt suchen...' : 'Benutzer suchen...'}
+                                placeholder={activeTab === 'companies' ? t({ de: 'Projekt suchen...', en: 'Search projects...', tr: 'Proje ara...' }) : t({ de: 'Benutzer suchen...', en: 'Search users...', tr: 'Kullanıcı ara...' })}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 style={{ paddingLeft: '36px' }}
@@ -326,12 +328,12 @@ export default function SuperAdminPage() {
                         </div>
                         {activeTab === 'companies' && (
                             <button className="btn btn-primary" onClick={() => setShowCreateCompanyModal(true)}>
-                                <Plus size={16} /> Neues Projekt
+                                <Plus size={16} /> {t({ de: 'Neues Projekt', en: 'New Project', tr: 'Yeni Proje' })}
                             </button>
                         )}
                         {activeTab === 'users' && (
                             <button className="btn btn-primary" onClick={() => setShowAddUserModal(true)}>
-                                <Plus size={16} /> Neuer Benutzer
+                                <Plus size={16} /> {t({ de: 'Neuer Benutzer', en: 'New User', tr: 'Yeni Kullanıcı' })}
                             </button>
                         )}
                     </div>
@@ -342,7 +344,7 @@ export default function SuperAdminPage() {
                             {filteredCompanies.length === 0 ? (
                                 <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
                                     <Building2 size={40} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-                                    <p style={{ color: 'var(--text-secondary)' }}>Keine Projekt gefunden.</p>
+                                    <p style={{ color: 'var(--text-secondary)' }}>{t({ de: 'Keine Projekte gefunden.', en: 'No projects found.', tr: 'Proje bulunamadı.' })}</p>
                                 </div>
                             ) : (
                                 filteredCompanies.map(company => (
@@ -364,7 +366,7 @@ export default function SuperAdminPage() {
                                                     {company.name}
                                                 </div>
                                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                    {company.industry || 'Keine Branche'} · Erstellt {new Date(company.createdAt).toLocaleDateString('de-DE')}
+                                                    {company.industry || t({ de: 'Keine Branche', en: 'No industry', tr: 'Sektör yok' })} · {t({ de: 'Erstellt', en: 'Created', tr: 'Oluşturulma' })} {new Date(company.createdAt).toLocaleDateString('de-DE')}
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
@@ -377,7 +379,7 @@ export default function SuperAdminPage() {
                                                         }
                                                     }}
                                                 >
-                                                    <Users2 size={14} /> Mitglieder
+                                                    <Users2 size={14} /> {t({ de: 'Mitglieder', en: 'Members', tr: 'Üyeler' })}
                                                 </button>
                                                 <button
                                                     className="btn btn-ghost btn-sm"
@@ -411,7 +413,7 @@ export default function SuperAdminPage() {
                                                         }))}
                                                         style={{ minWidth: '250px' }}
                                                     >
-                                                        <option value="">Benutzer wählen</option>
+                                                        <option value="">{t({ de: 'Benutzer wählen', en: 'Select user', tr: 'Kullanıcı seç' })}</option>
                                                         {users
                                                             .filter(user => !(companyMembers[company.id] ?? []).some(member => member.userId === user.id))
                                                             .map(user => (
@@ -440,22 +442,22 @@ export default function SuperAdminPage() {
                                                         className="btn btn-primary btn-sm"
                                                         onClick={() => handleAssignUserToCompany(company.id)}
                                                     >
-                                                        <UserCheck size={14} /> Zuweisen
+                                                        <UserCheck size={14} /> {t({ de: 'Zuweisen', en: 'Assign', tr: 'Ata' })}
                                                     </button>
                                                 </div>
                                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '8px' }}>
-                                                    Hier weist du vorhandene Benutzer einem Projekt zu und setzt direkt ihre Projektrolle.
+                                                    {t({ de: 'Hier weist du vorhandene Benutzer einem Projekt zu und setzt direkt ihre Projektrolle.', en: 'Here you assign existing users to a project and set their project role directly.', tr: 'Burada mevcut kullanıcıları bir projeye atar ve proje rollerini doğrudan ayarlarsınız.' })}
                                                 </div>
                                                 <div style={{
                                                     fontSize: 'var(--font-size-xs)', fontWeight: 600,
                                                     color: 'var(--text-tertiary)', marginBottom: '8px',
                                                     textTransform: 'uppercase',
                                                 }}>
-                                                    Mitglieder ({companyMembers[company.id]?.length ?? 0})
+                                                    {t({ de: 'Mitglieder', en: 'Members', tr: 'Üyeler' })} ({companyMembers[company.id]?.length ?? 0})
                                                 </div>
                                                 {(companyMembers[company.id] ?? []).length === 0 ? (
                                                     <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                                                        Keine Mitglieder zugewiesen.
+                                                        {t({ de: 'Keine Mitglieder zugewiesen.', en: 'No members assigned.', tr: 'Üye atanmadı.' })}
                                                     </p>
                                                 ) : (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -467,10 +469,10 @@ export default function SuperAdminPage() {
                                                                 member.userId === currentUser?.id && activeCompany?.id === company.id;
                                                             const removeDisabled = isLastAdmin || isCurrentUserInActiveCompany;
                                                             const removeTitle = isLastAdmin
-                                                                ? 'Letzten Admin kann man nicht entfernen'
+                                                                ? t({ de: 'Letzten Admin kann man nicht entfernen', en: 'Cannot remove the last admin', tr: 'Son admin kaldırılamaz' })
                                                                 : isCurrentUserInActiveCompany
-                                                                    ? 'Eigenen Account im aktiven Projekt kann man nicht entfernen'
-                                                                    : 'Mitglied entfernen';
+                                                                    ? t({ de: 'Eigenen Account im aktiven Projekt kann man nicht entfernen', en: 'Cannot remove your own account from the active project', tr: 'Aktif projeden kendi hesabınızı kaldıramazsınız' })
+                                                                    : t({ de: 'Mitglied entfernen', en: 'Remove member', tr: 'Üyeyi kaldır' });
                                                             return (
                                                                 <div key={idx} style={{
                                                                     display: 'grid',
@@ -558,7 +560,7 @@ export default function SuperAdminPage() {
                             {filteredUsers.length === 0 ? (
                                 <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
                                     <Users2 size={40} style={{ color: 'var(--text-tertiary)', marginBottom: '12px' }} />
-                                    <p style={{ color: 'var(--text-secondary)' }}>Keine Benutzer gefunden.</p>
+                                    <p style={{ color: 'var(--text-secondary)' }}>{t({ de: 'Keine Benutzer gefunden.', en: 'No users found.', tr: 'Kullanıcı bulunamadı.' })}</p>
                                 </div>
                             ) : (
                                 filteredUsers.map(user => {
@@ -591,7 +593,7 @@ export default function SuperAdminPage() {
                                                                 borderRadius: 'var(--radius-full)',
                                                                 background: 'rgba(220,38,38,0.1)',
                                                                 color: 'var(--color-primary-light)', fontWeight: 700,
-                                                            }}>Du</span>
+                                                            }}>{t({ de: 'Du', en: 'You', tr: 'Sen' })}</span>
                                                         )}
                                                         {user.isSuperAdmin && (
                                                             <span style={{
@@ -601,7 +603,7 @@ export default function SuperAdminPage() {
                                                                 background: 'rgba(245, 158, 11, 0.12)',
                                                                 color: '#f59e0b', fontWeight: 700,
                                                             }}>
-                                                                <Crown size={9} /> Super-Admin
+                                                                <Crown size={9} /> {t({ de: 'Super-Admin', en: 'Super Admin', tr: 'Süper Admin' })}
                                                             </span>
                                                         )}
                                                     </div>
@@ -619,10 +621,10 @@ export default function SuperAdminPage() {
                                                                     fontSize: 'var(--font-size-xs)',
                                                                 }}
                                                                 onClick={() => handleToggleSuperAdmin(user.id, user.isSuperAdmin)}
-                                                                title={user.isSuperAdmin ? 'Super-Admin entziehen' : 'Zum Super-Admin machen'}
+                                                                title={user.isSuperAdmin ? t({ de: 'Super-Admin entziehen', en: 'Revoke Super Admin', tr: 'Süper Admin\'i Kaldır' }) : t({ de: 'Zum Super-Admin machen', en: 'Make Super Admin', tr: 'Süper Admin Yap' })}
                                                             >
                                                                 <Crown size={14} />
-                                                                {user.isSuperAdmin ? 'SA entziehen' : 'SA erteilen'}
+                                                                {user.isSuperAdmin ? t({ de: 'SA entziehen', en: 'Revoke SA', tr: 'SA Kaldır' }) : t({ de: 'SA erteilen', en: 'Grant SA', tr: 'SA Ata' })}
                                                             </button>
                                                             <button
                                                                 className="btn btn-ghost btn-sm"

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ContentItem } from '../types';
-import { Plus, Calendar, AlertTriangle, CheckCircle, FileText, Filter, X, LayoutGrid, GripVertical } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle, CheckCircle, FileText, Filter, X, LayoutGrid, GripVertical, Wand2 } from 'lucide-react';
 import { useContents, CONTENT_STATUSES, CONTENT_STATUS_ORDER } from '../context/ContentContext';
 import { useTasks } from '../context/TaskContext';
 import { useData } from '../context/DataContext';
@@ -8,55 +8,75 @@ import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import ContentDetailModal from '../components/ContentDetailModal';
+import ContentIdeaWizard from '../components/ContentIdeaWizard';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
 
-const CONTENT_TYPE_LABELS = {
-    social: 'Social Media', email: 'E-Mail', ads: 'Ads / Anzeige', content: 'Blog / Content', event: 'Event'
+const CONTENT_TYPE_LABELS: Record<string, { de: string; en: string; tr: string }> = {
+    social: { de: 'Social Media', en: 'Social Media', tr: 'Sosyal Medya' },
+    email: { de: 'E-Mail', en: 'E-Mail', tr: 'E-Posta' },
+    ads: { de: 'Ads / Anzeige', en: 'Ads', tr: 'Reklamlar' },
+    content: { de: 'Blog / Content', en: 'Blog / Content', tr: 'Blog / İçerik' },
+    event: { de: 'Event', en: 'Event', tr: 'Etkinlik' },
 };
 
 const CONTENT_STATUS_MODEL = [
     {
         id: 'idea',
-        title: 'Idee',
-        description: 'Thema, Ziel und Format sind als erster Entwurf angelegt.',
-        entry: ['Neuer Content wurde erstellt oder aus dem Backlog aufgenommen.'],
-        exit: ['Kanal und Zielgruppe sind definiert.', 'Ein umsetzbares Briefing liegt vor.'],
+        title: { de: 'Idee', en: 'Idea', tr: 'Fikir' },
+        description: { de: 'Thema, Ziel und Format sind als erster Entwurf angelegt.', en: 'Topic, goal and format are created as a first draft.', tr: 'Konu, hedef ve format ilk taslak olarak oluşturuldu.' },
+        entry: [{ de: 'Neuer Content wurde erstellt oder aus dem Backlog aufgenommen.', en: 'New content was created or picked up from the backlog.', tr: 'Yeni içerik oluşturuldu veya birikmişlerden alındı.' }],
+        exit: [
+            { de: 'Kanal und Zielgruppe sind definiert.', en: 'Channel and target audience are defined.', tr: 'Kanal ve hedef kitle tanımlandı.' },
+            { de: 'Ein umsetzbares Briefing liegt vor.', en: 'An actionable briefing is available.', tr: 'Uygulanabilir bir brifing mevcut.' },
+        ],
     },
     {
         id: 'planning',
-        title: 'In Planung',
-        description: 'Inhaltliche Planung, Ressourcen und Timing werden konkretisiert.',
-        entry: ['Briefing ist vollständig genug für die Umsetzung.'],
-        exit: ['Aufgaben sind zugeordnet.', 'Umsetzung kann ohne offene Kernfragen starten.'],
+        title: { de: 'In Planung', en: 'Planning', tr: 'Planlamada' },
+        description: { de: 'Inhaltliche Planung, Ressourcen und Timing werden konkretisiert.', en: 'Content planning, resources and timing are being refined.', tr: 'İçerik planlaması, kaynaklar ve zamanlama somutlaştırılıyor.' },
+        entry: [{ de: 'Briefing ist vollständig genug für die Umsetzung.', en: 'Briefing is complete enough for implementation.', tr: 'Brifing uygulama için yeterince eksiksiz.' }],
+        exit: [
+            { de: 'Aufgaben sind zugeordnet.', en: 'Tasks are assigned.', tr: 'Görevler atandı.' },
+            { de: 'Umsetzung kann ohne offene Kernfragen starten.', en: 'Implementation can start without open core questions.', tr: 'Uygulama açık temel sorular olmadan başlayabilir.' },
+        ],
     },
     {
         id: 'production',
-        title: 'In Produktion',
-        description: 'Text, Visuals oder Assets werden erstellt und intern abgestimmt.',
-        entry: ['Alle notwendigen Inputs aus Planung sind vorhanden.'],
-        exit: ['Finale Asset-Version liegt vor.', 'Qualitätscheck ist erledigt.'],
+        title: { de: 'In Produktion', en: 'In Production', tr: 'Üretimde' },
+        description: { de: 'Text, Visuals oder Assets werden erstellt und intern abgestimmt.', en: 'Text, visuals or assets are being created and internally aligned.', tr: 'Metin, görseller veya varlıklar oluşturuluyor ve dahili olarak uyumlaştırılıyor.' },
+        entry: [{ de: 'Alle notwendigen Inputs aus Planung sind vorhanden.', en: 'All necessary inputs from planning are available.', tr: 'Planlamadan gerekli tüm girdiler mevcut.' }],
+        exit: [
+            { de: 'Finale Asset-Version liegt vor.', en: 'Final asset version is available.', tr: 'Son varlık sürümü hazır.' },
+            { de: 'Qualitätscheck ist erledigt.', en: 'Quality check is completed.', tr: 'Kalite kontrolü tamamlandı.' },
+        ],
     },
     {
         id: 'ready',
-        title: 'Bereit',
-        description: 'Der Inhalt ist fertig produziert und freigegeben zur Terminierung.',
-        entry: ['Produktion ist abgeschlossen.', 'Keine kritischen Korrekturen mehr offen.'],
-        exit: ['Konkreter Veröffentlichungstermin ist festgelegt.'],
+        title: { de: 'Bereit', en: 'Ready', tr: 'Hazır' },
+        description: { de: 'Der Inhalt ist fertig produziert und freigegeben zur Terminierung.', en: 'The content is fully produced and approved for scheduling.', tr: 'İçerik tamamen üretildi ve planlamaya onaylandı.' },
+        entry: [
+            { de: 'Produktion ist abgeschlossen.', en: 'Production is completed.', tr: 'Üretim tamamlandı.' },
+            { de: 'Keine kritischen Korrekturen mehr offen.', en: 'No critical corrections remaining.', tr: 'Kritik düzeltme kalmadı.' },
+        ],
+        exit: [{ de: 'Konkreter Veröffentlichungstermin ist festgelegt.', en: 'Specific publication date is set.', tr: 'Belirli yayın tarihi belirlendi.' }],
     },
     {
         id: 'scheduled',
-        title: 'Eingeplant',
-        description: 'Der Content ist im Kalender eingeplant und wartet auf Go-Live.',
-        entry: ['Publish-Date ist gesetzt.', 'Plattform-Zuweisung ist final.'],
-        exit: ['Inhalt wurde veröffentlicht.'],
+        title: { de: 'Eingeplant', en: 'Scheduled', tr: 'Planlanmış' },
+        description: { de: 'Der Content ist im Kalender eingeplant und wartet auf Go-Live.', en: 'The content is scheduled in the calendar and waiting for go-live.', tr: 'İçerik takvimde planlandı ve yayına alınmayı bekliyor.' },
+        entry: [
+            { de: 'Publish-Date ist gesetzt.', en: 'Publish date is set.', tr: 'Yayın tarihi belirlendi.' },
+            { de: 'Plattform-Zuweisung ist final.', en: 'Platform assignment is final.', tr: 'Platform ataması kesinleşti.' },
+        ],
+        exit: [{ de: 'Inhalt wurde veröffentlicht.', en: 'Content has been published.', tr: 'İçerik yayınlandı.' }],
     },
     {
         id: 'published',
-        title: 'Veröffentlicht',
-        description: 'Inhalt ist live auf dem vorgesehenen Touchpoint/Kanal.',
-        entry: ['Content wurde ausgespielt oder manuell live gestellt.'],
-        exit: ['Optional: Performance-Auswertung oder Folgeaufgaben werden gestartet.'],
+        title: { de: 'Veröffentlicht', en: 'Published', tr: 'Yayınlandı' },
+        description: { de: 'Inhalt ist live auf dem vorgesehenen Touchpoint/Kanal.', en: 'Content is live on the designated touchpoint/channel.', tr: 'İçerik belirlenen temas noktasında/kanalda yayında.' },
+        entry: [{ de: 'Content wurde ausgespielt oder manuell live gestellt.', en: 'Content was deployed or manually set live.', tr: 'İçerik dağıtıldı veya manuel olarak yayına alındı.' }],
+        exit: [{ de: 'Optional: Performance-Auswertung oder Folgeaufgaben werden gestartet.', en: 'Optional: Performance evaluation or follow-up tasks are started.', tr: 'Opsiyonel: Performans değerlendirmesi veya takip görevleri başlatıldı.' }],
     },
 ];
 
@@ -64,17 +84,18 @@ export default function ContentOverviewPage() {
     const { contents } = useContents();
     const { tasks } = useTasks();
     const { can } = useAuth();
-    const { language, locale } = useLanguage();
+    const { language, locale, t } = useLanguage();
     const { campaigns, touchpoints } = useData();
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterTaskStatus, setFilterTaskStatus] = useState('all');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
     const [showNewContent, setShowNewContent] = useState(false);
+    const [showIdeaWizard, setShowIdeaWizard] = useState(false);
 
     const getCampaignName = (cId) => {
-        if (!cId) return language === 'en' ? 'No campaign' : 'Ohne Kampagne';
-        return campaigns.find(c => c.id === cId)?.name || (language === 'en' ? 'Unknown' : 'Unbekannt');
+        if (!cId) return t({ de: 'Ohne Kampagne', en: 'No campaign', tr: 'Kampanya yok' });
+        return campaigns.find(c => c.id === cId)?.name || t({ de: 'Unbekannt', en: 'Unknown', tr: 'Bilinmeyen' });
     };
 
     const getTouchpointBadge = (tpId) => {
@@ -109,28 +130,33 @@ export default function ContentOverviewPage() {
         <div className="animate-in">
             <div className="page-header">
                 <div className="page-header-left">
-                    <h1 className="page-title">{language === 'en' ? 'Content overview' : 'Content-Uebersicht'}</h1>
-                    <p className="page-subtitle">{language === 'en' ? 'All planned and published content at a glance' : 'Alle geplanten und veroeffentlichten Inhalte im Ueberblick'}</p>
+                    <h1 className="page-title">{t({ de: 'Content-Übersicht', en: 'Content overview', tr: 'İçerik Genel Bakışı' })}</h1>
+                    <p className="page-subtitle">{t({ de: 'Alle geplanten und veröffentlichten Inhalte im Überblick', en: 'All planned and published content at a glance', tr: 'Tüm planlanan ve yayınlanan içerikler bir bakışta' })}</p>
                 </div>
                 <div className="page-header-actions">
                     <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)', padding: '2px' }}>
                         <button className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('grid')}>
-                            <LayoutGrid size={14} /> {language === 'en' ? 'Grid' : 'Raster'}
+                            <LayoutGrid size={14} /> {t({ de: 'Raster', en: 'Grid', tr: 'Izgara' })}
                         </button>
                         <button className={`btn btn-sm ${viewMode === 'kanban' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('kanban')}>
                             <GripVertical size={14} /> Kanban
                         </button>
                     </div>
-                    <PageHelp title={language === 'en' ? 'Content overview' : 'Content-Uebersicht'}>
-                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'All editorial content is consolidated here across platforms.' : 'Hier laufen alle Redaktionsinhalte tabellarisch zusammen, egal auf welcher Plattform sie spielen.'}</p>
+                    <PageHelp title={t({ de: 'Content-Übersicht', en: 'Content overview', tr: 'İçerik Genel Bakışı' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Hier laufen alle Redaktionsinhalte tabellarisch zusammen, egal auf welcher Plattform sie spielen.', en: 'All editorial content is consolidated here across platforms.', tr: 'Tüm editoryal içerikler platformdan bağımsız olarak burada bir araya getirilir.' })}</p>
                         <ul className="help-list">
-                            <li><strong>{language === 'en' ? 'KPI board' : 'KPI Board'}:</strong> {language === 'en' ? 'See scheduled content and pipeline volume instantly.' : 'Du siehst direkt, welcher Content bereits safe eingeplant ist und wie viele Posts in der Pipeline liegen.'}</li>
-                            <li><strong>{language === 'en' ? 'Filters' : 'Filtern'}:</strong> {language === 'en' ? 'Find content without tasks or narrow down by status.' : 'Suche gezielt nach ohne Aufgaben oder filter den Status auf fertige Assets.'}</li>
+                            <li><strong>{t({ de: 'KPI Board', en: 'KPI board', tr: 'KPI Panosu' })}:</strong> {t({ de: 'Du siehst direkt, welcher Content bereits safe eingeplant ist und wie viele Posts in der Pipeline liegen.', en: 'See scheduled content and pipeline volume instantly.', tr: 'Planlanan içerikleri ve pipeline hacmini anında görün.' })}</li>
+                            <li><strong>{t({ de: 'Filtern', en: 'Filters', tr: 'Filtreler' })}:</strong> {t({ de: 'Suche gezielt nach ohne Aufgaben oder filter den Status auf fertige Assets.', en: 'Find content without tasks or narrow down by status.', tr: 'Görevsiz içerikleri bulun veya duruma göre daraltın.' })}</li>
                         </ul>
                     </PageHelp>
                     {can('canEditContent') && (
+                        <button className="btn btn-secondary" onClick={() => setShowIdeaWizard(true)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
+                            <Wand2 size={16} /> {t({ de: 'KI Content-Ideen', en: 'AI content ideas', tr: 'YZ İçerik Fikirleri' })}
+                        </button>
+                    )}
+                    {can('canEditContent') && (
                         <button className="btn btn-primary" onClick={() => setShowNewContent(true)}>
-                            <Plus size={16} /> {language === 'en' ? 'New content' : 'Neuer Content'}
+                            <Plus size={16} /> {t({ de: 'Neuer Content', en: 'New content', tr: 'Yeni İçerik' })}
                         </button>
                     )}
                 </div>
@@ -139,10 +165,10 @@ export default function ContentOverviewPage() {
             {/* KPI Stats */}
             <div className="stats-grid" style={{ marginBottom: '24px' }}>
                 {[
-                    { label: language === 'en' ? 'Total' : 'Gesamt', value: totalContents, icon: <FileText size={20} />, color: 'var(--color-primary)' },
-                    { label: language === 'en' ? 'Scheduled' : 'Eingeplant', value: scheduledCount, icon: <Calendar size={20} />, color: '#6366f1' },
-                    { label: language === 'en' ? 'Published' : 'Veroeffentlicht', value: publishedCount, icon: <CheckCircle size={20} />, color: '#10b981' },
-                    { label: language === 'en' ? 'No tasks' : 'Ohne Aufgaben', value: noTaskCount, icon: <AlertTriangle size={20} />, color: noTaskCount > 0 ? '#ef4444' : '#10b981' },
+                    { label: t({ de: 'Gesamt', en: 'Total', tr: 'Toplam' }), value: totalContents, icon: <FileText size={20} />, color: 'var(--color-primary)' },
+                    { label: t({ de: 'Eingeplant', en: 'Scheduled', tr: 'Planlanmış' }), value: scheduledCount, icon: <Calendar size={20} />, color: '#6366f1' },
+                    { label: t({ de: 'Veröffentlicht', en: 'Published', tr: 'Yayınlandı' }), value: publishedCount, icon: <CheckCircle size={20} />, color: '#10b981' },
+                    { label: t({ de: 'Ohne Aufgaben', en: 'No tasks', tr: 'Görevsiz' }), value: noTaskCount, icon: <AlertTriangle size={20} />, color: noTaskCount > 0 ? '#ef4444' : '#10b981' },
                 ].map((stat, i) => (
                     <div key={i} className="stat-card" style={{ borderLeft: `3px solid ${stat.color}` }}>
                         <div className="stat-label">{stat.label}</div>
@@ -154,9 +180,9 @@ export default function ContentOverviewPage() {
             <div className="card" style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
                     <div>
-                        <h3 style={{ marginBottom: '4px' }}>{language === 'en' ? 'Content status model' : 'Statusmodell Content'}</h3>
+                        <h3 style={{ marginBottom: '4px' }}>{t({ de: 'Statusmodell Content', en: 'Content status model', tr: 'İçerik durum modeli' })}</h3>
                         <p style={{ margin: 0, fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                            {language === 'en' ? 'Visual order with entry and exit criteria per status.' : 'Visuelle Reihenfolge mit fachlichen Ein- und Ausgangskriterien je Status.'}
+                            {t({ de: 'Visuelle Reihenfolge mit fachlichen Ein- und Ausgangskriterien je Status.', en: 'Visual order with entry and exit criteria per status.', tr: 'Her durum için giriş ve çıkış kriterleri ile görsel sıralama.' })}
                         </p>
                     </div>
                 </div>
@@ -176,7 +202,7 @@ export default function ContentOverviewPage() {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    {st.icon} {status.title}
+                                    {st.icon} {t(status.title)}
                                 </span>
                                 {!isLast && <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>→</span>}
                             </div>
@@ -191,16 +217,16 @@ export default function ContentOverviewPage() {
                             <div key={status.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '12px', borderLeft: `3px solid ${st.color}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>
                                     <span>{st.icon}</span>
-                                    <span>{status.title}</span>
+                                    <span>{t(status.title)}</span>
                                 </div>
-                                <p style={{ marginTop: 0, marginBottom: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{status.description}</p>
-                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Eingangskriterien</div>
+                                <p style={{ marginTop: 0, marginBottom: '8px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>{t(status.description)}</p>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginBottom: '4px' }}>{t({ de: 'Eingangskriterien', en: 'Entry criteria', tr: 'Giriş kriterleri' })}</div>
                                 <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                                    {status.entry.map(item => <li key={item}>{item}</li>)}
+                                    {status.entry.map((item, i) => <li key={i}>{t(item)}</li>)}
                                 </ul>
-                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginTop: '8px', marginBottom: '4px' }}>Ausgangskriterien</div>
+                                <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-tertiary)', marginTop: '8px', marginBottom: '4px' }}>{t({ de: 'Ausgangskriterien', en: 'Exit criteria', tr: 'Çıkış kriterleri' })}</div>
                                 <ul style={{ margin: 0, paddingLeft: '16px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                                    {status.exit.map(item => <li key={item}>{item}</li>)}
+                                    {status.exit.map((item, i) => <li key={i}>{t(item)}</li>)}
                                 </ul>
                             </div>
                         );
@@ -211,28 +237,28 @@ export default function ContentOverviewPage() {
             {/* Filters */}
             <div className="card" style={{ marginBottom: '20px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>
-                    <Filter size={14} /> {language === 'en' ? 'Filters:' : 'Filter:'}
+                    <Filter size={14} /> {t({ de: 'Filter:', en: 'Filters:', tr: 'Filtreler:' })}
                 </div>
                 <select className="form-input" style={{ width: 'auto', padding: '4px 10px', fontSize: 'var(--font-size-xs)' }}
                     value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="all">{language === 'en' ? 'All statuses' : 'Alle Status'}</option>
+                    <option value="all">{t({ de: 'Alle Status', en: 'All statuses', tr: 'Tüm durumlar' })}</option>
                     {CONTENT_STATUS_ORDER.map(s => (
                         <option key={s} value={s}>{CONTENT_STATUSES[s].icon} {CONTENT_STATUSES[s].label}</option>
                     ))}
                 </select>
                 <select className="form-input" style={{ width: 'auto', padding: '4px 10px', fontSize: 'var(--font-size-xs)' }}
                     value={filterTaskStatus} onChange={e => setFilterTaskStatus(e.target.value)}>
-                    <option value="all">{language === 'en' ? 'All task states' : 'Alle Aufgaben-Status'}</option>
-                    <option value="with">{language === 'en' ? '✅ With tasks' : '✅ Mit Aufgaben'}</option>
-                    <option value="without">{language === 'en' ? '⚠️ Without tasks' : '⚠️ Ohne Aufgaben'}</option>
+                    <option value="all">{t({ de: 'Alle Aufgaben-Status', en: 'All task states', tr: 'Tüm görev durumları' })}</option>
+                    <option value="with">{t({ de: '✅ Mit Aufgaben', en: '✅ With tasks', tr: '✅ Görevli' })}</option>
+                    <option value="without">{t({ de: '⚠️ Ohne Aufgaben', en: '⚠️ Without tasks', tr: '⚠️ Görevsiz' })}</option>
                 </select>
                 {(filterStatus !== 'all' || filterTaskStatus !== 'all') && (
                     <button className="btn btn-ghost btn-sm" onClick={() => { setFilterStatus('all'); setFilterTaskStatus('all'); }}>
-                        <X size={14} /> {language === 'en' ? 'Reset' : 'Zuruecksetzen'}
+                        <X size={14} /> {t({ de: 'Zurücksetzen', en: 'Reset', tr: 'Sıfırla' })}
                     </button>
                 )}
                 <div style={{ marginLeft: 'auto', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                    {filteredContents.length} {language === 'en' ? 'of' : 'von'} {totalContents} {language === 'en' ? 'entries' : 'Eintraegen'}
+                    {filteredContents.length} {t({ de: 'von', en: 'of', tr: '/' })} {totalContents} {t({ de: 'Einträgen', en: 'entries', tr: 'kayıt' })}
                 </div>
             </div>
 
@@ -270,21 +296,21 @@ export default function ContentOverviewPage() {
                             )}
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                                 <span className={`badge badge-${CONTENT_TYPE_COLORS[cnt.contentType] || 'info'}`} style={{ fontSize: '0.65rem', ...(isCritical && { background: 'rgba(255,255,255,0.2)', color: '#ffffff' }) }}>{cnt.platform}</span>
-                                <span className="badge" style={{ background: isCritical ? 'rgba(255,255,255,0.2)' : 'var(--bg-hover)', color: isCritical ? '#ffffff' : undefined, fontSize: '0.65rem' }}>{CONTENT_TYPE_LABELS[cnt.contentType] || cnt.contentType}</span>
+                                <span className="badge" style={{ background: isCritical ? 'rgba(255,255,255,0.2)' : 'var(--bg-hover)', color: isCritical ? '#ffffff' : undefined, fontSize: '0.65rem' }}>{CONTENT_TYPE_LABELS[cnt.contentType] ? t(CONTENT_TYPE_LABELS[cnt.contentType]) : cnt.contentType}</span>
                                 {getTouchpointBadge(cnt.touchpointId)}
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${isCritical ? 'rgba(255,255,255,0.25)' : 'var(--border-color)'}`, paddingTop: '10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-xs)', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                     <Calendar size={12} />
-                                    {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString(locale) : (language === 'en' ? 'No date' : 'Kein Datum')}
+                                    {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString(locale) : t({ de: 'Kein Datum', en: 'No date', tr: 'Tarih yok' })}
                                 </div>
                                 {hasTasks ? (
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)', color: 'var(--color-success)', fontWeight: 500 }}>
-                                        <CheckCircle size={12} /> {linkedTasks.length} Aufgabe(n)
+                                        <CheckCircle size={12} /> {linkedTasks.length} {t({ de: 'Aufgabe(n)', en: 'task(s)', tr: 'görev' })}
                                     </span>
                                 ) : (
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-xs)', color: '#ffffff', fontWeight: 600 }}>
-                                        <AlertTriangle size={12} /> Keine Aufgaben
+                                        <AlertTriangle size={12} /> {t({ de: 'Keine Aufgaben', en: 'No tasks', tr: 'Görev yok' })}
                                     </span>
                                 )}
                             </div>
@@ -297,8 +323,8 @@ export default function ContentOverviewPage() {
                 <div className="card">
                     <div className="empty-state">
                         <div className="empty-state-icon">📄</div>
-                        <div className="empty-state-title">Keine Inhalte gefunden</div>
-                        <div className="empty-state-text">Passe deine Filtereinstellungen an oder erstelle neuen Content.</div>
+                        <div className="empty-state-title">{t({ de: 'Keine Inhalte gefunden', en: 'No content found', tr: 'İçerik bulunamadı' })}</div>
+                        <div className="empty-state-text">{t({ de: 'Passe deine Filtereinstellungen an oder erstelle neuen Content.', en: 'Adjust your filter settings or create new content.', tr: 'Filtre ayarlarınızı düzenleyin veya yeni içerik oluşturun.' })}</div>
                     </div>
                 </div>
             )}
@@ -365,7 +391,7 @@ export default function ContentOverviewPage() {
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: isCritical ? 'rgba(255,255,255,0.75)' : 'var(--text-tertiary)' }}>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                                         <Calendar size={10} />
-                                                        {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : '—'}
+                                                        {cnt.publishDate ? new Date(cnt.publishDate).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' }) : '—'}
                                                     </span>
                                                     {hasTasks ? (
                                                         <span style={{ color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -373,7 +399,7 @@ export default function ContentOverviewPage() {
                                                         </span>
                                                     ) : (
                                                         <span style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                            <AlertTriangle size={10} /> Keine Aufgaben
+                                                            <AlertTriangle size={10} /> {t({ de: 'Keine Aufgaben', en: 'No tasks', tr: 'Görev yok' })}
                                                         </span>
                                                     )}
                                                 </div>
@@ -382,7 +408,7 @@ export default function ContentOverviewPage() {
                                     })}
                                     {colContents.length === 0 && (
                                         <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 'var(--font-size-xs)', padding: '28px 8px', opacity: 0.4 }}>
-                                            Keine Inhalte
+                                            {t({ de: 'Keine Inhalte', en: 'No content', tr: 'İçerik yok' })}
                                         </div>
                                     )}
                                 </div>
@@ -400,6 +426,11 @@ export default function ContentOverviewPage() {
             {/* New Content Modal */}
             {showNewContent && (
                 <NewContentModal onClose={() => setShowNewContent(false)} />
+            )}
+
+            {/* Content Idea Wizard */}
+            {showIdeaWizard && (
+                <ContentIdeaWizard onClose={() => setShowIdeaWizard(false)} />
             )}
         </div>
     );

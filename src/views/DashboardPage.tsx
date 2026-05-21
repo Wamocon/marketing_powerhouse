@@ -15,6 +15,7 @@ export default function DashboardPage() {
     const router = useProjectRouter();
     const { currentUser, activeCompanyRole } = useAuth();
     const { locale, language } = useLanguage();
+    const t = (tr: { de: string; en: string; tr: string }) => tr[language];
     const { tasks } = useTasks();
     const { contents } = useContents();
 
@@ -37,25 +38,25 @@ export default function DashboardPage() {
             <div className="page-header">
                 <div className="page-header-left">
                     <h1 className="page-title">Dashboard</h1>
-                    <p className="page-subtitle">{language === 'en' ? 'Your marketing at a glance' : 'Dein Marketing auf einen Blick'} - {language === 'en' ? 'as of' : 'Stand'}: {new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <p className="page-subtitle">{t({ de: 'Dein Marketing auf einen Blick', en: 'Your marketing at a glance', tr: 'Pazarlamanız bir bakı\u015fta' })} - {t({ de: 'Stand', en: 'as of', tr: 'tarih' })}: {new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
                 <div className="page-header-actions">
-                    <PageHelp title={language === 'en' ? 'The dashboard' : 'Das Dashboard'}>
-                        <p style={{ marginBottom: '12px' }}>{language === 'en' ? 'Welcome to the control center. The dashboard adapts to your role.' : 'Willkommen im Kontrollzentrum! Das Dashboard passt sich deiner Rolle an.'}</p>
+                    <PageHelp title={t({ de: 'Das Dashboard', en: 'The dashboard', tr: 'Kontrol paneli' })}>
+                        <p style={{ marginBottom: '12px' }}>{t({ de: 'Willkommen im Kontrollzentrum! Das Dashboard passt sich deiner Rolle an.', en: 'Welcome to the control center. The dashboard adapts to your role.', tr: 'Kontrol merkezine ho\u015f geldiniz. Pano rolünüze göre uyarlanır.' })}</p>
                         <ul className="help-list">
-                            <li><strong>Manager:</strong> {language === 'en' ? 'See active campaigns, linked content, detailed tasks and campaign budget.' : 'Sehen aktive Kampagnen, deren Content + detaillierte Aufgaben in Farblogik sowie das Kampagnenbudget.'}</li>
-                            <li><strong>Member:</strong> {language === 'en' ? 'See assigned tasks prioritized by urgency.' : 'Bekommen alle eigenen zugewiesenen Aufgaben in einer priorisierten Farblogik angezeigt (Rot = eilig, Gelb = demnaechst, Gruen = im Plan).'}</li>
-                            <li><strong>Admin:</strong> {language === 'en' ? 'See global stats and trend overview across all areas plus budget.' : 'Bekommen die globale Statistik und Gesamtuebersicht des Performance-Trends ueber alle Bereiche + das Budget.'}</li>
+                            <li><strong>Manager:</strong> {t({ de: 'Sehen aktive Kampagnen, deren Content + detaillierte Aufgaben in Farblogik sowie das Kampagnenbudget.', en: 'See active campaigns, linked content, detailed tasks and campaign budget.', tr: 'Aktif kampanyaları, ba\u011flı içerikleri, detaylı görevleri ve kampanya bütçesini görün.' })}</li>
+                            <li><strong>Member:</strong> {t({ de: 'Bekommen alle eigenen zugewiesenen Aufgaben in einer priorisierten Farblogik angezeigt.', en: 'See assigned tasks prioritized by urgency.', tr: 'Aciliyete göre önceliklendirilmi\u015f atanmı\u015f görevleri görün.' })}</li>
+                            <li><strong>Admin:</strong> {t({ de: 'Bekommen die globale Statistik und Gesamtübersicht des Performance-Trends über alle Bereiche + das Budget.', en: 'See global stats and trend overview across all areas plus budget.', tr: 'Tüm alanlardaki global istatistikleri, trend genel bakı\u015fını ve bütçeyi görün.' })}</li>
                         </ul>
                     </PageHelp>
-                    <button className="btn btn-secondary" onClick={() => router.push('/campaigns')}>{language === 'en' ? 'New campaign' : 'Neue Kampagne'}</button>
+                    <button className="btn btn-secondary" onClick={() => router.push('/campaigns')}>{t({ de: 'Neue Kampagne', en: 'New campaign', tr: 'Yeni kampanya' })}</button>
                     {role === 'manager' || role === 'company_admin' ? (
                         <button className="btn btn-primary" onClick={() => router.push('/calendar')}>
-                            <Megaphone size={16} /> {language === 'en' ? 'Content calendar' : 'Content Kalender'}
+                            <Megaphone size={16} /> {t({ de: 'Content Kalender', en: 'Content calendar', tr: 'İçerik takvimi' })}
                         </button>
                     ) : (
                         <button className="btn btn-primary" onClick={() => router.push('/calendar')}>
-                            <Megaphone size={16} /> {language === 'en' ? 'My tasks' : 'Meine To-Dos'}
+                            <Megaphone size={16} /> {t({ de: 'Meine To-Dos', en: 'My tasks', tr: 'Görevlerim' })}
                         </button>
                     )}
                 </div>
@@ -63,7 +64,7 @@ export default function DashboardPage() {
 
             <div style={{ marginBottom: '24px' }}>
                 <span className="badge" style={{ background: 'var(--color-primary-50)', color: 'var(--color-primary)' }}>
-                    {language === 'en' ? 'Active role' : 'Aktive Rolle'}: {role.toUpperCase()}
+                    {t({ de: 'Aktive Rolle', en: 'Active role', tr: 'Aktif rol' })}: {role.toUpperCase()}
                 </span>
             </div>
 

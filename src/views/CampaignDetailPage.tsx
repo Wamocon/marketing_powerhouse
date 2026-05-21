@@ -46,9 +46,8 @@ export default function CampaignDetailPage() {
   const router = useProjectRouter();
   const { can } = useAuth();
   const { subscription, loading: subscriptionLoading } = useSubscription();
-  const { language } = useLanguage();
-  const isGerman = language === "de";
-  const locale = isGerman ? "de-DE" : "en-US";
+  const { language, locale } = useLanguage();
+  const t = (tr: { de: string; en: string; tr: string }) => tr[language];
   const {
     campaigns,
     audiences,
@@ -157,7 +156,7 @@ export default function CampaignDetailPage() {
         <div className="card" style={{ padding: "48px", textAlign: "center" }}>
           <div className="empty-state-icon">⏳</div>
           <div className="empty-state-title">
-            {isGerman ? "Kampagne wird geladen..." : "Loading campaign..."}
+            {t({ de: "Kampagne wird geladen...", en: "Loading campaign...", tr: "Kampanya yükleniyor..." })}
           </div>
         </div>
       </div>
@@ -173,17 +172,19 @@ export default function CampaignDetailPage() {
           style={{ marginBottom: "16px" }}
         >
           <ArrowLeft size={16} />{" "}
-          {isGerman ? "Zurueck zu Kampagnen" : "Back to Campaigns"}
+          {t({ de: "Zurück zu Kampagnen", en: "Back to Campaigns", tr: "Kampanyalara dön" })}
         </button>
         <div className="card" style={{ padding: "48px", textAlign: "center" }}>
           <div className="empty-state-icon">🔍</div>
           <div className="empty-state-title">
-            {isGerman ? "Kampagne nicht gefunden" : "Campaign Not Found"}
+            {t({ de: "Kampagne nicht gefunden", en: "Campaign Not Found", tr: "Kampanya bulunamadı" })}
           </div>
           <div className="empty-state-text">
-            {isGerman
-              ? `Die Kampagne mit der ID "${id}" existiert nicht.`
-              : `The campaign with ID "${id}" does not exist.`}
+            {t({
+              de: `Die Kampagne mit der ID "${id}" existiert nicht.`,
+              en: `The campaign with ID "${id}" does not exist.`,
+              tr: `"${id}" ID'li kampanya mevcut değil.`,
+            })}
           </div>
         </div>
       </div>
@@ -200,7 +201,7 @@ export default function CampaignDetailPage() {
           style={{ marginBottom: "16px" }}
         >
           <ArrowLeft size={16} />{" "}
-          {isGerman ? "Zurueck zu Kampagnen" : "Back to Campaigns"}
+          {t({ de: "Zurück zu Kampagnen", en: "Back to Campaigns", tr: "Kampanyalara dön" })}
         </button>
         <div className="page-header" style={{ marginBottom: 0 }}>
           <div className="page-header-left">
@@ -212,47 +213,59 @@ export default function CampaignDetailPage() {
           </div>
           <div className="page-header-actions">
             <PageHelp
-              title={isGerman ? "Kampagnen-Details" : "Campaign Details"}
+              title={t({ de: "Kampagnen-Details", en: "Campaign Details", tr: "Kampanya Detayları" })}
             >
               <p style={{ marginBottom: "12px" }}>
-                {isGerman
-                  ? "Die Detailansicht einer Kampagne buendelt alle relevanten Workstreams zu diesem Projekt."
-                  : "The campaign detail view bundles all relevant workstreams for this project."}
+                {t({
+                  de: "Die Detailansicht einer Kampagne bündelt alle relevanten Workstreams zu diesem Projekt.",
+                  en: "The campaign detail view bundles all relevant workstreams for this project.",
+                  tr: "Kampanya detay görünümü, bu projeye ait tüm ilgili iş akışlarını bir araya getirir.",
+                })}
               </p>
               <ul className="help-list">
                 <li>
-                  <strong>{isGerman ? "Uebersicht:" : "Overview:"}</strong>{" "}
-                  {isGerman
-                    ? "Zusammenfassung von Zielgruppen, Keywords, Timing und Kampagnenzielen."
-                    : "Summary of linked audiences, keywords, timing, and campaign goals."}
+                  <strong>{t({ de: "Übersicht:", en: "Overview:", tr: "Genel Bakış:" })}</strong>{" "}
+                  {t({
+                    de: "Zusammenfassung von Zielgruppen, Keywords, Timing und Kampagnenzielen.",
+                    en: "Summary of linked audiences, keywords, timing, and campaign goals.",
+                    tr: "Hedef kitleler, anahtar kelimeler, zamanlama ve kampanya hedeflerinin özeti.",
+                  })}
                 </li>
                 <li>
                   <strong>
-                    {isGerman ? "Manager & Team:" : "Manager & Team:"}
+                    {t({ de: "Manager & Team:", en: "Manager & Team:", tr: "Yönetici & Ekip:" })}
                   </strong>{" "}
-                  {isGerman
-                    ? "Zeigt verantwortlichen Manager und beteiligte Team-Mitglieder."
-                    : "Shows responsible manager and planned team members."}
+                  {t({
+                    de: "Zeigt verantwortlichen Manager und beteiligte Team-Mitglieder.",
+                    en: "Shows responsible manager and planned team members.",
+                    tr: "Sorumlu yöneticiyi ve planlanan ekip üyelerini gösterir.",
+                  })}
                 </li>
                 <li>
                   <strong>
-                    {isGerman ? "Creatives & Aufgaben:" : "Creatives & Tasks:"}
+                    {t({ de: "Creatives & Aufgaben:", en: "Creatives & Tasks:", tr: "Yaratıcı İçerikler & Görevler:" })}
                   </strong>{" "}
-                  {isGerman
-                    ? "Mini-Kanban fuer kreative Umsetzung und Produktionsfortschritt."
-                    : "Mini kanban for creative execution and production progress."}
+                  {t({
+                    de: "Mini-Kanban für kreative Umsetzung und Produktionsfortschritt.",
+                    en: "Mini kanban for creative execution and production progress.",
+                    tr: "Yaratıcı içerik üretimi ve üretim ilerlemesi için mini kanban.",
+                  })}
                 </li>
                 <li>
-                  <strong>{isGerman ? "Content:" : "Content:"}</strong>{" "}
-                  {isGerman
-                    ? "Alle geplanten Beitraege fuer diese Kampagne mit Aufgaben-Verknuepfung."
-                    : "All planned content for this campaign with task linkage."}
+                  <strong>{t({ de: "Content:", en: "Content:", tr: "İçerik:" })}</strong>{" "}
+                  {t({
+                    de: "Alle geplanten Beiträge für diese Kampagne mit Aufgaben-Verknüpfung.",
+                    en: "All planned content for this campaign with task linkage.",
+                    tr: "Bu kampanya için görev bağlantılı tüm planlanmış içerikler.",
+                  })}
                 </li>
                 <li>
-                  <strong>{isGerman ? "Performance:" : "Performance:"}</strong>{" "}
-                  {isGerman
-                    ? "Kanal-KPIs mit Impressionen, Klicks, CTR, Conversions und Spend."
-                    : "Channel KPIs for impressions, clicks, CTR, conversions, and spend."}
+                  <strong>{t({ de: "Performance:", en: "Performance:", tr: "Performans:" })}</strong>{" "}
+                  {t({
+                    de: "Kanal-KPIs mit Impressionen, Klicks, CTR, Conversions und Spend.",
+                    en: "Channel KPIs for impressions, clicks, CTR, conversions, and spend.",
+                    tr: "Gösterimler, tıklamalar, CTR, dönüşümler ve harcama için kanal KPI'ları.",
+                  })}
                 </li>
               </ul>
             </PageHelp>
@@ -263,9 +276,11 @@ export default function CampaignDetailPage() {
                 onClick={async () => {
                   if (
                     window.confirm(
-                      isGerman
-                        ? "Moechtest du diese Kampagne wirklich loeschen?"
-                        : "Do you really want to delete this campaign?",
+                      t({
+                        de: "Möchtest du diese Kampagne wirklich löschen?",
+                        en: "Do you really want to delete this campaign?",
+                        tr: "Bu kampanyayı gerçekten silmek istiyor musun?",
+                      }),
                     )
                   ) {
                     await deleteCampaign(campaign.id);
@@ -273,11 +288,11 @@ export default function CampaignDetailPage() {
                   }
                 }}
               >
-                <Trash2 size={16} /> {isGerman ? "Loeschen" : "Delete"}
+                <Trash2 size={16} /> {t({ de: "Löschen", en: "Delete", tr: "Sil" })}
               </button>
             )}
             <button className="btn btn-secondary">
-              <Edit size={16} /> {isGerman ? "Bearbeiten" : "Edit"}
+              <Edit size={16} /> {t({ de: "Bearbeiten", en: "Edit", tr: "Düzenle" })}
             </button>
             <button className="btn btn-ghost btn-icon">
               <MoreVertical size={16} />
@@ -289,7 +304,7 @@ export default function CampaignDetailPage() {
       {/* Status Pipeline */}
       <div className="card" style={{ marginBottom: "24px" }}>
         <div className="card-title" style={{ marginBottom: "16px" }}>
-          {isGerman ? "Kampagnen-Status" : "Campaign Status"}
+          {t({ de: "Kampagnen-Status", en: "Campaign Status", tr: "Kampanya Durumu" })}
         </div>
         <div style={{ display: "flex", gap: "4px" }}>
           {statusSteps.map((step, idx) => (
@@ -325,15 +340,17 @@ export default function CampaignDetailPage() {
       {/* Tabs */}
       <div className="tabs" style={{ marginBottom: "24px" }}>
         {[
-          { id: "overview", label: isGerman ? "Uebersicht" : "Overview" },
+          { id: "overview", label: t({ de: "Übersicht", en: "Overview", tr: "Genel Bakış" }) },
           {
             id: "creatives",
-            label: isGerman
-              ? `Creatives & Aufgaben (${creatives.length})`
-              : `Creatives & Tasks (${creatives.length})`,
+            label: t({
+              de: `Creatives & Aufgaben (${creatives.length})`,
+              en: `Creatives & Tasks (${creatives.length})`,
+              tr: `Yaratıcı İçerikler & Görevler (${creatives.length})`,
+            }),
           },
-          { id: "content", label: `Content (${campaignContents.length})` },
-          { id: "performance", label: "Performance" },
+          { id: "content", label: `${t({ de: "Content", en: "Content", tr: "İçerik" })} (${campaignContents.length})` },
+          { id: "performance", label: t({ de: "Performance", en: "Performance", tr: "Performans" }) },
         ].map((t) => (
           <button
             key={t.id}
@@ -379,7 +396,7 @@ export default function CampaignDetailPage() {
           >
             <div>
               <h2 style={{ fontSize: "var(--font-size-lg)", fontWeight: 700 }}>
-                Creatives & Aufgaben
+                Creatives & {t({ de: "Aufgaben", en: "Tasks", tr: "Görevler" })}
               </h2>
               <p
                 style={{
@@ -387,9 +404,11 @@ export default function CampaignDetailPage() {
                   color: "var(--text-tertiary)",
                 }}
               >
-                {isGerman
-                  ? "Erstelle, reviewe und veroeffentliche Inhalte fuer diese Kampagne"
-                  : "Create, review, and publish assets for this campaign"}
+                {t({
+                  de: "Erstelle, reviewe und veröffentliche Inhalte für diese Kampagne",
+                  en: "Create, review, and publish assets for this campaign",
+                  tr: "Bu kampanya için içerikleri oluşturun, inceleyin ve yayınlayın",
+                })}
               </p>
             </div>
             {can("canCreateCampaignTasks") && (
@@ -398,7 +417,7 @@ export default function CampaignDetailPage() {
                 onClick={() => setShowNewCreativeModal(true)}
               >
                 <Plus size={16} />{" "}
-                {isGerman ? "Neues Creative" : "New Creative"}
+                {t({ de: "Neues Creative", en: "New Creative", tr: "Yeni Yaratıcı İçerik" })}
               </button>
             )}
           </div>
@@ -508,9 +527,11 @@ export default function CampaignDetailPage() {
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman
-                        ? `Generiere und veröffentliche KI-Posts für ${campaign.channels.filter((ch) => ch === "LinkedIn" || ch === "Instagram").join(" & ")}`
-                        : `Generate and publish AI posts for ${campaign.channels.filter((ch) => ch === "LinkedIn" || ch === "Instagram").join(" & ")}`}
+                      {t({
+                        de: `Generiere und veröffentliche KI-Posts für ${campaign.channels.filter((ch) => ch === "LinkedIn" || ch === "Instagram").join(" & ")}`,
+                        en: `Generate and publish AI posts for ${campaign.channels.filter((ch) => ch === "LinkedIn" || ch === "Instagram").join(" & ")}`,
+                        tr: `${campaign.channels.filter((ch) => ch === "LinkedIn" || ch === "Instagram").join(" & ")} için yapay zeka gönderileri oluşturun ve yayınlayın`,
+                      })}
                     </div>
                   </div>
                 </div>
@@ -519,7 +540,7 @@ export default function CampaignDetailPage() {
                   onClick={() => router.push("/social-hub")}
                 >
                   <Radio size={14} />{" "}
-                  {isGerman ? "Social Hub öffnen" : "Open Social Hub"}
+                  {t({ de: "Social Hub öffnen", en: "Open Social Hub", tr: "Social Hub'\u0131 aç" })}
                 </button>
               </div>
             )}
@@ -568,7 +589,7 @@ export default function CampaignDetailPage() {
                         fontSize: "var(--font-size-sm)",
                       }}
                     >
-                      {isGerman ? "Social Hub ab Pro" : "Social Hub from Pro"}
+                      {t({ de: "Social Hub ab Pro", en: "Social Hub from Pro", tr: "Pro'dan itibaren Social Hub" })}
                     </div>
                     <div
                       style={{
@@ -576,9 +597,11 @@ export default function CampaignDetailPage() {
                         color: "var(--text-tertiary)",
                       }}
                     >
-                      {isGerman
-                        ? "Upgrade auf Pro oder Ultimate, um aus dieser Kampagne direkt Social Posts zu generieren und zu veroeffentlichen."
-                        : "Upgrade to Pro or Ultimate to generate and publish social posts directly from this campaign."}
+                      {t({
+                        de: "Upgrade auf Pro oder Ultimate, um aus dieser Kampagne direkt Social Posts zu generieren und zu veröffentlichen.",
+                        en: "Upgrade to Pro or Ultimate to generate and publish social posts directly from this campaign.",
+                        tr: "Bu kampanyadan doğrudan sosyal medya gönderileri oluşturmak ve yayınlamak için Pro veya Ultimate'e yükseltin.",
+                      })}
                     </div>
                   </div>
                 </div>
@@ -587,7 +610,7 @@ export default function CampaignDetailPage() {
                   onClick={() => router.push("/settings?tab=subscription")}
                 >
                   <Radio size={14} />{" "}
-                  {isGerman ? "Auf Pro upgraden" : "Upgrade to Pro"}
+                  {t({ de: "Auf Pro upgraden", en: "Upgrade to Pro", tr: "Pro'ya yükseltin" })}
                 </button>
               </div>
             )}
@@ -606,9 +629,11 @@ export default function CampaignDetailPage() {
                 }}
               >
                 <Globe size={14} />{" "}
-                {isGerman
-                  ? "Uebergreifende Aufgaben (alle Plattformen)"
-                  : "Cross-platform tasks (all platforms)"}
+                {t({
+                  de: "Übergreifende Aufgaben (alle Plattformen)",
+                  en: "Cross-platform tasks (all platforms)",
+                  tr: "Platformlar arası görevler (tüm platformlar)",
+                })}
               </div>
               <div style={{ display: "grid", gap: "12px" }}>
                 {allPlatformCreatives.map((c) => (
@@ -665,12 +690,14 @@ export default function CampaignDetailPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">🎨</div>
                 <div className="empty-state-title">
-                  {isGerman ? "Noch keine Creatives" : "No Creatives Yet"}
+                  {t({ de: "Noch keine Creatives", en: "No Creatives Yet", tr: "Henüz Yaratıcı İçerik Yok" })}
                 </div>
                 <div className="empty-state-text">
-                  {isGerman
-                    ? "Erstelle dein erstes Creative, um den KI-gestuetzten Workflow zu starten."
-                    : "Create your first creative to start the AI-supported workflow."}
+                  {t({
+                    de: "Erstelle dein erstes Creative, um den KI-gestützten Workflow zu starten.",
+                    en: "Create your first creative to start the AI-supported workflow.",
+                    tr: "Yapay zeka destekli iş akışını başlatmak için ilk yaratıcı içeriğinizi oluşturun.",
+                  })}
                 </div>
               </div>
             </div>
@@ -690,16 +717,18 @@ export default function CampaignDetailPage() {
             }}
           >
             <h3 style={{ fontSize: "var(--font-size-md)", fontWeight: 600 }}>
-              {isGerman
-                ? `Kampagnen-Content (${campaignContents.length})`
-                : `Campaign Content (${campaignContents.length})`}
+              {t({
+                de: `Kampagnen-Content (${campaignContents.length})`,
+                en: `Campaign Content (${campaignContents.length})`,
+                tr: `Kampanya İçeriği (${campaignContents.length})`,
+              })}
             </h3>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => setShowNewCampaignContent(true)}
             >
               <Plus size={14} />{" "}
-              {isGerman ? "Content hinzufuegen" : "Add Content"}
+              {t({ de: "Content hinzufügen", en: "Add Content", tr: "İçerik ekle" })}
             </button>
           </div>
           {campaignContents.length === 0 ? (
@@ -707,12 +736,14 @@ export default function CampaignDetailPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">📄</div>
                 <div className="empty-state-title">
-                  {isGerman ? "Noch kein Content" : "No Content Yet"}
+                  {t({ de: "Noch kein Content", en: "No Content Yet", tr: "Henüz İçerik Yok" })}
                 </div>
                 <div className="empty-state-text">
-                  {isGerman
-                    ? "Erstelle Content-Eintraege fuer diese Kampagne, um die Redaktionsplanung zu starten."
-                    : "Create content items for this campaign to start editorial planning."}
+                  {t({
+                    de: "Erstelle Content-Einträge für diese Kampagne, um die Redaktionsplanung zu starten.",
+                    en: "Create content items for this campaign to start editorial planning.",
+                    tr: "Editöryal planlamayı başlatmak için bu kampanya için içerik girişleri oluşturun.",
+                  })}
                 </div>
               </div>
             </div>
@@ -813,7 +844,7 @@ export default function CampaignDetailPage() {
                           }}
                         >
                           ✅ {cnt.taskIds.length}{" "}
-                          {isGerman ? "Aufgabe(n)" : "task(s)"}
+                          {t({ de: "Aufgabe(n)", en: "task(s)", tr: "görev" })}
                         </span>
                       ) : (
                         <span
@@ -823,7 +854,7 @@ export default function CampaignDetailPage() {
                             fontWeight: 600,
                           }}
                         >
-                          ⚠ {isGerman ? "Keine Aufgaben" : "No Tasks"}
+                          ⚠ {t({ de: "Keine Aufgaben", en: "No Tasks", tr: "Görev Yok" })}
                         </span>
                       )}
                     </div>
@@ -861,7 +892,7 @@ export default function CampaignDetailPage() {
           >
             <div className="stat-card success">
               <span className="stat-card-label">
-                {isGerman ? "Impressionen" : "Impressions"}
+                {t({ de: "Impressionen", en: "Impressions", tr: "Gösterimler" })}
               </span>
               <span className="stat-card-value">
                 {campaign.kpis.impressions.toLocaleString(locale)}
@@ -869,7 +900,7 @@ export default function CampaignDetailPage() {
             </div>
             <div className="stat-card info">
               <span className="stat-card-label">
-                {isGerman ? "Klicks" : "Clicks"}
+                {t({ de: "Klicks", en: "Clicks", tr: "Tıklamalar" })}
               </span>
               <span className="stat-card-value">
                 {campaign.kpis.clicks.toLocaleString(locale)}
@@ -877,7 +908,7 @@ export default function CampaignDetailPage() {
             </div>
             <div className="stat-card warning">
               <span className="stat-card-label">
-                {isGerman ? "Conversions" : "Conversions"}
+                {t({ de: "Conversions", en: "Conversions", tr: "Dönüşümler" })}
               </span>
               <span className="stat-card-value">
                 {campaign.kpis.conversions.toLocaleString(locale)}
@@ -897,9 +928,11 @@ export default function CampaignDetailPage() {
                 channelKpis={campaign.channelKpis}
                 touchpoints={touchpoints}
                 title={
-                  isGerman
-                    ? "Performance nach Kanal / Touchpoint"
-                    : "Performance by Channel / Touchpoint"
+                  t({
+                    de: "Performance nach Kanal / Touchpoint",
+                    en: "Performance by Channel / Touchpoint",
+                    tr: "Kanala / Temas Noktasına Göre Performans",
+                  })
                 }
               />
             </div>
@@ -908,12 +941,14 @@ export default function CampaignDetailPage() {
               <div className="empty-state">
                 <div className="empty-state-icon">📊</div>
                 <div className="empty-state-title">
-                  {isGerman ? "Keine Kanal-KPIs" : "No Channel KPIs"}
+                  {t({ de: "Keine Kanal-KPIs", en: "No Channel KPIs", tr: "Kanal KPI'ları Yok" })}
                 </div>
                 <div className="empty-state-text">
-                  {isGerman
-                    ? "Fuer diese Kampagne liegen noch keine kanalspezifischen Performance-Daten vor."
-                    : "No channel-specific performance data is available for this campaign yet."}
+                  {t({
+                    de: "Für diese Kampagne liegen noch keine kanalspezifischen Performance-Daten vor.",
+                    en: "No channel-specific performance data is available for this campaign yet.",
+                    tr: "Bu kampanya için henüz kanala özgü performans verileri mevcut değil.",
+                  })}
                 </div>
               </div>
             </div>

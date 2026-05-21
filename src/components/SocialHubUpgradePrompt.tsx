@@ -12,10 +12,9 @@ interface SocialHubUpgradePromptProps {
 }
 
 export default function SocialHubUpgradePrompt({ compact = false, showPricingCards = false }: SocialHubUpgradePromptProps) {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const { activeCompany } = useCompany();
   const { currentPlan } = useSubscription();
-  const isEn = language === 'en';
   const settingsUrl = activeCompany ? `/project/${activeCompany.id}/settings?tab=subscription` : '/settings?tab=subscription';
 
   return (
@@ -58,15 +57,17 @@ export default function SocialHubUpgradePrompt({ compact = false, showPricingCar
             textTransform: 'uppercase',
           }}>
             <Lock size={12} />
-            {isEn ? 'Pro Feature' : 'Pro Feature'}
+            {t({ de: 'Pro Feature', en: 'Pro Feature', tr: 'Pro Özellik' })}
           </div>
           <h3 style={{ margin: 0, fontSize: compact ? 'var(--font-size-base)' : 'var(--font-size-xl)', fontWeight: 800, color: 'var(--text-primary)' }}>
-            {isEn ? 'Unlock Social Hub with Pro or Ultimate' : 'Social Hub mit Pro oder Ultimate freischalten'}
+            {t({ de: 'Social Hub mit Pro oder Ultimate freischalten', en: 'Unlock Social Hub with Pro or Ultimate', tr: 'Social Hub\'ı Pro veya Ultimate ile açın' })}
           </h3>
           <p style={{ margin: '8px 0 0', fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-            {isEn
-              ? 'Upgrade to Pro to generate AI social drafts, manage approvals, and publish through one focused workflow. Ultimate adds Instagram and more connected accounts for broader reach.'
-              : 'Upgrade auf Pro, um KI-Social-Posts zu generieren, Freigaben zu steuern und Publishing in einem durchgaengigen Workflow zu verwalten. Ultimate erweitert das Ganze um Instagram und mehr verbundene Accounts.'}
+            {t({
+              de: 'Upgrade auf Pro, um KI-Social-Posts zu generieren, Freigaben zu steuern und Publishing in einem durchgängigen Workflow zu verwalten. Ultimate erweitert das Ganze um Instagram und mehr verbundene Accounts.',
+              en: 'Upgrade to Pro to generate AI social drafts, manage approvals, and publish through one focused workflow. Ultimate adds Instagram and more connected accounts for broader reach.',
+              tr: 'Yapay zeka destekli sosyal medya taslakları oluşturmak, onay süreçlerini yönetmek ve tek bir iş akışıyla yayınlamak için Pro\'ya yükseltin. Ultimate, daha geniş erişim için Instagram ve daha fazla bağlı hesap ekler.',
+            })}
           </p>
         </div>
       </div>
@@ -75,44 +76,46 @@ export default function SocialHubUpgradePrompt({ compact = false, showPricingCar
         <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>
             <Crown size={14} style={{ color: 'var(--color-primary)' }} />
-            {isEn ? 'AI Draft Engine' : 'KI-Draft-Engine'}
+            {t({ de: 'KI-Draft-Engine', en: 'AI Draft Engine', tr: 'Yapay Zeka Taslak Motoru' })}
           </div>
           <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-            {isEn ? 'Turn campaigns, content, and tasks into ready-to-review social posts.' : 'Mache aus Kampagnen, Content und Tasks direkt freigabefaehige Social-Posts.'}
+            {t({ de: 'Mache aus Kampagnen, Content und Tasks direkt freigabefähige Social-Posts.', en: 'Turn campaigns, content, and tasks into ready-to-review social posts.', tr: 'Kampanyaları, içerikleri ve görevleri incelemeye hazır sosyal medya paylaşımlarına dönüştürün.' })}
           </div>
         </div>
         <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>
             <Crown size={14} style={{ color: 'var(--color-primary)' }} />
-            {isEn ? 'Approval and Publishing' : 'Freigabe und Publishing'}
+            {t({ de: 'Freigabe und Publishing', en: 'Approval and Publishing', tr: 'Onay ve Yayınlama' })}
           </div>
           <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-            {isEn ? 'Keep review, scheduling, and channel publishing inside Momentum.' : 'Halte Review, Terminierung und Channel-Publishing direkt in Momentum.'}
+            {t({ de: 'Halte Review, Terminierung und Channel-Publishing direkt in Momentum.', en: 'Keep review, scheduling, and channel publishing inside Momentum.', tr: 'İnceleme, planlama ve kanal yayınlamayı Momentum içinde tutun.' })}
           </div>
         </div>
         <div style={{ padding: '12px 14px', borderRadius: 'var(--radius-lg)', background: 'rgba(255,255,255,0.6)', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>
             <Crown size={14} style={{ color: 'var(--color-primary)' }} />
-            {isEn ? 'Scale with Ultimate' : 'Skalieren mit Ultimate'}
+            {t({ de: 'Skalieren mit Ultimate', en: 'Scale with Ultimate', tr: 'Ultimate ile ölçeklendirin' })}
           </div>
           <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-            {isEn ? 'Unlock Instagram plus additional connected social accounts when your team is ready.' : 'Schalte Instagram und weitere verbundene Social Accounts frei, sobald dein Team mehr Reichweite braucht.'}
+            {t({ de: 'Schalte Instagram und weitere verbundene Social Accounts frei, sobald dein Team mehr Reichweite braucht.', en: 'Unlock Instagram plus additional connected social accounts when your team is ready.', tr: 'Ekibiniz hazır olduğunda Instagram ve ek bağlı sosyal hesapları açın.' })}
           </div>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: compact ? 'stretch' : 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-          {isEn
-            ? `Current plan: ${currentPlan?.name ?? 'Starter'}. Social Hub activates from Pro upward.`
-            : `Aktueller Plan: ${currentPlan?.name ?? 'Starter'}. Der Social Hub ist ab Pro aktiviert.`}
+          {t({
+            de: `Aktueller Plan: ${currentPlan?.name ?? 'Starter'}. Der Social Hub ist ab Pro aktiviert.`,
+            en: `Current plan: ${currentPlan?.name ?? 'Starter'}. Social Hub activates from Pro upward.`,
+            tr: `Mevcut plan: ${currentPlan?.name ?? 'Starter'}. Social Hub, Pro ve üstü planlarda aktiftir.`,
+          })}
         </div>
         <Link
           href={settingsUrl}
           className="btn btn-primary"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
         >
-          {isEn ? 'Upgrade to Pro' : 'Auf Pro upgraden'} <ArrowRight size={14} />
+          {t({ de: 'Auf Pro upgraden', en: 'Upgrade to Pro', tr: 'Pro\'ya yükselt' })} <ArrowRight size={14} />
         </Link>
       </div>
 
