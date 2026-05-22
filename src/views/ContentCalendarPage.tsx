@@ -7,8 +7,8 @@ import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useRouter } from 'next/navigation';
 import ContentDetailModal from '../components/ContentDetailModal';
-import ContentIdeaWizard from '../components/ContentIdeaWizard';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
 import { listPosts, type ScheduledPost } from '../lib/socialHub';
@@ -39,6 +39,7 @@ export default function ContentCalendarPage() {
     const { can } = useAuth();
     const { activeCompany } = useCompany();
     const { language, locale, t } = useLanguage();
+    const router = useRouter();
     const daysOfWeek = daysOfWeekByLang[language] || daysOfWeekByLang.en;
     const monthNames = monthNamesByLang[language] || monthNamesByLang.en;
     const [currentDate, setCurrentDate] = useState(() => {
@@ -48,7 +49,6 @@ export default function ContentCalendarPage() {
     const [view, setView] = useState('month');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [showNewContentModal, setShowNewContentModal] = useState(false);
-    const [showIdeaWizard, setShowIdeaWizard] = useState(false);
 
     // Social Hub posts for calendar overlay
     const [socialPosts, setSocialPosts] = useState<ScheduledPost[]>([]);
@@ -125,7 +125,7 @@ export default function ContentCalendarPage() {
                         <button className={`btn btn-sm ${view === 'list' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setView('list')}>{t({ de: 'Liste', en: 'List', tr: 'Liste' })}</button>
                     </div>
                     {can('canEditContent') && (
-                        <button className="btn btn-secondary" onClick={() => setShowIdeaWizard(true)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
+                        <button className="btn btn-secondary" onClick={() => router.push(`${activeCompany ? `/project/${activeCompany.id}` : ''}/content-ideas`)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
                             <Wand2 size={16} /> {t({ de: 'KI Content-Ideen', en: 'AI content ideas', tr: 'YZ İçerik Fikirleri' })}
                         </button>
                     )}
@@ -291,11 +291,6 @@ export default function ContentCalendarPage() {
             {/* New Content Modal */}
             {showNewContentModal && (
                 <NewContentModal onClose={() => setShowNewContentModal(false)} />
-            )}
-
-            {/* Content Idea Wizard */}
-            {showIdeaWizard && (
-                <ContentIdeaWizard onClose={() => setShowIdeaWizard(false)} />
             )}
         </div>
     );

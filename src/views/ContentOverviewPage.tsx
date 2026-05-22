@@ -7,8 +7,9 @@ import { useData } from '../context/DataContext';
 import { CONTENT_TYPE_COLORS } from '../lib/constants';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useCompany } from '../context/CompanyContext';
+import { useRouter } from 'next/navigation';
 import ContentDetailModal from '../components/ContentDetailModal';
-import ContentIdeaWizard from '../components/ContentIdeaWizard';
 import NewContentModal from '../components/NewContentModal';
 import PageHelp from '../components/PageHelp';
 
@@ -86,12 +87,13 @@ export default function ContentOverviewPage() {
     const { can } = useAuth();
     const { language, locale, t } = useLanguage();
     const { campaigns, touchpoints } = useData();
+    const { activeCompany } = useCompany();
+    const router = useRouter();
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterTaskStatus, setFilterTaskStatus] = useState('all');
     const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'kanban'>('grid');
     const [showNewContent, setShowNewContent] = useState(false);
-    const [showIdeaWizard, setShowIdeaWizard] = useState(false);
 
     const getCampaignName = (cId) => {
         if (!cId) return t({ de: 'Ohne Kampagne', en: 'No campaign', tr: 'Kampanya yok' });
@@ -150,7 +152,7 @@ export default function ContentOverviewPage() {
                         </ul>
                     </PageHelp>
                     {can('canEditContent') && (
-                        <button className="btn btn-secondary" onClick={() => setShowIdeaWizard(true)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
+                        <button className="btn btn-secondary" onClick={() => router.push(`${activeCompany ? `/project/${activeCompany.id}` : ''}/content-ideas`)} style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)', color: 'white', border: 'none' }}>
                             <Wand2 size={16} /> {t({ de: 'KI Content-Ideen', en: 'AI content ideas', tr: 'YZ İçerik Fikirleri' })}
                         </button>
                     )}
@@ -426,11 +428,6 @@ export default function ContentOverviewPage() {
             {/* New Content Modal */}
             {showNewContent && (
                 <NewContentModal onClose={() => setShowNewContent(false)} />
-            )}
-
-            {/* Content Idea Wizard */}
-            {showIdeaWizard && (
-                <ContentIdeaWizard onClose={() => setShowIdeaWizard(false)} />
             )}
         </div>
     );
